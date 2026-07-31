@@ -1,0 +1,50 @@
+# Severity of collisions in which a pedestrian was struck.
+#
+# The whole-dataset problem is dominated by a fact nobody disputes: pedestrians
+# and cyclists get hurt, everyone else mostly does not. Conditioning on a
+# pedestrian collision removes that fact from the problem and asks the question
+# underneath it — given that someone was struck, what makes it worse?
+#
+# The class balance is far better here than in the unrestricted problem: roughly
+# 14 / 78 / 8 rather than 80 / 19 / 1, so the severe class has ten times its
+# usual share and a model has something to find. Every variable an engineer
+# could act on remains available.
+#
+# `ACCDN_TYPE` becomes constant under this restriction and is dropped
+# automatically.
+
+name: pedestrian_injury
+description: >-
+  Ternary severity for Montréal collisions involving a pedestrian, 2011-2022.
+  Asks what distinguishes a serious pedestrian collision from a minor one, given
+  that a pedestrian was struck.
+
+data:
+  years: [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022]
+  restrict:
+    REGION: ["Montréal (06)"]
+    ACCDN_TYPE: ["pedestrian"]
+  target: TNRY_SEV
+  exclude_features: [YEAR]
+  # Report completeness tracks severity, so records with several blanks are
+  # informative about the paperwork rather than the collision.
+  max_missing_features: 1
+
+split:
+  test_size: 0.15
+  folds: 5
+  seed: 42
+  stratify: true
+
+model:
+  kind: xgboost
+  params:
+    objective: "multi:softprob"
+    eval_metric: mlogloss
+    max_depth: 5
+    n_estimators: 150
+    tree_method: hist
+
+evaluation:
+  beta: [0.5, 1.0, 2.0]
+  weights: [1.0, 2.0, 8.0]

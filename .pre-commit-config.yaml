@@ -1,0 +1,57 @@
+# Run `make install` once; hooks then run on every commit.
+# `pre-commit run --all-files` to sweep the tree.
+
+default_language_version:
+  python: python3.12
+
+# The raw extracts are the citable source of record and are never rewritten. A
+# whitespace or line-ending fixer would modify a quarter of a gigabyte of data
+# files on every commit, and — worse — change their bytes enough that git no
+# longer recognises a move as a move, storing the whole lot again.
+exclude: ^data/raw/
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        # The raw SAAQ CSVs are ~21 MB each and are committed deliberately.
+        # Anything larger is almost certainly an accident.
+        args: [--maxkb=30720]
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.4
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  # Run mypy from the project environment rather than an isolated one. The
+  # mirrored hook installs its own dependency set and passes its own flags, so
+  # it and `make typecheck` are two configurations that drift apart: the mirror
+  # lacked pytest, and reported every fixture in the test suite as an untyped
+  # decorator while the project run was clean. One environment, one config, one
+  # answer.
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types: [python]
+        pass_filenames: false
+
+  # Notebook output committed alongside source bloats the history and produces
+  # diffs nobody can read. Strip it at the door.
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout

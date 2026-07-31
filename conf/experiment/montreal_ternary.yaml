@@ -1,0 +1,51 @@
+# Severity of Montréal collisions, in three classes.
+#
+# This is the experiment the analysis is built around. It reproduces the setup
+# whose result motivates the whole investigation: an estimator of reasonable
+# capacity, given every feature that is not disqualified by leakage, performing
+# barely above a trivial baseline on the class that matters.
+
+name: montreal_ternary
+description: >-
+  Ternary severity classification for the Montréal administrative region,
+  2011-2022. Material damage only, at least one minor injury, or at least one
+  serious injury or fatality.
+
+data:
+  years: [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022]
+  restrict:
+    REGION: ["Montréal (06)"]
+  target: TNRY_SEV
+  # The calendar year of a collision is not plausibly a cause of its severity.
+  # Including it invites the model to fit drift in reporting practice instead.
+  exclude_features: [YEAR]
+  drop_rows_missing_target: true
+
+split:
+  test_size: 0.15
+  folds: 5
+  seed: 42
+  # The severe class is under one percent, so unstratified folds would differ
+  # materially from one another in how many severe records they contain.
+  stratify: true
+
+model:
+  kind: xgboost
+  params:
+    objective: "multi:softprob"
+    eval_metric: mlogloss
+    max_depth: 6
+    n_estimators: 100
+    max_delta_step: 1
+    tree_method: hist
+
+resampling:
+  max_repeats: 1
+
+evaluation:
+  # Missing a serious collision costs more than a false alarm about one, so the
+  # severe class weights recall; the reverse holds for material damage.
+  beta: [0.5, 1.0, 2.0]
+  # Counteracts the imbalance, so a model cannot score well merely by handling
+  # the majority class competently.
+  weights: [1.0, 4.0, 16.0]

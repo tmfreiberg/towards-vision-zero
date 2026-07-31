@@ -1,0 +1,1037 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collision records — what actually happened</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ------------------------------------------------------------------
+     The subject is a municipal accident report, so the page is a form.
+     Palette taken from Quebec form stock: pale grey-green paper, the
+     process blue used for printed rules, typewriter slate, stamped red.
+     ------------------------------------------------------------------ */
+  :root {
+    --stock:      #e9ebe5;
+    --stock-deep: #dfe2da;
+    --card:       #f6f7f3;
+    --rule:       #a3b6c4;
+    --rule-faint: #c6d1d9;
+    --ink:        #1d2b35;
+    --ink-soft:   #5c6b75;
+    --pencil:     #8c9aa3;
+    --stamp:      #a6332e;
+    --amber:      #b8791b;
+    --slate:      #7d8b93;
+    --focus:      #2f6f9e;
+
+    /* A ramp long enough for the published four-level scale. A three-level
+       target uses the upper three, so the severest class keeps the same
+       colour whichever scale is in play. */
+    --sev-a: #c4c8c0;
+    --sev-b: var(--slate);
+    --sev-c: var(--amber);
+    --sev-d: var(--stamp);
+
+    --sans: "IBM Plex Sans Condensed", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--stock);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.5;
+    /* Faint ruled grid, as on the printed form this data came off. */
+    background-image:
+      linear-gradient(var(--rule-faint) 1px, transparent 1px);
+    background-size: 100% 28px;
+  }
+
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    background: var(--stock);
+    padding: 28px 24px 14px;
+  }
+  .masthead-inner { max-width: 1180px; margin: 0 auto; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 0 0 6px;
+  }
+  h1 {
+    font-size: clamp(26px, 4vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin: 0 0 8px;
+    max-width: 22ch;
+  }
+  .standfirst {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 16px;
+  }
+  /* Exactly which records are loaded, so no share is read against the wrong
+     denominator. Assembled from the payload's own metadata. */
+  .provenance {
+    margin: 12px 0 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+  .provenance b { font-weight: 600; color: var(--ink); }
+
+  .lang {
+    float: right;
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .lang button {
+    background: transparent;
+    border: 0;
+    padding: 5px 11px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font: inherit;
+    letter-spacing: 0.08em;
+  }
+  .lang button[aria-pressed="true"] { background: var(--ink); color: var(--card); }
+
+  main {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.85fr);
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--rule);
+  }
+  .panel-head {
+    border-bottom: 1px solid var(--rule);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .panel-head h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .panel-note { font-family: var(--mono); font-size: 11px; color: var(--pencil); }
+
+  /* ---- the form ---- */
+  .fields { padding: 0; }
+  .field { border-bottom: 1px dotted var(--rule-faint); }
+  .field:last-child { border-bottom: 0; }
+  .field[open] { background: #eef2f4; }
+  .field.is-set { background: #eef2f4; }
+
+  .field > summary {
+    display: grid;
+    grid-template-columns: 14px minmax(110px, 210px) 1fr;
+    gap: 12px;
+    align-items: baseline;
+    padding: 9px 16px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .field > summary::-webkit-details-marker { display: none; }
+  .field > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+  .caret {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--pencil);
+    transition: transform 140ms ease;
+    display: inline-block;
+    line-height: 1.4;
+  }
+  .field[open] .caret { transform: rotate(90deg); }
+
+  .field-name { font-weight: 600; font-size: 14px; }
+  .field-source {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--pencil);
+    letter-spacing: 0.04em;
+  }
+  .field-state {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--pencil);
+    align-self: center;
+    overflow-wrap: anywhere;
+  }
+  .field.is-set .field-state { color: var(--ink); }
+
+  .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 2px 16px 14px 42px;
+  }
+  .opt { position: relative; }
+  .opt input {
+    position: absolute;
+    opacity: 0;
+    width: 1px; height: 1px;
+  }
+  .opt span {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 4px 9px;
+    border: 1px solid var(--rule);
+    background: var(--card);
+    cursor: pointer;
+    user-select: none;
+  }
+  .opt input:checked + span {
+    background: var(--ink);
+    color: var(--card);
+    border-color: var(--ink);
+  }
+  .opt input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 1px; }
+  .opt span:hover { border-color: var(--ink); }
+  .opt.blank span { font-style: italic; }
+
+  .definitions { margin: 0 16px 14px 42px; }
+  .definitions > summary {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--pencil);
+    cursor: pointer;
+    list-style: none;
+    padding: 3px 0;
+  }
+  .definitions > summary::-webkit-details-marker { display: none; }
+  .definitions > summary::before { content: "+ "; }
+  .definitions[open] > summary::before { content: "\2212 "; }
+  .definitions > summary:hover { color: var(--ink); }
+  .definitions > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .definitions dl {
+    margin: 6px 0 2px;
+    padding-left: 11px;
+    border-left: 1px solid var(--rule-faint);
+    font-size: 12.5px;
+  }
+  .definitions dt {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    margin-top: 8px;
+  }
+  .definitions dd { margin: 1px 0 0; color: var(--ink-soft); line-height: 1.45; }
+  .definitions .attribution {
+    margin: 9px 0 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: var(--pencil);
+  }
+  .definitions .caveat {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: var(--stock-deep);
+    color: var(--ink);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .summary-line {
+    margin: 0 16px 8px 42px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+    max-width: 68ch;
+  }
+  .outcome-definitions { margin: 0 16px 16px; }
+
+  .field-hint {
+    grid-column: 1 / -1;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--pencil);
+    padding: 0 16px 10px 42px;
+  }
+
+  .actions { padding: 12px 16px; border-top: 1px solid var(--rule); }
+  .clear {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--rule);
+    padding: 7px 13px;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .clear:hover { border-color: var(--ink); }
+  .clear:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+  /* ---- the tally ---- */
+  .tally { position: sticky; top: 20px; }
+  .scale-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .scale-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pencil);
+  }
+  #scale {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 4px 7px;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 0;
+  }
+  #scale:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+
+  .count {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .count-number {
+    font-family: var(--mono);
+    font-size: 40px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .count-label { color: var(--ink-soft); font-size: 14px; margin-top: 2px; }
+
+  .outcomes { padding: 14px 16px 4px; }
+  .outcome { margin-bottom: 16px; }
+  .outcome-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 5px;
+  }
+  .outcome-name { font-size: 13.5px; }
+  .outcome-figure { font-family: var(--mono); font-size: 13px; }
+
+  /* The base rate sits behind the observed share as a hairline marker, so
+     every reading is a comparison rather than a number on its own. */
+  .track {
+    position: relative;
+    height: 16px;
+    background: var(--stock-deep);
+  }
+  .bar { height: 100%; transition: width 220ms ease; }
+  .baseline {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 2px;
+    background: var(--ink);
+  }
+  .baseline::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: -2px;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 4px solid var(--ink);
+  }
+  .delta { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); margin-top: 3px; }
+
+  /* ---- signature: the tally marks ---- */
+  .marks { padding: 6px 16px 18px; }
+  .marks-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pencil);
+    margin-bottom: 8px;
+  }
+  .marks-rows { display: flex; flex-direction: column; gap: 9px; }
+  .marks-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .marks-key { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); min-width: 34px; }
+  .gate { display: inline-flex; gap: 2px; margin-right: 7px; position: relative; }
+  .stroke { width: 2px; height: 17px; background: currentColor; transform: rotate(6deg); }
+  .gate.full::after {
+    content: "";
+    position: absolute;
+    left: -3px; right: -3px; top: 50%;
+    height: 2px;
+    background: currentColor;
+    transform: rotate(-19deg);
+  }
+
+  .warn {
+    margin: 0 16px 16px;
+    padding: 11px 13px;
+    border-left: 3px solid var(--stamp);
+    background: #f4ecea;
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+
+  footer {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 8px 24px 48px;
+    color: var(--ink-soft);
+    font-size: 13px;
+    max-width: 78ch;
+  }
+  footer p { margin: 0 0 10px; }
+  code { font-family: var(--mono); font-size: 12px; }
+
+  .source {
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+  }
+  .source h3 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--ink-soft);
+    margin: 0 0 8px;
+  }
+  .source p { font-size: 12.5px; line-height: 1.55; }
+  .source .gloss { color: var(--ink-soft); font-style: italic; }
+  .source a { color: var(--focus); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  .loading { padding: 40px 16px; text-align: center; color: var(--ink-soft); font-family: var(--mono); font-size: 13px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="fr" aria-pressed="false">FR</button>
+    </div>
+    <p class="eyebrow" id="eyebrow">Société de l'assurance automobile du Québec</p>
+    <h1 id="title">What happened to collisions like this one</h1>
+    <p class="standfirst" id="standfirst">
+      Tick the conditions recorded on a police report. The panel shows what became of
+      every collision in the record that matches — not a prediction, a tally.
+    </p>
+    <p class="provenance" id="provenance"></p>
+  </div>
+</header>
+
+<main>
+  <section class="panel" aria-labelledby="form-heading">
+    <div class="panel-head">
+      <h2 id="form-heading">Conditions</h2>
+      <span class="panel-note" id="chosen-note">nothing set</span>
+    </div>
+    <div class="fields" id="fields">
+      <p class="loading" id="loading">Loading records…</p>
+    </div>
+    <div class="actions">
+      <button type="button" class="clear" id="clear">Clear all</button>
+    </div>
+  </section>
+
+  <section class="panel tally" aria-labelledby="tally-heading" aria-live="polite">
+    <div class="panel-head">
+      <h2 id="tally-heading">What happened</h2>
+      <span class="panel-note" id="share-note"></span>
+    </div>
+    <div class="scale-row" id="scale-row" hidden>
+      <label class="scale-label" for="scale">Scale</label>
+      <select id="scale"></select>
+    </div>
+    <div class="count">
+      <div class="count-number" id="count">—</div>
+      <div class="count-label" id="count-label">matching collisions</div>
+    </div>
+    <div id="warn-slot"></div>
+    <div class="outcomes" id="outcomes"></div>
+    <div class="marks" id="marks-slot"></div>
+    <div class="outcome-definitions" id="outcome-definitions"></div>
+  </section>
+</main>
+
+<footer>
+  <p id="foot-1">
+    The marker on each bar is that outcome's rate across every record loaded here. It is
+    there so each share can be read as a comparison: a bar past its marker means this
+    combination produced that outcome more often than usual, short of it, less often.
+  </p>
+  <p id="foot-2">
+    Small groups say very little. Below thirty matching records the figures are mostly
+    noise, and the tally is drawn stroke by stroke to make that plain.
+  </p>
+  <div class="source">
+    <h3 id="source-heading">Source</h3>
+    <p id="citation"></p>
+    <p class="gloss" id="citation-gloss"></p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  "use strict";
+
+  const TALLY_LIMIT = 120;   // above this, strokes stop being countable
+  const THIN = 30;           // below this, the figures are mostly noise
+
+  const COPY = {
+    en: {
+      title: "What happened to collisions like this one",
+      standfirst: "Tick the conditions recorded on a police report. The panel shows what became of every collision in the record that matches — not a prediction, a tally.",
+      conditions: "Conditions", happened: "What happened",
+      any: "any",
+      matching: "matching collisions", nothingSet: "nothing set",
+      clear: "Clear all",
+      hint: "Pick more than one to match any of them.",
+      chosen: n => `${n} chosen`,
+      source: "Source",
+      loaded: "reports loaded",
+      whatTheseMean: "What these mean",
+      scale: "Scale",
+      levels: n => `${n} levels`,
+      asPublished: "as published",
+      mergedNote: "Two categories of the published scale differ only by whether the damage estimate cleared $2,000. Combining them is a choice about what the question is, not a fact about the collisions.",
+      officialNote: "Definitions as published by the SAAQ.",
+      outcomeMeaning: "What these outcomes mean",
+      combines: n => `combines ${n} published categories`,
+      everywhere: "Québec-wide",
+      blanksKept: "blank fields kept",
+      blankCap: n => n === 1 ? "at most one blank field" : `at most ${n} blank fields`,
+      ofAll: p => `${p} of those loaded`,
+      thin: "Too few records to read anything into these shares. Loosen a condition.",
+      none: "No collision on record matches all of these conditions.",
+      marks: "One stroke per collision",
+      above: p => `${p} above the overall rate`,
+      below: p => `${p} below the overall rate`,
+      same: "level with the overall rate",
+      foot1: "The marker on each bar is that outcome's rate across every record loaded here. It is there so each share can be read as a comparison: a bar past its marker means this combination produced that outcome more often than usual, short of it, less often.",
+      foot2: "Small groups say very little. Below thirty matching records the figures are mostly noise, and the tally is drawn stroke by stroke to make that plain.",
+      citation: 'QUEBEC AUTOMOBILE INSURANCE SOCIETY (SAAQ). Accident reports, [Dataset], in Data Quebec, 2017, updated December 18, 2023. <a href="https://www.donneesquebec.ca/recherche/dataset/rapports-d-accident">donneesquebec.ca</a>, (accessed March 13, 2024).',
+      gloss: "Data from accident reports completed by police officers, including the time, severity of the accident as well as the type of vehicles involved."
+    },
+    fr: {
+      title: "Ce qui est arrivé aux collisions de ce type",
+      standfirst: "Cochez les conditions consignées sur un rapport de police. Le panneau montre ce qu'il est advenu de chaque collision correspondante — non pas une prédiction, un décompte.",
+      conditions: "Conditions", happened: "Ce qui est arrivé",
+      any: "toutes",
+      matching: "collisions correspondantes", nothingSet: "aucune condition",
+      clear: "Tout effacer",
+      hint: "Cochez-en plusieurs pour accepter l'une ou l'autre.",
+      chosen: n => `${n} cochées`,
+      source: "Source",
+      loaded: "rapports chargés",
+      whatTheseMean: "Ce que cela signifie",
+      scale: "Échelle",
+      levels: n => `${n} niveaux`,
+      asPublished: "tel que publié",
+      mergedNote: "Deux catégories de l'échelle publiée ne diffèrent que selon que l'évaluation des dommages dépassait 2 000 $. Les regrouper est un choix sur la question posée, non un fait sur les collisions.",
+      officialNote: "Définitions telles que publiées par la SAAQ.",
+      outcomeMeaning: "Ce que signifient ces issues",
+      combines: n => `regroupe ${n} catégories publiées`,
+      everywhere: "tout le Québec",
+      blanksKept: "champs vides conservés",
+      blankCap: n => n === 1 ? "au plus un champ vide" : `au plus ${n} champs vides`,
+      ofAll: p => `${p} des enregistrements chargés`,
+      thin: "Trop peu d'enregistrements pour en tirer quoi que ce soit. Assouplissez une condition.",
+      none: "Aucune collision consignée ne correspond à toutes ces conditions.",
+      marks: "Un trait par collision",
+      above: p => `${p} au-dessus du taux global`,
+      below: p => `${p} en dessous du taux global`,
+      same: "au niveau du taux global",
+      foot1: "Le repère sur chaque barre indique le taux de cette issue sur l'ensemble des enregistrements chargés ici. Il permet de lire chaque proportion comme une comparaison : une barre au-delà de son repère signifie que cette combinaison a produit cette issue plus souvent que d'ordinaire ; en deçà, moins souvent.",
+      foot2: "Les petits groupes ne disent presque rien. En dessous de trente enregistrements, les chiffres sont surtout du bruit, et le décompte est tracé trait par trait pour le rendre évident.",
+      citation: 'SOCIÉTÉ DE L\'ASSURANCE AUTOMOBILE DU QUÉBEC (SAAQ). Rapports d\'accident, [Jeu de données], dans Données Québec, 2017, mis à jour le 18 décembre 2023. <a href="https://www.donneesquebec.ca/recherche/dataset/rapports-d-accident">donneesquebec.ca</a>, (consulté le 13 mars 2024).',
+      gloss: "Données issues des rapports d'accident remplis par les policiers, incluant notamment le moment, la gravité de l'accident de même que le type des véhicules impliqués."
+    }
+  };
+
+  const RAMP = ["--sev-a", "--sev-b", "--sev-c", "--sev-d"];
+  // Three classes take the upper three steps, so "serious or fatal" is the same
+  // red whether the scale has three levels or four.
+  const colourFor = (index, total) =>
+    `var(${RAMP[RAMP.length - total + index] || RAMP[RAMP.length - 1]})`;
+
+  let meta = null;
+  let columns = [];      // Int8Array per feature, then the target
+  let target = null;
+  let lang = "en";
+  let scale = 0;   // index into meta.target.groupings; 0 is the published scale
+  // feature name -> Set of accepted codes. Absent or empty means "any".
+  // Codes are OR-ed within a field and AND-ed across fields, which is the
+  // reading a form invites: "weather was clear or cloudy, and it was daytime".
+  const selection = new Map();
+
+  const $ = id => document.getElementById(id);
+  const pct = x => (100 * x).toFixed(1) + "%";
+
+  async function load() {
+    const [metaResponse, dataResponse] = await Promise.all([
+      fetch("meta.json"),
+      fetch("records.bin.gz")
+    ]);
+    meta = await metaResponse.json();
+
+    let bytes;
+    const buffer = await dataResponse.arrayBuffer();
+    if (typeof DecompressionStream === "function") {
+      const stream = new Blob([buffer]).stream().pipeThrough(new DecompressionStream("gzip"));
+      bytes = new Int8Array(await new Response(stream).arrayBuffer());
+    } else {
+      bytes = new Int8Array(buffer);   // server already decompressed it
+    }
+
+    const n = meta.n_records;
+    const featureCount = meta.features.length;
+    for (let i = 0; i < featureCount; i += 1) {
+      columns.push(bytes.subarray(i * n, (i + 1) * n));
+    }
+    target = bytes.subarray(featureCount * n, (featureCount + 1) * n);
+
+    renderProvenance();
+    buildScaleControl();
+    buildForm();
+    render();
+  }
+
+  function buildScaleControl() {
+    const copy = COPY[lang];
+    const row = $("scale-row");
+    const select = $("scale");
+    const groupings = meta.target.groupings || [];
+
+    // One scale means no choice to offer.
+    row.hidden = groupings.length < 2;
+    if (row.hidden) return;
+
+    $("scale-row").querySelector(".scale-label").textContent = copy.scale;
+    select.innerHTML = "";
+    groupings.forEach((grouping, index) => {
+      const levels = copy.levels(grouping.partition.length);
+      const text = grouping.published ? `${levels} (${copy.asPublished})` : levels;
+      select.appendChild(new Option(text, String(index)));
+    });
+    select.value = String(Math.min(scale, groupings.length - 1));
+    select.onchange = () => { scale = Number(select.value); render(); };
+  }
+
+  function buildForm() {
+    const copy = COPY[lang];
+    const host = $("fields");
+    host.innerHTML = "";
+
+    meta.features.forEach((feature, index) => {
+      const chosen = selection.get(feature.name) || new Set();
+
+      const row = document.createElement("details");
+      row.className = "field" + (chosen.size ? " is-set" : "");
+      row.open = chosen.size > 0;
+
+      const summary = document.createElement("summary");
+      summary.innerHTML = `
+        <span class="caret" aria-hidden="true">&rsaquo;</span>
+        <span class="field-name">${feature.label[lang]}<span class="field-source">${feature.source_column}</span></span>
+        <span class="field-state"></span>`;
+      row.appendChild(summary);
+
+      const options = document.createElement("div");
+      options.className = "options";
+
+      const addOption = (code, text, extra) => {
+        const wrap = document.createElement("label");
+        wrap.className = "opt" + (extra ? " " + extra : "");
+        const box = document.createElement("input");
+        box.type = "checkbox";
+        box.value = String(code);
+        box.checked = chosen.has(code);
+        box.addEventListener("change", () => {
+          const set = selection.get(feature.name) || new Set();
+          if (box.checked) set.add(code); else set.delete(code);
+          if (set.size) selection.set(feature.name, set);
+          else selection.delete(feature.name);
+          row.classList.toggle("is-set", set.size > 0);
+          updateState(feature, summary.querySelector(".field-state"));
+          render();
+        });
+        const face = document.createElement("span");
+        face.textContent = text;
+        wrap.append(box, face);
+        options.appendChild(wrap);
+      };
+
+      feature.values.forEach((value, code) => addOption(code, value.label[lang]));
+      addOption(-1, feature.missing.label[lang], "blank");
+      row.appendChild(options);
+
+      if (feature.values.length > 2) {
+        const hint = document.createElement("p");
+        hint.className = "field-hint";
+        hint.textContent = copy.hint;
+        row.appendChild(hint);
+      }
+
+      const summaryText = feature.summary && feature.summary[lang];
+      if (summaryText) {
+        const line = document.createElement("p");
+        line.className = "summary-line";
+        line.textContent = summaryText;
+        row.appendChild(line);
+      }
+
+      const defined = feature.values.filter(v => v.definition && v.definition[lang]);
+      const caveat = feature.notes && feature.notes[lang];
+      if (defined.length || caveat) {
+        row.appendChild(definitionList(
+          copy.whatTheseMean,
+          defined.map(v => [v.label[lang], v.definition[lang]]),
+          caveat
+        ));
+      }
+
+      updateState(feature, summary.querySelector(".field-state"));
+      host.appendChild(row);
+    });
+  }
+
+  // A disclosure holding official definitions. Collapsed, because a reader who
+  // knows what a public road is should not have to scroll past the SAAQ telling
+  // them; expanded, because a reader who does not should not have to leave.
+  function definitionList(heading, entries, caveat) {
+    const box = document.createElement("details");
+    box.className = "definitions";
+
+    const summary = document.createElement("summary");
+    summary.textContent = heading;
+    box.appendChild(summary);
+
+    if (entries.length) {
+      const list = document.createElement("dl");
+      entries.forEach(([term, definition]) => {
+        const dt = document.createElement("dt");
+        dt.textContent = term;
+        const dd = document.createElement("dd");
+        dd.textContent = definition;
+        list.append(dt, dd);
+      });
+      box.appendChild(list);
+    }
+
+    if (caveat) {
+      const note = document.createElement("p");
+      note.className = "caveat";
+      note.textContent = caveat;
+      box.appendChild(note);
+    }
+
+    // These are the SAAQ's words, not this page's, and the reader should know it.
+    const attribution = document.createElement("p");
+    attribution.className = "attribution";
+    attribution.textContent = COPY[lang].officialNote;
+    box.appendChild(attribution);
+
+    return box;
+  }
+
+  function updateState(feature, node) {
+    const copy = COPY[lang];
+    const chosen = selection.get(feature.name);
+    if (!chosen || !chosen.size) { node.textContent = copy.any; return; }
+
+    const names = [...chosen].sort((a, b) => a - b).map(code =>
+      code === -1 ? feature.missing.label[lang] : feature.values[code].label[lang]);
+    node.textContent = names.length <= 3 ? names.join(", ") : copy.chosen(names.length);
+  }
+
+  function matchingIndices() {
+    const n = meta.n_records;
+    // A lookup array beats Set.has() in the hot loop. Codes run from -1 up, so
+    // the offset of one keeps every index non-negative.
+    const active = [];
+    meta.features.forEach((feature, index) => {
+      const chosen = selection.get(feature.name);
+      if (!chosen || !chosen.size) return;
+      const accepts = new Uint8Array(feature.values.length + 2);
+      chosen.forEach(code => { accepts[code + 1] = 1; });
+      active.push([columns[index], accepts]);
+    });
+
+    const counts = new Array(meta.target.classes.length).fill(0);
+    let total = 0;
+    const sample = [];
+
+    outer:
+    for (let row = 0; row < n; row += 1) {
+      for (let a = 0; a < active.length; a += 1) {
+        if (!active[a][1][active[a][0][row] + 1]) continue outer;
+      }
+      counts[target[row]] += 1;
+      total += 1;
+      if (sample.length < TALLY_LIMIT) sample.push(target[row]);
+    }
+    return { counts, total, sample };
+  }
+
+  // Every grouping is a partition of the published classes, so folding one is a
+  // matter of summing within each group. Both the counts and the base rate are
+  // folded the same way, or a share would be compared against the wrong rate.
+  function activeScale() {
+    const groupings = meta.target.groupings;
+    if (!groupings || !groupings.length) {
+      return {
+        partition: meta.target.classes.map((_, i) => [i]),
+        labels: meta.target.labels,
+        definitions: meta.target.definitions,
+        merged: meta.target.merged
+      };
+    }
+    return groupings[Math.min(scale, groupings.length - 1)];
+  }
+
+  const fold = (values, partition) =>
+    partition.map(group => group.reduce((sum, i) => sum + values[i], 0));
+
+  function render() {
+    const copy = COPY[lang];
+    const raw = matchingIndices();
+    const active = activeScale();
+    const counts = fold(raw.counts, active.partition);
+    const base = fold(meta.target.base_rate, active.partition);
+    const total = raw.total;
+    const sample = raw.sample.map(cls =>
+      active.partition.findIndex(group => group.includes(cls)));
+    const labels = active.labels[lang];
+
+    $("count").textContent = total.toLocaleString(lang === "fr" ? "fr-CA" : "en-CA");
+    $("count-label").textContent = copy.matching;
+    $("share-note").textContent = total ? copy.ofAll(pct(total / meta.n_records)) : "";
+    $("chosen-note").textContent = selection.size
+      ? `${selection.size}/${meta.features.length}`
+      : copy.nothingSet;
+
+    const warn = $("warn-slot");
+    warn.innerHTML = "";
+    if (total === 0) {
+      warn.innerHTML = `<p class="warn">${copy.none}</p>`;
+    } else if (total < THIN) {
+      warn.innerHTML = `<p class="warn">${copy.thin}</p>`;
+    }
+
+    const outcomes = $("outcomes");
+    outcomes.innerHTML = "";
+    active.partition.forEach((group, i) => {
+      const share = total ? counts[i] / total : 0;
+      const diff = share - base[i];
+
+      const block = document.createElement("div");
+      block.className = "outcome";
+      const colour = colourFor(i, active.partition.length);
+
+      const relative = Math.abs(diff) < 0.005
+        ? copy.same
+        : (diff > 0 ? copy.above(pct(Math.abs(diff))) : copy.below(pct(Math.abs(diff))));
+
+      block.innerHTML = `
+        <div class="outcome-head">
+          <span class="outcome-name">${labels[i]}</span>
+          <span class="outcome-figure">${counts[i].toLocaleString()} · ${total ? pct(share) : "—"}</span>
+        </div>
+        <div class="track">
+          <div class="bar" style="width:${(100 * share).toFixed(2)}%;background:${colour}"></div>
+          <div class="baseline" style="left:calc(${(100 * base[i]).toFixed(2)}% - 1px)"
+               title="${pct(base[i])}"></div>
+        </div>
+        <div class="delta">${total ? relative : ""}</div>`;
+      outcomes.appendChild(block);
+    });
+
+    renderMarks(sample, total, active);
+    renderOutcomeDefinitions(active);
+  }
+
+  function renderOutcomeDefinitions(active) {
+    const host = $("outcome-definitions");
+    host.innerHTML = "";
+    const copy = COPY[lang];
+    const definitions = active.definitions ? active.definitions[lang] : null;
+    if (!definitions) return;
+
+    const labels = active.labels[lang];
+    const merged = active.merged || [];
+    const entries = [];
+    active.partition.forEach((group, i) => {
+      if (!definitions[i]) return;
+      // Where a class merges published categories, say so: the three-level scale
+      // combines two that differ only by a dollar threshold on the damage.
+      const term = merged[i] > 1
+        ? `${labels[i]} — ${copy.combines(merged[i])}`
+        : labels[i];
+      entries.push([term, definitions[i]]);
+    });
+    const caveat = merged.some(count => count > 1) ? copy.mergedNote : null;
+    if (entries.length) host.appendChild(definitionList(copy.outcomeMeaning, entries, caveat));
+  }
+
+  function renderMarks(sample, total, active) {
+    const host = $("marks-slot");
+    host.innerHTML = "";
+    if (!total || total > TALLY_LIMIT) return;
+
+    const copy = COPY[lang];
+    const labels = active.labels[lang];
+    const grouped = new Map();
+    sample.forEach(cls => grouped.set(cls, (grouped.get(cls) || 0) + 1));
+
+    const rows = document.createElement("div");
+    rows.className = "marks-rows";
+    active.partition.forEach((group, i) => {
+      const count = grouped.get(i) || 0;
+      if (!count) return;
+      const row = document.createElement("div");
+      row.className = "marks-row";
+      row.style.color = colourFor(i, active.partition.length);
+
+      const key = document.createElement("span");
+      key.className = "marks-key";
+      key.textContent = String(count);
+      key.title = labels[i];
+      row.appendChild(key);
+
+      let drawn = 0;
+      while (drawn < count) {
+        const size = Math.min(5, count - drawn);
+        const gate = document.createElement("span");
+        gate.className = "gate" + (size === 5 ? " full" : "");
+        const strokes = size === 5 ? 4 : size;
+        for (let s = 0; s < strokes; s += 1) {
+          const stroke = document.createElement("span");
+          stroke.className = "stroke";
+          gate.appendChild(stroke);
+        }
+        row.appendChild(gate);
+        drawn += size;
+      }
+      rows.appendChild(row);
+    });
+
+    const label = document.createElement("div");
+    label.className = "marks-label";
+    label.textContent = copy.marks;
+    host.append(label, rows);
+  }
+
+  function renderProvenance() {
+    const node = $("provenance");
+    if (!meta) { node.textContent = ""; return; }
+    const copy = COPY[lang];
+    const locale = lang === "fr" ? "fr-CA" : "en-CA";
+    const spec = meta.experiment;
+
+    const parts = [`<b>${meta.n_records.toLocaleString(locale)}</b> ${copy.loaded}`];
+
+    // The scope of the loaded extract, not of the current selection. Naming a
+    // filter state here would contradict itself as soon as one was applied.
+    const restrict = spec.restrict || {};
+    const named = Object.keys(restrict);
+    parts.push(named.length
+      ? named.map(key => restrict[key].join(" / ")).join(" · ")
+      : copy.everywhere);
+
+    const years = spec.years || [];
+    if (years.length) parts.push(`${years[0]}\u2013${years[years.length - 1]}`);
+
+    parts.push(spec.max_missing_features === null || spec.max_missing_features === undefined
+      ? copy.blanksKept
+      : copy.blankCap(spec.max_missing_features));
+
+    node.innerHTML = parts.join(" &middot; ");
+  }
+
+  function applyLanguage() {
+    const copy = COPY[lang];
+    document.documentElement.lang = lang;
+    $("title").textContent = copy.title;
+    $("standfirst").textContent = copy.standfirst;
+    $("form-heading").textContent = copy.conditions;
+    $("tally-heading").textContent = copy.happened;
+    $("clear").textContent = copy.clear;
+    $("foot-1").textContent = copy.foot1;
+    $("foot-2").textContent = copy.foot2;
+    $("source-heading").textContent = copy.source;
+    renderProvenance();
+    $("citation").innerHTML = copy.citation;
+    $("citation-gloss").textContent = copy.gloss;
+    document.querySelectorAll(".lang button").forEach(button => {
+      button.setAttribute("aria-pressed", String(button.dataset.lang === lang));
+    });
+  }
+
+  document.querySelectorAll(".lang button").forEach(button => {
+    button.addEventListener("click", () => {
+      lang = button.dataset.lang;
+      applyLanguage();
+      if (meta) { buildScaleControl(); buildForm(); render(); }
+    });
+  });
+
+  $("clear").addEventListener("click", () => {
+    selection.clear();
+    buildForm();
+    render();
+  });
+
+  applyLanguage();
+  load().catch(error => {
+    $("loading").textContent = "Could not load the records. Run `tvz export` to build them.";
+    console.error(error);
+  });
+})();
+</script>
+</body>
+</html>

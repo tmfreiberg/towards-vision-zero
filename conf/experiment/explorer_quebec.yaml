@@ -1,0 +1,52 @@
+# Every collision report, for the explorer.
+#
+# The modelling experiments narrow the data deliberately: to one region, to
+# adequately completed reports, to collisions of one kind. Each narrowing is
+# there to make a specific question answerable, and each is argued for where it
+# is made.
+#
+# The explorer asks no question, so it narrows nothing. It shows the published
+# record as published — every region, every year, blank fields included — and
+# lets the reader do the narrowing themselves. `REGION` is a variable here
+# rather than a filter, so the whole province is available to slice through.
+#
+# The only records dropped are those whose severity is not determinable, which
+# cannot be tallied under any outcome.
+
+name: explorer_quebec
+description: >-
+  All SAAQ collision reports, 2011-2022, province-wide. The dataset behind the
+  interactive explorer: unnarrowed, with region as a selectable variable and
+  blank fields preserved.
+
+data:
+  years: [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022]
+  # The published four-level scale, not the three-level one the analysis uses.
+  # Collapsing the two material-damage categories is right for a question about
+  # who got hurt and wrong for a tool that shows the record as it was filed:
+  # those two differ only by whether the damage estimate cleared $2,000, which
+  # is an insurer's distinction and worth seeing rather than assuming away.
+  target: SEV4
+  exclude_features: [YEAR]
+  drop_rows_missing_target: true
+  # No cap: whether a field was filled in is part of what the record says, and
+  # the explorer is for looking at the record rather than modelling from it.
+  max_missing_features: null
+
+split:
+  # The explorer fits nothing and predicts nothing, so the split is immaterial
+  # to it. A token test fraction keeps the shape of a specification without
+  # withholding records the reader has every reason to see.
+  test_size: 0.01
+  folds: 2
+  seed: 42
+  stratify: true
+
+model:
+  kind: decision_tree
+  params:
+    max_depth: 1
+
+evaluation:
+  beta: [0.5, 1.0, 2.0]
+  weights: [1.0, 4.0, 16.0]

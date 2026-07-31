@@ -1,0 +1,45 @@
+# The headline problem, restricted to adequately completed reports.
+#
+# Blank fields are not blank at random: a collision that hurt somebody gets a
+# thorough report, one that bent a bumper gets a cursory one. A model with
+# access to sparse records is partly reading the thoroughness of the paperwork,
+# which is available to it and useless for prevention.
+#
+# Capping the blanks at one removes the steep end of that channel — everything
+# from two blanks upward, where the share of uninjured outcomes runs from 0.93
+# to 1.00 — while keeping the large majority of records and almost all of the
+# severe ones. What it costs is reported when the dataset is built.
+
+name: montreal_ternary_complete
+description: >-
+  Ternary severity classification for Montréal, 2011-2022, restricted to
+  reports with at most one blank field. Companion to montreal_ternary, isolating
+  what the collision says from what the report's completeness says.
+
+data:
+  years: [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022]
+  restrict:
+    REGION: ["Montréal (06)"]
+  target: TNRY_SEV
+  exclude_features: [YEAR]
+  max_missing_features: 1
+
+split:
+  test_size: 0.15
+  folds: 5
+  seed: 42
+  stratify: true
+
+model:
+  kind: xgboost
+  params:
+    objective: "multi:softprob"
+    eval_metric: mlogloss
+    max_depth: 6
+    n_estimators: 100
+    max_delta_step: 1
+    tree_method: hist
+
+evaluation:
+  beta: [0.5, 1.0, 2.0]
+  weights: [1.0, 4.0, 16.0]

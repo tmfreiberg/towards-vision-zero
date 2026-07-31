@@ -1,0 +1,229 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "towards-vision-zero"
+version = "0.2.0.dev0"
+description = "How much can police-report features tell us about traffic accident severity? An investigation of the predictability ceiling in Quebec SAAQ collision data."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [{ name = "Tristan Freiberg" }]
+keywords = ["towards-vision-zero", "vision-zero", "saaq", "bayes-error", "calibration"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Natural Language :: French",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Typing :: Typed",
+]
+
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "pyarrow>=16.0",              # Parquet intermediate
+    "scikit-learn>=1.5",
+    "xgboost>=2.1",
+    "scipy>=1.14",
+    "matplotlib>=3.9",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "pyyaml>=6.0",                # bilingual codebook
+    "typer>=0.12",
+    "rich>=13.7",
+]
+
+# PEP 735 dependency groups. These are development-time only and are
+# deliberately not extras: nothing installing this package as a library should
+# be offered a `[dev]` extra.
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pytest>=8.3",
+    "pytest-cov>=5.0",
+    "pytest-randomly>=3.15",      # order-dependence is a determinism bug
+    "hypothesis>=6.111",
+    "pre-commit>=3.8",
+    "nbstripout>=0.7",
+    "pandas-stubs>=2.2",
+    "types-pyyaml>=6.0",
+]
+docs = [
+    "jupyter>=1.1",               # Quarto's Python execution engine
+    "nbformat>=5.10",
+    "nbclient>=0.10",
+]
+
+[project.urls]
+Repository = "https://github.com/tmfreiberg/towards-vision-zero"
+Documentation = "https://tmfreiberg.github.io/towards-vision-zero"
+
+[project.scripts]
+tvz = "vision_zero.cli:app"
+
+[tool.hatch.build.targets.wheel]
+# Non-Python files inside the package directory — notably the YAML codebook —
+# are included automatically by this target.
+packages = ["src/vision_zero"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+# ---------------------------------------------------------------------------
+# ruff — lint and format.
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+extend-exclude = [
+    "_freeze",
+    # Legacy trees, retained only until the code that replaces them lands.
+    # Remove these entries once the directories are gone.
+    "scripts",
+    "streamlit",
+    "notebooks",
+    "legacy_src",
+]
+# Without this, ruff lints excluded files anyway when paths are passed
+# explicitly — which is exactly how pre-commit invokes it.
+force-exclude = true
+
+[tool.ruff.lint]
+select = [
+    "F",     # pyflakes            — undefined and possibly-unbound names
+    "E",     # pycodestyle errors  — includes E722, no bare except
+    "W",     # pycodestyle warnings
+    "I",     # isort
+    "N",     # pep8-naming
+    "UP",    # pyupgrade           — Union[X, None] -> X | None
+    "B",     # bugbear             — mutable defaults, loop-variable binding
+    "A",     # builtins shadowing
+    "C4",    # comprehensions
+    "DTZ",   # naive datetimes
+    "T20",   # flake8-print        — no print() outside the CLI
+    "PT",    # pytest style
+    "RET",   # return consistency
+    "SIM",   # simplify
+    "ARG",   # unused arguments
+    "PTH",   # prefer pathlib over os.path
+    "PD",    # pandas-vet          — ambiguous DataFrame indexing and chaining
+    "NPY",   # numpy legacy random, etc.
+    "RUF",   # ruff-specific
+    "D",     # pydocstyle
+    "ANN",   # annotation completeness
+    "TRY",   # exception antipatterns
+    "ERA",   # commented-out code
+]
+ignore = [
+    "D107",    # __init__ docstring — covered by the class docstring
+    "D203",    # incompatible with D211
+    "D213",    # incompatible with D212
+    "ANN401",  # Any is occasionally correct at library boundaries
+    "TRY003",  # long messages in raises are good messages
+    "COM812",  # conflicts with the formatter
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "D",       # test names carry the documentation
+    "ANN",
+    "N803",    # `X` for a design matrix, as everywhere else
+    "N806",
+    "PLR2004", # magic values are the point of a test
+    "S101",
+]
+"src/vision_zero/cli.py" = ["T20"]   # the CLI is allowed to write to stdout
+# `X` for a design matrix and `y` for a target vector is universal in
+# scikit-learn and everything written against it. Renaming to satisfy a casing
+# rule would make this code less readable, not more.
+"src/vision_zero/modeling/*.py" = ["N803", "N806"]
+"src/vision_zero/evaluation/*.py" = ["N803", "N806"]
+"src/vision_zero/ceiling/*.py" = ["N803", "N806"]
+# `Variable.values` is the codebook's documented-value mapping. pandas-vet reads
+# every `.values` as the deprecated DataFrame accessor.
+"src/vision_zero/export.py" = ["N803", "N806", "PD011"]
+"tools/*.py" = ["T20"]              # these are scripts; printing is the output
+"conftest.py" = ["D", "ANN"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["vision_zero"]
+
+[tool.ruff.format]
+docstring-code-format = true
+# Markdown under `docs/` may quote code that must not be normalised.
+exclude = ["docs/**"]
+
+# ---------------------------------------------------------------------------
+# mypy — strict, with no ratchet: retrofitting strictness is the expensive path.
+# ---------------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src", "tests"]
+strict = true
+warn_unreachable = true
+warn_no_return = true
+disallow_any_generics = true
+show_error_codes = true
+pretty = true
+plugins = ["pydantic.mypy"]
+
+# Comparisons between non-overlapping types are always False and always a bug.
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = ["xgboost.*", "sklearn.*", "matplotlib.*", "scipy.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+# ---------------------------------------------------------------------------
+# pytest.
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+# Coverage is reported on every run but only *enforced* by `make test` and CI.
+# A subset run — a single file, or `-m requires_data` — measures the package
+# against a handful of tests and would otherwise fail on coverage alone.
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+    "--cov=vision_zero",
+    "--cov-report=term-missing:skip-covered",
+]
+markers = [
+    "slow: takes more than a second",
+    "requires_data: needs the full SAAQ CSVs; skipped when absent",
+]
+filterwarnings = ["error", "ignore::DeprecationWarning:xgboost.*"]
+
+[tool.coverage.run]
+branch = true
+source = ["src/vision_zero"]
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+]

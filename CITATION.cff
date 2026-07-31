@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+title: >-
+  Towards Vision Zero: the predictability ceiling for traffic
+  accident severity in Quebec SAAQ collision data
+message: Please cite this repository if you use it.
+type: software
+authors:
+  - family-names: Freiberg
+    given-names: Tristan
+repository-code: https://github.com/tmfreiberg/towards-vision-zero
+license: MIT
+abstract: >-
+  An investigation into how much the features recorded on Quebec
+  police accident reports can tell us about collision severity.
+  The analysis estimates an upper bound on achievable
+  classification accuracy from the empirical label distribution
+  within identical feature vectors, and a lower bound on error
+  from mutual information via Fano's inequality, and argues that
+  the resulting ceiling is a property of the data rather than of
+  the model class or the quantity of training data.
+keywords:
+  - road safety
+  - Vision Zero
+  - Bayes error rate
+  - calibration
+  - SAAQ
+references:
+  - type: data
+    title: Rapports d'accident
+    authors:
+      - name: Société de l'assurance automobile du Québec
+        alias: SAAQ
+    year: 2017
+    url: https://www.donneesquebec.ca/recherche/dataset/rapports-d-accident
+    notes: >-
+      SOCIÉTÉ DE L'ASSURANCE AUTOMOBILE DU QUÉBEC (SAAQ). Rapports d'accident,
+      [Jeu de données], dans Données Québec, 2017, mis à jour le 18 décembre
+      2023. https://www.donneesquebec.ca/recherche/dataset/rapports-d-accident,
+      (consulté le 13 mars 2024).
+
+      Données issues des rapports d'accident remplis par les policiers, incluant
+      notamment le moment, la gravité de l'accident de même que le type des
+      véhicules impliqués.

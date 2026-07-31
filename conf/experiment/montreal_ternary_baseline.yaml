@@ -1,0 +1,33 @@
+# The same problem under a linear model.
+#
+# Exists to support the claim that the ceiling is a property of the data rather
+# than of the estimator: if a linear model and a boosted ensemble land in the
+# same place, capacity is not what is binding.
+
+name: montreal_ternary_baseline
+description: >-
+  Ternary severity classification for Montréal under multinomial logistic
+  regression, for comparison against the boosted-tree result.
+
+data:
+  years: [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022]
+  restrict:
+    REGION: ["Montréal (06)"]
+  target: TNRY_SEV
+  exclude_features: [YEAR]
+
+split:
+  test_size: 0.15
+  folds: 5
+  seed: 42
+  stratify: true
+
+model:
+  kind: logistic
+  params:
+    max_iter: 1000
+    solver: saga
+
+evaluation:
+  beta: [0.5, 1.0, 2.0]
+  weights: [1.0, 4.0, 16.0]

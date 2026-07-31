@@ -1,0 +1,1751 @@
+schema_version: 1
+dataset: saaq
+source:
+  publisher: Société de l'assurance automobile du Québec
+  url: https://www.donneesquebec.ca/recherche/dataset/rapports-d-accident
+  accessed: '2024-03-13'
+languages:
+  - en
+  - fr
+variables:
+  YEAR:
+    source_column: AN
+    label:
+      en: Year
+      fr: Année
+    type: categorical
+    summary:
+      en: Year of accident (YYYY).
+      fr: Année de l'accident (AAAA).
+  ASPECT:
+    source_column: CD_ASPCT_ROUTE
+    label:
+      en: Road alignment
+      fr: Aspect de la route
+    type: categorical
+    summary:
+      en: Appearance of the road at the scene of the accident at the time of impact and in
+        its immediate surroundings depending on the field of vision of a driver seated at
+        the wheel of their vehicle.
+      fr: Aspect de la route sur le lieu de l'accident au moment de l'impact et dans son entourage
+        immédiat en fonction du champ de vision d'un conducteur assis au volant de son véhicule.
+    values:
+      Straight:
+        label:
+          en: Straight
+          fr: Droit
+        gloss:
+          en: Roadway where the direction of traffic is relatively straight.
+          fr: Chaussée où la direction de la circulation est relativement droite.
+        short:
+          en: Straight
+          fr: Droit
+        code: 0
+      Curve:
+        label:
+          en: Curve
+          fr: Courbe
+        gloss:
+          en: Roadway where the direction of traffic turns to the left or right.
+          fr: Chaussée où la direction de la circulation tourne vers la gauche ou vers la
+            droite.
+        short:
+          en: Curve
+          fr: Courbe
+        code: 1
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  PUB_PRIV_RD:
+    source_column: CD_CATEG_ROUTE
+    label:
+      en: Road category
+      fr: Catégorie de route
+    type: categorical
+    summary:
+      en: Category of road on which the first physical event (impact) occurred.
+      fr: Catégorie de route sur laquelle le premier fait physique (impact) s'est produit.
+    values:
+      '1':
+        label:
+          en: '1'
+          fr: '1'
+        gloss:
+          en: 'Public road. Examples: numbered road, ramp, highway collector, service road,
+            main artery, residential street, path, row, alley.'
+          fr: 'Chemin public. Exemples: route numérotée, bretelle, collecteur d''autoroute,
+            voie de service, artère principale, rue résidentielle, chemin, rang, ruelle.'
+        short:
+          en: Public
+          fr: Chemin public
+        code: 0
+      '2':
+        label:
+          en: '2'
+          fr: '2'
+        gloss:
+          en: 'Off public roads. Examples: parking lot, private land, private road, forest
+            road, marked trail.'
+          fr: 'Hors chemin public. Exemples: terrain de stationnement, terrain privé, chemin
+            privé, chemin forestier, sentier balisé.'
+        short:
+          en: Private
+          fr: Hors chemin public
+        code: 1
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  WEATHER:
+    source_column: CD_COND_METEO
+    label:
+      en: Weather
+      fr: Conditions météorologiques
+    type: categorical
+    summary:
+      en: 'Meteorological conditions: Atmospheric conditions present during the accident.'
+      fr: 'Conditions météorologiques: Conditions atmosphériques présentes lors de l''accident.'
+    values:
+      '11':
+        label:
+          en: '11'
+          fr: '11'
+        gloss:
+          en: Clear. Total absence of clouds or presence of clouds which does not have the
+            effect of darkening or making vision less distinct.
+          fr: Clair. Absence totale de nuages ou présence de nuages qui n'a pas pour effet
+            d'assombrir ou de rendre la vision moins distincte.
+        short:
+          en: Clear
+          fr: Clair
+        code: 0
+      '12':
+        label:
+          en: '12'
+          fr: '12'
+        gloss:
+          en: Overcast (cloudy/dark). Sky covered with dark, thick clouds which have the effect
+            of darkening and making vision less distinct.
+          fr: Couvert (nuageux/sombre). Ciel couvert de nuages sombres et épais ayant pour
+            effet d'assombrir et de rendre la vision moins distincte.
+        short:
+          en: Overcast
+          fr: Couvert (nuageux/sombre)
+        code: 1
+      '13':
+        label:
+          en: '13'
+          fr: '13'
+        gloss:
+          en: Fog/haze. "Opaque white smoke" formed from very small water droplets suspended
+            in the air.
+          fr: Brouillard/brume. « Fumée blanche opaque » formée de très petites gouttelettes
+            d'eau en suspension dans l'air.
+        short:
+          en: Fog/haze
+          fr: Brouillard/brume
+        code: 2
+      '14':
+        label:
+          en: '14'
+          fr: '14'
+        gloss:
+          en: Rain/drizzle. Regular and continuous fall of water droplets coming from the
+            clouds.
+          fr: Pluie/bruine. Tombée régulière et continue de gouttelettes d'eau venant des
+            nuages.
+        short:
+          en: Rain/drizzle
+          fr: Pluie/bruine
+        code: 3
+      '15':
+        label:
+          en: '15'
+          fr: '15'
+        gloss:
+          en: Downpour (heavy rain). Sudden and heavy rain.
+          fr: Averse (pluie forte). Pluie soudaine et abondante.
+        short:
+          en: Downpour
+          fr: Averse (pluie forte)
+        code: 4
+      '16':
+        label:
+          en: '16'
+          fr: '16'
+        gloss:
+          en: Strong wind (no blowing snow, no rain). Air movement which has the effect of
+            making a vehicle less stable on the road.
+          fr: Vent fort (pas de poudrerie, pas de pluie). Déplacement d'air qui a pour effet
+            de rendre un véhicule moins stable sur la route.
+        short:
+          en: Strong wind
+          fr: Vent fort
+        code: 5
+      '17':
+        label:
+          en: '17'
+          fr: '17'
+        gloss:
+          en: Snow/hail. Falling water droplets crystallized in the form of snow or hail.
+          fr: Neige/grêle. Tombée de gouttelettes d'eau cristallisées sous forme de neige
+            ou de grêle.
+        short:
+          en: Snow/hail
+          fr: Neige/grêle
+        code: 6
+      '18':
+        label:
+          en: '18'
+          fr: '18'
+        gloss:
+          en: Blowing snow/snowstorm. Windblown snow (often gusty) or snowfall accompanied
+            by strong wind.
+          fr: Poudrerie/tempête. de neige Neige chassée par le vent (souvent en rafales) ou
+            chute de neige accompagnée d'un vent violent.
+        short:
+          en: Blowing snow/snowstorm
+          fr: Poudrerie/tempête
+        code: 7
+      '19':
+        label:
+          en: '19'
+          fr: '19'
+        gloss:
+          en: Black ice. A layer of ice, generally very thin, which forms when supercooled
+            rain falls in contact with solid bodies below zero degrees Celsius.
+          fr: Verglas. Couche de glace, généralement très mince, qui se forme lorsque tombe
+            une pluie surfondue venant en contact avec des corps solides au-dessous de zéro
+            degré Celsius.
+        short:
+          en: Black ice
+          fr: Verglas
+        code: 8
+      '99':
+        label:
+          en: '99'
+          fr: '99'
+        gloss:
+          en: Other. Any atmospheric condition, other than those described above.
+          fr: Autre. Toute condition atmosphérique, autre que celles décrites précédemment.
+        short:
+          en: Other
+          fr: Autre
+        code: 9
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  RD_CONFG:
+    source_column: CD_CONFG_ROUTE
+    label:
+      en: Road configuration
+      fr: Configuration de la route
+    type: categorical
+    summary:
+      en: 'Road configuration: Lane characteristics. If the accident takes place at an intersection,
+        the most important street of this intersection is described.'
+      fr: 'Configuration de la route: Caractéristiques des voies. Si l''accident a lieu à
+        une intersection, la rue la plus importante de cette intersection est décrite.'
+    values:
+      '1':
+        label:
+          en: '1'
+          fr: '1'
+        gloss:
+          en: One-way. Vehicle traffic is authorized in one direction only, indicated by an
+            arrow.
+          fr: Sens unique. La circulation des véhicules est autorisée dans une direction seulement,
+            indiquée par une flèche.
+        short:
+          en: One-way
+          fr: Sens unique
+        code: 0
+      '23':
+        label:
+          en: '23'
+          fr: '23'
+        gloss:
+          en: Two-way. Vehicles move in both directions.
+          fr: Deux sens. Les véhicules se déplacent dans les deux directions.
+        short:
+          en: Two-way
+          fr: Deux sens
+        code: 1
+      '45':
+        label:
+          en: '45'
+          fr: '45'
+        gloss:
+          en: Separated by layout. Traffic flows are separated by a physical layout.
+          fr: Séparée par aménagement. Les courants de circulation sont séparés par un aménagement
+            physique.
+        short:
+          en: Sep by layout
+          fr: Séparée par aménagement
+        code: 2
+      '9':
+        label:
+          en: '9'
+          fr: '9'
+        gloss:
+          en: 'Other. Any configuration, other than those mentioned previously. Examples:
+            markers, left turn lane in both directions.'
+          fr: 'Autre. Toute configuration, autre que celles mentionnées précédemment. Exemples:
+            balises, voie de virage à gauche dans les deux sens. '
+        short:
+          en: Other
+          fr: Autre
+        code: 3
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  LIGHT:
+    source_column: CD_ECLRM
+    label:
+      en: Lighting
+      fr: Éclairement
+    type: ordinal
+    summary:
+      en: 'Illumination: Degree of clarity of the premises at the time of the accident. Illumination
+        refers to two periods of a day, day and night.'
+      fr: 'Éclairement: Degré de clarté des lieux au moment de l''accident. L''éclairement
+        fait référence à deux périodes d''une journée, soit le jour et la nuit.'
+    values:
+      '1':
+        label:
+          en: '1'
+          fr: '1'
+        gloss:
+          en: 'Day and clarity. Day: Period between half an hour before sunrise and half an
+            hour after sunset. Clarity: Refers to the period between sunrise and sunset.'
+          fr: 'Jour et clarté. Jour: Période comprise entre une demi-heure avant le lever
+            du soleil et une demi-heure après son coucher. Clarté: Fait référence à la période
+            comprise entre le lever du soleil et son coucher.'
+        short:
+          en: Clear day
+          fr: Jour et clarté
+        code: 3
+      '2':
+        label:
+          en: '2'
+          fr: '2'
+        gloss:
+          en: 'Day and half darkness. Day: Period between half an hour before sunrise and
+            half an hour after sunset. Half-darkness: Refers to the period between night and
+            sunrise and the period between sunset and night.'
+          fr: 'Jour et demi-obscurité. Jour: Période comprise entre une demi-heure avant le
+            lever du soleil et une demi-heure après son coucher. Demi-obscurité: Fait référence
+            à la période entre la nuit et le lever du soleil et à la période entre le coucher
+            du soleil et la nuit.'
+        short:
+          en: Dawn/dusk
+          fr: Jour et demi-obscurité
+        code: 2
+      '3':
+        label:
+          en: '3'
+          fr: '3'
+        gloss:
+          en: 'Night and lit path. Night: Period between half an hour after sunset and one
+            half an hour before getting up. Illuminated path: Path along which lighting equipment
+            is installed which was operating at the time of the accident.'
+          fr: 'Nuit et chemin éclairé. Nuit: Période comprise entre une demi-heure après le
+            coucher du soleil et une demi-heure avant son lever. Chemin éclairé: Chemin le
+            long duquel sont installés des équipements d''éclairage qui fonctionnaient au
+            moment de l''accident.'
+        short:
+          en: Lit path
+          fr: Nuit et chemin éclairé
+        code: 1
+      '4':
+        label:
+          en: '4'
+          fr: '4'
+        gloss:
+          en: 'Night and unlit path. Night: Period between half an hour after sunset and one
+            half an hour before getting up. Unlit path: Path along which, in the immediate
+            area of the accident, no lighting equipment is installed or the equipment in place
+            was not functioning.'
+          fr: 'Nuit et chemin non éclairé. Nuit: Période comprise entre une demi-heure après
+            le coucher du soleil et une demi-heure avant son lever. Chemin non éclairé: Chemin
+            le long duquel, dans la région immédiate de l''accident, aucun équipement d''éclairage
+            n''est installé ou l''équipement en place ne fonctionnait pas.'
+        short:
+          en: Unlit path
+          fr: Nuit et chemin non éclairé
+        code: 0
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  ZONE:
+    source_column: CD_ENVRN_ACCDN
+    label:
+      en: Surroundings
+      fr: Environnement
+    type: categorical
+    summary:
+      en: 'Zone: Dominant activity in the sector where the accident occurred.'
+      fr: 'Environnement: Activité dominante du secteur où l''accident s''est produit.'
+    values:
+      '1':
+        label:
+          en: '1'
+          fr: '1'
+        gloss:
+          en: School. Immediate area of an educational institution.
+          fr: Scolaire. Région immédiate d'un établissement d'enseignement.
+        short:
+          en: School
+          fr: Scolaire
+        code: 0
+      '2':
+        label:
+          en: '2'
+          fr: '2'
+        gloss:
+          en: Residential. Mainly residential sector.
+          fr: Résidentiel. Secteur domiciliaire principalement.
+        short:
+          en: Residential
+          fr: Résidentiel
+        code: 1
+      '3':
+        label:
+          en: '3'
+          fr: '3'
+        gloss:
+          en: Business/commercial. Sector where the main activity is commercial, administrative
+            or business.
+          fr: Affaires / commercial. Secteur où l'activité principale est d'ordre commercial,
+            administratif ou d'affaires.
+        short:
+          en: Business/commercial
+          fr: Affaires/commercial
+        code: 2
+      '4':
+        label:
+          en: '4'
+          fr: '4'
+        gloss:
+          en: Industrial / manufacturing. Sector where the main activity is industrial, manufacturing.
+          fr: Industriel / manufacturier. Secteur où l'activité principale est d'ordre industriel,
+            manufacturier.
+        short:
+          en: Industrial
+          fr: Industriel
+        code: 3
+      '5':
+        label:
+          en: '5'
+          fr: '5'
+        gloss:
+          en: Rural. Sector outside the limits of cities, towns and villages, except the forestry
+            sector.
+          fr: Rural. Secteur hors des limites des cités, villes et villages, sauf le secteur
+            forestier.
+        short:
+          en: Rural
+          fr: Rural
+        code: 4
+      '6':
+        label:
+          en: '6'
+          fr: '6'
+        gloss:
+          en: Forest road. Sector where the main activity is logging or forestry, even if
+            there is found some homes.
+          fr: Forestier. Secteur où l'activité principale est l'exploitation forestière ou
+            forêt, même si on y trouve quelques habitations.
+        short:
+          en: Forest
+          fr: Forestier
+        code: 5
+      '9':
+        label:
+          en: '9'
+          fr: '9'
+        gloss:
+          en: Other (e.g. lake, recreational, park, campsite). Any dominant activity in the
+            sector, other than those mentioned previously.
+          fr: Autre (ex. lac, récréatif, parc, camping). Toute activité dominante du secteur,
+            autre que celles mentionnées précédemment.
+        short:
+          en: Other
+          fr: Autre
+        code: 6
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  RD_COND:
+    source_column: CD_ETAT_SURFC
+    label:
+      en: Road surface
+      fr: État de la surface
+    type: categorical
+    summary:
+      en: Condition of the road surface during the accident.
+      fr: État de la surface de roulement lors de l'accident.
+    values:
+      '11':
+        label:
+          en: '11'
+          fr: '11'
+        gloss:
+          en: Dry. Surface that has not received any liquid or any material that affects tire
+            grip.
+          fr: Sèche. Surface qui n'a reçu aucun liquide ou aucun matériau nuisant à l'adhérence
+            des pneus.
+        short:
+          en: Dry
+          fr: Sèche
+        code: 0
+      '12':
+        label:
+          en: '12'
+          fr: '12'
+        gloss:
+          en: Wet. Surface which has received a liquid likely to reduce adhesion between the
+            vehicle and the surface (other than an oily or greasy substance).
+          fr: Mouillée. Surface qui a reçu un liquide de nature à diminuer l'adhérence entre
+            le véhicule et la surface (autre qu'une substance huileuse ou graisseuse).
+        short:
+          en: Wet
+          fr: Mouillée
+        code: 1
+      '13':
+        label:
+          en: '13'
+          fr: '13'
+        gloss:
+          en: Water accumulation (hydroplaning). Surface where a film of water between the
+            road surface and the tires causes loss complete grip of a vehicle.
+          fr: Accumulation d'eau (aquaplanage). Surface où une pellicule d'eau entre la chaussée
+            et les pneus entraîne la perte complète d'adhérence d'un véhicule.
+        short:
+          en: Water acc
+          fr: Acc. d'eau
+        code: 2
+      '14':
+        label:
+          en: '14'
+          fr: '14'
+        gloss:
+          en: Sand, gravel on the roadway. Surface covered with sand or gravel.
+          fr: 'Sable, gravier sur la chaussée. Surface couverte de sable ou de gravier. '
+        short:
+          en: Sand/gravel
+          fr: Sable/gravier
+        code: 3
+      '15':
+        label:
+          en: '15'
+          fr: '15'
+        gloss:
+          en: Slush/sleet. Surface that is covered with wet snow or slush.
+          fr: Gadoue/neige fondante. Surface qui est couverte de neige mouillée ou de neige
+            fondante.
+        short:
+          en: Slush/sleet
+          fr: Gadoue/neige fondante
+        code: 4
+      '16':
+        label:
+          en: '16'
+          fr: '16'
+        gloss:
+          en: Snowy. Surface that is covered with snow.
+          fr: Enneigée. Surface qui est couverte de neige.
+        short:
+          en: Snowy
+          fr: Enneigée
+        code: 5
+      '17':
+        label:
+          en: '17'
+          fr: '17'
+        gloss:
+          en: Hard snow. Surface covered with snow that is compacted and hardened.
+          fr: Neige durcie. Surface couverte de neige qui est compactée et qui a durci.
+        short:
+          en: Hard snow
+          fr: Neige durcie
+        code: 6
+      '18':
+        label:
+          en: '18'
+          fr: '18'
+        gloss:
+          en: Frozen. Surface that has lost its grip following the appearance of ice.
+          fr: 'Glacée. Surface qui a perdu son adhérence à la suite de l''apparition de glace. '
+        short:
+          en: Frozen
+          fr: Glacée
+        code: 7
+      '19':
+        label:
+          en: '19'
+          fr: '19'
+        gloss:
+          en: Muddy. Surface of a dirt road following rain or any other surface that has lost
+            its grip due to the presence of mud.
+          fr: Boueuse. Surface d'un chemin de terre à la suite d'une pluie ou toute autre
+            surface qui a perdu de son adhérence par la présence de boue.
+        short:
+          en: Muddy
+          fr: Boueuse
+        code: 8
+      '20':
+        label:
+          en: '20'
+          fr: '20'
+        gloss:
+          en: Oily. Presence of oil or greasy product on the road.
+          fr: Huileuse. Présence d'huile ou de produit graisseux sur la chaussée.
+        short:
+          en: Oily
+          fr: Huileuse
+        code: 9
+      '99':
+        label:
+          en: '99'
+          fr: '99'
+        gloss:
+          en: Other. Any surface condition, other than those described previously.
+          fr: Autre. Tout état de la surface, autre que ceux décrits précédemment.
+        short:
+          en: Other
+          fr: Autre
+        code: 10
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  ACCDN_TYPE:
+    source_column: CD_GENRE_ACCDN
+    label:
+      en: Type of collision
+      fr: Genre d'accident
+    type: categorical
+    summary:
+      en: 'Type of accident: Used to indicate the nature of the accident and the first physical
+        event (impact).'
+      fr: 'Genre d''accident: Sert à indiquer la nature de l''accident et le premier fait
+        physique (impact).'
+    values:
+      vehicle:
+        label:
+          en: vehicle
+          fr: véhicule
+        gloss:
+          en: 'Collision with road vehicle. Road vehicle: automobile or light truck, truck,
+            road tractor, tool vehicle, equipment vehicle, bus, minibus, taxi, emergency vehicle,
+            motorcycle, moped, recreational vehicle, snowmobile, VHR, motorcycle covered by
+            the VHR law.'
+          fr: 'Collision avec véhicule routier. Véhicule routier: automobile ou camion léger,
+            camion, tracteur routier, véhicule outil, véhicule d''équipement, autobus, minibus,
+            taxi, véhicule d''urgence, motocyclette, cyclomoteur, véhicule récréatif, motoneige,
+            VHR, motocyclette visée par la loi VHR.'
+        short:
+          en: veh
+          fr: véhicule
+        code: 0
+      pedestrian:
+        label:
+          en: pedestrian
+          fr: piéton
+        gloss:
+          en: Collision with pedestrian. Any person who walks, pulls, pushes an object or
+            is on or in this object. Any person who uses equipment that is not authorized
+            to travel on a public road is considered a pedestrian.
+          fr: Collision avec piéton. Toute personne qui circule à pied, tire, pousse un objet
+            ou se trouve sur ou dans cet objet. Toute personne qui utilise un équipement qui
+            n'est pas autorisé à circuler sur un chemin public est assimilée à un piéton.
+        short:
+          en: ped
+          fr: piéton
+        code: 1
+      cyclist:
+        label:
+          en: cyclist
+          fr: cycliste
+        gloss:
+          en: Collision with cyclist. Any person who rides a bicycle (assisted or not), tricycle,
+            unicycle or quadricycle.
+          fr: Collision avec cycliste. Toute personne qui circule à bicyclette (assistée ou
+            non), en tricycle, en monocycle ou en quadricycle.
+        short:
+          en: cyc
+          fr: cycliste
+        code: 2
+      animal:
+        label:
+          en: animal
+          fr: animal
+        gloss:
+          en: Collision with animal. Domestic or wild animal.
+          fr: Collision avec animal. Animal domestique ou sauvage.
+        short:
+          en: anim
+          fr: animal
+        code: 3
+      fixed object:
+        label:
+          en: fixed object
+          fr: objet fixe
+        gloss:
+          en: |2-
+
+            * Lamp: Fixed support used to support lighting equipment.
+            * Support/signal light: Support used to permanently support traffic signs or traffic lights.
+            * Pole (public service): Fixed support used to support public utility equipment, other than a street lamp or a traffic light.
+            * Tree: Any species of tree, excluding hedges.
+            * Crash barrier section: Section of a protective device made of corrugated iron, concrete (New Jersey) or steel, used to retain road vehicles leaving the roadway.
+            * Impact attenuator: Safety device installed in front of fixed obstacles along a road to reduce bodily injury and property damage when a vehicle leaves the road in front of the obstacle.
+            * End of guardrail: End of guardrail, excluding impact attenuators.
+            * Pillar (bridge/tunnel): Part of a structure (bridge, tunnel, viaduct) which supports the load.
+            * Snow drift: Snow accumulation.
+            * Building/edifice/wall: Includes, among others, any construction used to shelter individuals, animals or things.
+            * Curb/sidewalk: Strip that limits the edge of the roadway or shoulder, or raised path running along a street and reserved for pedestrians.
+            * Fire hydrant: Piece of equipment serving as a water point and generally used to fight a fire.
+            * Fence/barrier: Enclosure which demarcates a space. Also includes hedges.
+            * Ditch: Trench or canal built along a road, used for the flow of water.
+            * Rock wall: Rock wall along a road.
+            * Culvert: Drainage pipe, generally made of concrete or metal, used to pass water under a road, an entrance, an access.
+            * Other fixed object: Any object involved in a collision, other than those described previously.
+          fr: |2-
+
+            * Lampadaire: Support fixe servant à soutenir des équipements d'éclairage.
+            * Support/feu de signalisation: Support servant à soutenir de façon permanente des panneaux de signalisation ou des feux de signalisation.
+            * Poteau (service public): Support fixe servant à soutenir des équipements d'utilité publique, autre qu'un lampadaire ou un feu de signalisation.
+            * Arbre: Toute espèce d'arbres, excluant les haies.
+            * Section de glissière de sécurité: Section d'un dispositif de protection en tôle ondulée, en béton (New Jersey) ou en acier, servant à retenir les véhicules routiers quittant la chaussée.
+            * Atténuateur d'impact: Dispositif de sécurité installé devant des obstacles fixes le long d'une route pour réduire les préjudices corporels et les dommages matériels, lorsqu'un véhicule quitte la route devant l'obstacle.
+            * Extrémité de glissière de sécurité: Bout de la glissière, excluant les atténuateurs d'impact.
+            * Pilier (pont/tunnel): Partie d'une structure (pont, tunnel, viaduc) qui en supporte la charge.
+            * Amoncellement de neige: Accumulation de neige.
+            * Bâtiment/édifice/mur: Comprend, entre autres, toute construction servant à abriter des individus, des animaux ou des choses.
+            * Bordure/trottoir: Bande qui limite le bord de la chaussée ou l'accotement, ou chemin surélevé longeant une rue et réservé aux piétons.
+            * Borne-fontaine: Pièce d'équipement servant de point d'eau et généralement utilisée pour combattre un incendie.
+            * Clôture/barrière: Enceinte qui délimite un espace. Inclut aussi les haies.
+            * Fossé: Tranchée ou canal aménagé le long d'une route, servant à l'écoulement de l'eau.
+            * Paroi rocheuse: Mur de roc longeant une route.
+            * Ponceau: Conduite de drainage, généralement en béton ou en métal, servant au passage de l'eau sous une route, une entrée, un accès.
+            * Autre objet fixe: Tout objet impliqué dans une collision, autre que ceux décrits précédemment.
+        short:
+          en: fxd obj
+          fr: objet fixe
+        code: 4
+      no collision:
+        label:
+          en: no collision
+          fr: sans collision
+        gloss:
+          en: |2-
+
+            * Rollover: When a vehicle has overturned or rolled over.
+            * Rollover: When a vehicle ends up on one of its sides, without having rolled over.
+            * Submersion/watercourse: When a vehicle has plunged into water or finds itself in a watercourse (e.g.: river, lake).
+            * Fire/explosion: When a vehicle catches fire or explodes.
+            * Leaves the roadway: When a vehicle leaves the running surface following the loss of driver control.
+            * Other: Any non-collision event, other than those described previously.
+          fr: |2-
+
+            * Capotage: Lorsqu'un véhicule a culbuté ou capoté.
+            * Renversement: Lorsqu'un véhicule se retrouve sur un de ses côtés, sans avoir capoté.
+            * Submersion/cours d'eau: Lorsqu'un véhicule a plongé dans l'eau ou qu'il se retrouve dans un cours d'eau (ex.: rivière, lac).
+            * Feu/explosion: Lorsqu'un véhicule a pris feu ou a explosé.
+            * Quitte la chaussée: Lorsqu'un véhicule quitte la surface de roulement à la suite de la perte de contrôle du conducteur.
+            * Autre: Tout événement sans collision, autre que ceux décrits précédemment.
+        short:
+          en: no coll
+          fr: sans collision
+        code: 5
+      other:
+        label:
+          en: other
+          fr: autre
+        gloss:
+          en: 'Other type of collision. Any kind of collision, other than those described
+            above. Examples: a collision with a train, a temporary obstacle or an object projected/detached.'
+          fr: 'Autre genre de collision. Tout genre de collision, autre que ceux décrits précédemment.
+            Exemples: une collision avec un train, un obstacle temporaire ou un objet projeté/détaché.'
+        short:
+          en: oth
+          fr: autre
+        code: 6
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  LONG_LOC:
+    source_column: CD_LOCLN_ACCDN
+    label:
+      en: Location along road
+      fr: Localisation longitudinale
+    type: categorical
+    summary:
+      en: Longitudinal location (along the road) of the first physical event (impact).
+      fr: Localisation longitudinale (le long de la route) du premier fait physique (impact).
+    values:
+      '12':
+        label:
+          en: '12'
+          fr: '12'
+        gloss:
+          en: At an intersection (less than 5 meters) or in a roundabout.
+          fr: En intersection (moins de 5 mètres) ou dans un carrefour giratoire.
+        short:
+          en: Int'n/roundabout
+          fr: En intersection
+        code: 0
+      '33':
+        label:
+          en: '33'
+          fr: '33'
+        gloss:
+          en: Near an intersection/roundabout.
+          fr: Près d'une intersection/carrefour giratoire.
+        short:
+          en: Near int'n/roundabout
+          fr: Près d'une intersection
+        code: 1
+      '34':
+        label:
+          en: '34'
+          fr: '34'
+        gloss:
+          en: Between intersections (100 meters and more).
+          fr: Entre intersections (100 mètres et +).
+        short:
+          en: Btwn int'ns
+          fr: Entre intersections
+        code: 2
+      '40':
+        label:
+          en: '40'
+          fr: '40'
+        gloss:
+          en: Shopping centre.
+          fr: Centre commercial.
+        short:
+          en: Shop centre
+          fr: Centre commercial
+        code: 3
+      '69':
+        label:
+          en: '69'
+          fr: '69'
+        gloss:
+          en: |2-
+
+            * Bridge (over a stream). Structure allowing a river to be crossed.
+            * Another bridge (viaduct). Structure allowing crossing of a road or rail traffic lane, or any other obstacle, other than a watercourse.
+            * Tunnel. Large section underground gallery allowing the passage of a communication route.
+            * Under a bridge or viaduct. Below a structure allowing you to cross obstacles.
+          fr: |2-
+
+            * Pont (au-dessus d'un cours d'eau). Structure permettant de traverser un cours d'eau.
+            * Autre pont (viaduc). Structure permettant de traverser une voie de circulation routière ou ferroviaire, ou tout autre obstacle, autre qu'un cours d'eau.
+            * Tunnel. Galerie souterraine de grande section permettant le passage d'une voie de communication.
+            * Sous un pont ou un viaduc. En dessous d'une structure permettant de traverser des obstacles.
+        short:
+          en: Bridge etc.
+          fr: Pont etc.
+        code: 4
+      '99':
+        label:
+          en: '99'
+          fr: '99'
+        gloss:
+          en: Others. Any location, other than those described above.
+          fr: Autres. Toute localisation, autre que celles décrites précédemment.
+        short:
+          en: Other
+          fr: autre
+        code: 5
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  RDWX:
+    source_column: CD_ZON_TRAVX_ROUTR
+    label:
+      en: Work zone
+      fr: Zone de travaux
+    type: categorical
+    summary:
+      en: Indicates that the accident took place near or in a work zone.
+      fr: Indicateur si l'accident a eu lieu près ou dans une zone de travaux.
+    values:
+      Y:
+        label:
+          en: Y
+          fr: O
+        gloss:
+          en: |2-
+
+            * Approaching the area. Area upstream of the work where drivers are notified of changes in lanes, speed reduction, passing bans, etc.
+            * In the zone. Area where there are changes to the road configuration or authorized speed to allow work, or where there is mobile work.
+          fr: |2-
+
+            * Aux approches de la zone. Zone en amont des travaux où les conducteurs sont avisés des changements de voies, de la réduction de vitesse, des interdictions de passer, etc.
+            * Dans la zone. Zone où il y a des modifications de la configuration de la route ou de la vitesse autorisée afin de permettre les travaux, ou dans laquelle il y a des travaux mobiles.
+        short:
+          en: Y
+          fr: O
+        code: 1
+    notes:
+      en: The published documentation lists only the positive value. The data carries it on
+        a small minority of records and is blank on the rest; whether a blank means 'not in
+        a work zone' or 'not recorded' cannot be determined from the documentation.
+      fr: La documentation publiée ne mentionne que la valeur positive. Les données la portent
+        sur une faible minorité d'enregistrements et sont vides pour les autres; la documentation
+        ne permet pas de déterminer si une valeur vide signifie « hors zone de travaux » ou
+        « non consigné ».
+  SEVERITY:
+    source_column: GRAVITE
+    label:
+      en: Severity
+      fr: Gravité
+    type: ordinal
+    summary:
+      en: 'Severity of the accident: Indicates the severity of the accident based on the presence
+        and condition of victims'
+      fr: 'Gravité de l''accident: Indique la gravité de l''accident en fonction de la présence
+        et de l''état des victimes.'
+    values:
+      Fatal or serious:
+        label:
+          en: Fatal or serious
+          fr: Mortel ou grave
+        gloss:
+          en: At least one victim died within 30 days following the accident or no death and
+            at least one victim seriously injured (injuries requiring hospitalization, including
+            those for which the person remains under observation in hospital).
+          fr: Au moins une victime décédée dans les 30 jours suivant l'accident ou aucun décès
+            et au moins une victime blessée gravement (blessures nécessitant l'hospitalisation,
+            incluant celles pour lesquelles la personne demeure en observation à l'hôpital).
+        short:
+          en: Fatal/serious
+          fr: Mortel/grave
+        code: 3
+      Minor:
+        label:
+          en: Minor
+          fr: Léger
+        gloss:
+          en: Only one or more victims lightly injured (injuries not requiring hospitalization
+            or observation of the person, even if they require treatment by a doctor or in
+            a hospital center).
+          fr: Seulement une ou plusieurs victimes blessées légèrement (blessures ne nécessitant
+            pas l'hospitalisation ni la mise en observation de la personne, même si elles
+            exigent des traitements chez un médecin ou dans un centre hospitalier).
+        short:
+          en: Minor
+          fr: Léger
+        code: 2
+      Material damage only:
+        label:
+          en: Material damage only
+          fr: Dommages matériels seulement
+        gloss:
+          en: No victims, and the damage assessment is above the reporting threshold (threshold
+            of $2,000 since March 2010).
+          fr: Aucune victime, et l'évaluation des dommages est supérieure au seuil de rapportage
+            (seuil de 2 000$ depuis mars 2010).
+        short:
+          en: Mat
+          fr: Mat
+        code: 1
+      Material damage below the reporting threshold:
+        label:
+          en: Material damage below the reporting threshold
+          fr: Dommages matériels inférieurs au seuil de rapportage
+        gloss:
+          en: No victims, and the assessment of damage is less than or equal to the reporting
+            threshold (threshold of $2,000 since March 2010).
+          fr: Aucune victime, et l'évaluation des dommages est inférieure ou égale au seuil
+            de rapportage (seuil de 2 000$ depuis mars 2010).
+        short:
+          en: Mat < 2000
+          fr: Mat < 2000
+        code: 0
+  HOUR:
+    source_column: HR_ACCDN
+    label:
+      en: Time of day
+      fr: Heure
+    type: categorical
+    summary:
+      en: Hour of accident. Four-hour interval, containing the actual time of the accident.
+      fr: Heure de l'accident. Intervalle de 4 heures, contenant l'heure réelle de l'accident.
+    values:
+      00:00:00-03:59:00:
+        label:
+          en: 00:00:00-03:59:00
+          fr: 00:00:00-03:59:00
+        gloss:
+          en: Between midnight and 4:00am.
+          fr: Entre minuit et 4h00.
+        short:
+          en: 00:00-04:00
+          fr: 00h00-04h00
+        code: 0
+      04:00:00-07:59:00:
+        label:
+          en: 04:00:00-07:59:00
+          fr: 04:00:00-07:59:00
+        gloss:
+          en: Between 4:00am and 8:00am.
+          fr: Entre 4h00 et 8h00.
+        short:
+          en: 04:00-08:00
+          fr: 04h00-08h00
+        code: 1
+      08:00:00-11:59:00:
+        label:
+          en: 08:00:00-11:59:00
+          fr: 08:00:00-11:59:00
+        gloss:
+          en: Between 8:00am and noon.
+          fr: Entre 8h00 et midi.
+        short:
+          en: 08:00-12:00
+          fr: 08h00-12h00
+        code: 2
+      12:00:00-15:59:00:
+        label:
+          en: 12:00:00-15:59:00
+          fr: 12:00:00-15:59:00
+        gloss:
+          en: Between noon and 4:00pm.
+          fr: Entre midi et 16h00.
+        short:
+          en: 12:00-16:00
+          fr: 12h00-16h00
+        code: 3
+      16:00:00-19:59:00:
+        label:
+          en: 16:00:00-19:59:00
+          fr: 16:00:00-19:59:00
+        gloss:
+          en: Between 4:00pm and 8:00pm.
+          fr: Entre 16h00 et 20h00.
+        short:
+          en: 16:00-20:00
+          fr: 16h00-20h00
+        code: 4
+      20:00:00-23:59:00:
+        label:
+          en: 20:00:00-23:59:00
+          fr: 20:00:00-23:59:00
+        gloss:
+          en: Between 8:00pm and midnight.
+          fr: Entre 20h00 et minuit.
+        short:
+          en: 20:00-24:00
+          fr: 20h00-24h00
+        code: 5
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  LT_TRK:
+    source_column: IND_AUTO_CAMION_LEGER
+    label:
+      en: Car or light truck
+      fr: Automobile ou camion léger
+    type: categorical
+    summary:
+      en: Indicator of at least one automobile or light truck involved in the accident.
+      fr: 'Indicateur d''au moins une automobile ou un camion léger impliqué dans l''accident. '
+    values:
+      Y:
+        label:
+          en: Y
+          fr: O
+        gloss:
+          en: Yes.
+          fr: Oui.
+        short:
+          en: Y
+          fr: O
+        code: 1
+      N:
+        label:
+          en: N
+          fr: N
+        gloss:
+          en: No.
+          fr: Non.
+        short:
+          en: N
+          fr: N
+        code: 0
+  MTRCYC:
+    source_column: IND_MOTO_CYCLO
+    label:
+      en: Motorcycle or moped
+      fr: Motocyclette ou cyclomoteur
+    type: categorical
+    summary:
+      en: Indicator of at least one motorcycle or moped involved in the accident.
+      fr: Indicateur d'au moins une motocyclette ou un cyclomoteur impliqué dans l'accident.
+    values:
+      Y:
+        label:
+          en: Y
+          fr: O
+        gloss:
+          en: Yes.
+          fr: Oui.
+        short:
+          en: Y
+          fr: O
+        code: 1
+      N:
+        label:
+          en: N
+          fr: N
+        gloss:
+          en: No.
+          fr: Non.
+        short:
+          en: N
+          fr: N
+        code: 0
+  PED:
+    source_column: IND_PIETON
+    label:
+      en: Pedestrian victim
+      fr: Victime piéton
+    type: categorical
+    summary:
+      en: Indicator of at least one pedestrian victim (injured or died) in the accident.
+      fr: Indicateur d'au moins une victime piéton (blessée ou décédée) dans l'accident.
+    values:
+      Y:
+        label:
+          en: Y
+          fr: O
+        gloss:
+          en: Yes.
+          fr: Oui.
+        short:
+          en: Y
+          fr: O
+        code: 1
+      N:
+        label:
+          en: N
+          fr: N
+        gloss:
+          en: No.
+          fr: Non.
+        short:
+          en: N
+          fr: N
+        code: 0
+  HVY_VEH:
+    source_column: IND_VEH_LOURD
+    label:
+      en: Heavy vehicle
+      fr: Véhicule lourd
+    type: categorical
+    summary:
+      en: 'Indicator of at least one heavy vehicle involved in the accident. Heavy vehicle:
+        heavy truck, road tractor, bus, school bus, minibus, tool or equipment vehicle.'
+      fr: 'Indicateur d''au moins un véhicule lourd impliqué dans l''accident. Véhicule lourd:
+        camion lourd, tracteur routier, autobus, autobus scolaire, minibus, véhicule-outil
+        ou d''équipement.'
+    values:
+      Y:
+        label:
+          en: Y
+          fr: O
+        gloss:
+          en: Yes.
+          fr: Oui.
+        short:
+          en: Y
+          fr: O
+        code: 1
+      N:
+        label:
+          en: N
+          fr: N
+        gloss:
+          en: No.
+          fr: Non.
+        short:
+          en: N
+          fr: N
+        code: 0
+  BICYC:
+    source_column: IND_VELO
+    label:
+      en: Bicycle
+      fr: Bicyclette
+    type: categorical
+    summary:
+      en: Indicator of at least one bicycle involved in the accident.
+      fr: Indicateur d'au moins une bicyclette impliquée dans l'accident.
+    values:
+      Y:
+        label:
+          en: Y
+          fr: O
+        gloss:
+          en: Yes.
+          fr: Oui.
+        short:
+          en: Y
+          fr: O
+        code: 1
+      N:
+        label:
+          en: N
+          fr: N
+        gloss:
+          en: No.
+          fr: Non.
+        short:
+          en: N
+          fr: N
+        code: 0
+  WKDY_WKND:
+    source_column: JR_SEMN_ACCDN
+    label:
+      en: Day of week
+      fr: Jour de la semaine
+    type: categorical
+    summary:
+      en: Weekday of the date of the accident.
+      fr: Jour de la semaine de la date de l'accident.
+    values:
+      WKDY:
+        label:
+          en: WKDY
+          fr: SEM
+        gloss:
+          en: Monday through Friday
+          fr: Lundi au vendredi.
+        short:
+          en: weekday
+          fr: SEM
+        code: 0
+      WKND:
+        label:
+          en: WKND
+          fr: FDS
+        gloss:
+          en: Saturday or Sunday.
+          fr: Samedi ou dimanche.
+        short:
+          en: weekend
+          fr: FDS
+        code: 1
+  MONTH:
+    source_column: MS_ACCDN
+    label:
+      en: Month
+      fr: Mois
+    type: categorical
+    summary:
+      en: Month of the accident.
+      fr: Mois de l'accident.
+    values:
+      '1':
+        label:
+          en: '1'
+          fr: '1'
+        gloss:
+          en: January
+          fr: Janvier
+        short:
+          en: Jan
+          fr: jan
+        code: 1
+      '2':
+        label:
+          en: '2'
+          fr: '2'
+        gloss:
+          en: February
+          fr: Février
+        short:
+          en: Feb
+          fr: fév
+        code: 2
+      '3':
+        label:
+          en: '3'
+          fr: '3'
+        gloss:
+          en: March
+          fr: Mars
+        short:
+          en: Mar
+          fr: mars
+        code: 3
+      '4':
+        label:
+          en: '4'
+          fr: '4'
+        gloss:
+          en: April
+          fr: Avril
+        short:
+          en: Apr
+          fr: avr
+        code: 4
+      '5':
+        label:
+          en: '5'
+          fr: '5'
+        gloss:
+          en: May
+          fr: Mai
+        short:
+          en: May
+          fr: mai
+        code: 5
+      '6':
+        label:
+          en: '6'
+          fr: '6'
+        gloss:
+          en: June
+          fr: Juin
+        short:
+          en: Jun
+          fr: juin
+        code: 6
+      '7':
+        label:
+          en: '7'
+          fr: '7'
+        gloss:
+          en: July
+          fr: Juillet
+        short:
+          en: Jul
+          fr: juil
+        code: 7
+      '8':
+        label:
+          en: '8'
+          fr: '8'
+        gloss:
+          en: August
+          fr: Août
+        short:
+          en: Aug
+          fr: août
+        code: 8
+      '9':
+        label:
+          en: '9'
+          fr: '9'
+        gloss:
+          en: September
+          fr: Septembre
+        short:
+          en: Sep
+          fr: sept
+        code: 9
+      '10':
+        label:
+          en: '10'
+          fr: '10'
+        gloss:
+          en: October
+          fr: Octobre
+        short:
+          en: Oct
+          fr: oct
+        code: 10
+      '11':
+        label:
+          en: '11'
+          fr: '11'
+        gloss:
+          en: November
+          fr: Novembre
+        short:
+          en: Nov
+          fr: nov
+        code: 11
+      '12':
+        label:
+          en: '12'
+          fr: '12'
+        gloss:
+          en: December
+          fr: Décembre
+        short:
+          en: Dec
+          fr: déc
+        code: 12
+  NUM_VEH:
+    source_column: NB_VEH_IMPLIQUES_ACCDN
+    label:
+      en: Vehicles involved
+      fr: Véhicules impliqués
+    type: ordinal
+    summary:
+      en: Number of vehicles involved in the accident.
+      fr: Nombre de véhicules impliqués dans l'accident.
+    values:
+      '1':
+        label:
+          en: '1'
+          fr: '1'
+        gloss:
+          en: One road vehicle only was involved.
+          fr: Un seul véhicule routier a été impliqué.
+        short:
+          en: '1'
+          fr: '1'
+        code: 0
+      '2':
+        label:
+          en: '2'
+          fr: '2'
+        gloss:
+          en: Two road vehicles were involved.
+          fr: Deux véhicules routiers ont été impliqués.
+        short:
+          en: '2'
+          fr: '2'
+        code: 1
+      '9':
+        label:
+          en: '9'
+          fr: '9'
+        gloss:
+          en: Three or more road vehicles were involved.
+          fr: Trois véhicules routiers ou plus ont été impliqués.
+        short:
+          en: 3+
+          fr: 3+
+        code: 2
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  NUM_VICTIMS:
+    source_column: NB_VICTIMES_TOTAL
+    label:
+      en: Victims
+      fr: Nombre de victimes
+    type: ordinal
+    summary:
+      en: Total number of victims (deaths, serious injuries and minor injuries) in the accident.
+      fr: Nombre total de victimes (décès, blessés graves et blessés légers) dans l'accident.
+    values:
+      '0':
+        label:
+          en: '0'
+          fr: '0'
+        gloss:
+          en: No victims died or were injured.
+          fr: Aucune victime est décédée ou n'a été blessée.
+        short:
+          en: '0'
+          fr: '0'
+        code: 0
+      '1':
+        label:
+          en: '1'
+          fr: '1'
+        gloss:
+          en: One victim died or was injured.
+          fr: Une victime est décédée ou a été blessée.
+        short:
+          en: '1'
+          fr: '1'
+        code: 1
+      '2':
+        label:
+          en: '2'
+          fr: '2'
+        gloss:
+          en: Two victims died or were injured.
+          fr: Deux victimes sont décédées ou ont été blessées.
+        short:
+          en: '2'
+          fr: '2'
+        code: 2
+      '9':
+        label:
+          en: '9'
+          fr: '9'
+        gloss:
+          en: Three or more victims died or were injured.
+          fr: Trois victimes ou plus sont décédées ou ont été blessées.
+        short:
+          en: 3+
+          fr: 3+
+        code: 3
+  ID:
+    source_column: NO_SEQ_COLL
+    label:
+      en: Report number
+      fr: Numéro du rapport
+    type: null
+    summary:
+      en: Sequential number identifying the accident.
+      fr: Numéro séquentiel identifiant l'accident.
+  REGION:
+    source_column: REG_ADM
+    label:
+      en: Administrative region
+      fr: Région administrative
+    type: categorical
+    summary:
+      en: 'Administrative region of Quebec: The administrative region is determined from the
+        municipality code.'
+      fr: 'Région administrative du Québec: La région administrative est déterminée à partir
+        du code de municipalité.'
+    values:
+      Montréal (06):
+        label:
+          en: Montréal (06)
+          fr: Montréal (06)
+        short:
+          en: Montréal
+          fr: Montréal
+        code: 6
+      Laval (13):
+        label:
+          en: Laval (13)
+          fr: Laval (13)
+        short:
+          en: Laval
+          fr: Laval
+        code: 13
+      Côte-Nord (09):
+        label:
+          en: Côte-Nord (09)
+          fr: Côte-Nord (09)
+        short:
+          en: Côte-Nord
+          fr: Côte-Nord
+        code: 9
+      Nord-du-Québec (10):
+        label:
+          en: Nord-du-Québec (10)
+          fr: Nord-du-Québec (10)
+        short:
+          en: Nord-du-Québec
+          fr: Nord-du-Québec
+        code: 10
+      Saguenay/-Lac-Saint-Jean (02):
+        label:
+          en: Saguenay/-Lac-Saint-Jean (02)
+          fr: Saguenay/-Lac-Saint-Jean (02)
+        short:
+          en: Saguenay/Lac-Saint-Jean
+          fr: Saguenay/Lac-Saint-Jean
+        code: 2
+      Outaouais (07):
+        label:
+          en: Outaouais (07)
+          fr: Outaouais (07)
+        short:
+          en: Outaouais
+          fr: Outaouais
+        code: 7
+      Laurentides (15):
+        label:
+          en: Laurentides (15)
+          fr: Laurentides (15)
+        short:
+          en: Laurentides
+          fr: Laurentides
+        code: 15
+      Montérégie (16):
+        label:
+          en: Montérégie (16)
+          fr: Montérégie (16)
+        short:
+          en: Montérégie
+          fr: Montérégie
+        code: 16
+      Capitale-Nationale (03):
+        label:
+          en: Capitale-Nationale (03)
+          fr: Capitale-Nationale (03)
+        short:
+          en: Capitale-Nationale
+          fr: Capitale-Nationale
+        code: 3
+      Estrie (05):
+        label:
+          en: Estrie (05)
+          fr: Estrie (05)
+        short:
+          en: Estrie
+          fr: Estrie
+        code: 5
+      Mauricie (04):
+        label:
+          en: Mauricie (04)
+          fr: Mauricie (04)
+        short:
+          en: Mauricie
+          fr: Mauricie
+        code: 4
+      Gaspésie/-Îles-de-la-Madeleine (11):
+        label:
+          en: Gaspésie/-Îles-de-la-Madeleine (11)
+          fr: Gaspésie/-Îles-de-la-Madeleine (11)
+        short:
+          en: Gaspésie/Îles-de-la-Madeleine
+          fr: Gaspésie/Îles-de-la-Madeleine
+        code: 11
+      Bas-Saint-Laurent (01):
+        label:
+          en: Bas-Saint-Laurent (01)
+          fr: Bas-Saint-Laurent (01)
+        short:
+          en: Bas-Saint-Laurent
+          fr: Bas-Saint-Laurent
+        code: 1
+      Centre-du-Québec (17):
+        label:
+          en: Centre-du-Québec (17)
+          fr: Centre-du-Québec (17)
+        short:
+          en: Centre-du-Québec
+          fr: Centre-du-Québec
+        code: 17
+      Chaudière-Appalaches (12):
+        label:
+          en: Chaudière-Appalaches (12)
+          fr: Chaudière-Appalaches (12)
+        short:
+          en: Chaudière-Appalaches
+          fr: Chaudière-Appalaches
+        code: 12
+      Lanaudière (14):
+        label:
+          en: Lanaudière (14)
+          fr: Lanaudière (14)
+        short:
+          en: Lanaudière
+          fr: Lanaudière
+        code: 14
+      Abitibi-Témiscamingue (08):
+        label:
+          en: Abitibi-Témiscamingue (08)
+          fr: Abitibi-Témiscamingue (08)
+        short:
+          en: Abitibi-Témiscamingue
+          fr: Abitibi-Témiscamingue
+        code: 8
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
+  SPD_LIM:
+    source_column: VITESSE_AUTOR
+    label:
+      en: Speed limit
+      fr: Vitesse autorisée
+    type: ordinal
+    summary:
+      en: Speed limit. Speed permitted, in kilometers/hour, by the competent authority on
+        the road where the accident occurred. For an accident at an intersection, the highest
+        speed among those of the intersecting roads will be recorded.
+      fr: Vitesse autorisée. Vitesse permise, en kilomètres/heure, par l'autorité compétente
+        sur la route où est survenu l'accident. Pour un accident à une intersection, la vitesse
+        la plus élevée parmi celles des routes qui se croisent sera inscrite.
+    values:
+      <50:
+        label:
+          en: <50
+          fr: <50
+        gloss:
+          en: Less than 50 km/h.
+          fr: Moins de 50 km/h.
+        short:
+          en: <50
+          fr: <50
+        code: 0
+      '50':
+        label:
+          en: '50'
+          fr: '50'
+        gloss:
+          en: Speed limit in km/h.
+          fr: Vitesse permise en km/h.
+        short:
+          en: '50'
+          fr: '50'
+        code: 5
+      '60':
+        label:
+          en: '60'
+          fr: '60'
+        gloss:
+          en: Speed limit in km/h.
+          fr: Vitesse permise en km/h.
+        short:
+          en: '60'
+          fr: '60'
+        code: 6
+      '70':
+        label:
+          en: '70'
+          fr: '70'
+        gloss:
+          en: Speed limit in km/h.
+          fr: Vitesse permise en km/h.
+        short:
+          en: '70'
+          fr: '70'
+        code: 7
+      '80':
+        label:
+          en: '80'
+          fr: '80'
+        gloss:
+          en: Speed limit in km/h.
+          fr: Vitesse permise en km/h.
+        short:
+          en: '80'
+          fr: '80'
+        code: 8
+      '90':
+        label:
+          en: '90'
+          fr: '90'
+        gloss:
+          en: Speed limit in km/h.
+          fr: Vitesse permise en km/h.
+        short:
+          en: '90'
+          fr: '90'
+        code: 9
+      '100':
+        label:
+          en: '100'
+          fr: '100'
+        gloss:
+          en: Speed limit in km/h.
+          fr: Vitesse permise en km/h.
+        short:
+          en: '100'
+          fr: '100'
+        code: 10
+    missing:
+      label:
+        en: Unspecified
+        fr: Non précisé
