@@ -1,0 +1,6 @@
+# References {.unnumbered}
+
+Sources cited throughout, and the dataset itself.
+
+::: {#refs}
+:::

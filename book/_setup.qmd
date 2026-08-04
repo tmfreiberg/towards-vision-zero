@@ -1,0 +1,55 @@
+```{python}
+#| label: setup
+#| include: false
+
+# Shared by every chapter. Kept in one place so the experiment a figure refers
+# to is never ambiguous, and so a change of configuration re-renders everything
+# that depends on it rather than some of it.
+from __future__ import annotations
+
+import matplotlib
+matplotlib.use("Agg")
+
+import pandas as pd
+
+from vision_zero import viz
+from vision_zero.data import load_codebook
+from vision_zero.modeling.config import load_experiment
+from vision_zero.modeling.dataset import build_dataset, load_compiled
+
+pd.set_option("display.max_columns", 50)
+pd.set_option("display.width", 120)
+
+
+def _hide_index_in_rendered_tables() -> None:
+    """Stop the row index appearing as an unlabelled first column.
+
+    Every table in this book is assembled row by row from a list of
+    dictionaries, so its index is a running count from zero that carries no
+    information. Rendered, it appears as a leading column of bare integers that
+    reads like data and invites a reader to wonder what it means.
+
+    Set once here rather than by wrapping each table at the point of use, so
+    that a table added later cannot forget to do it. A frame that genuinely
+    wants its index shown can call `.reset_index()` to make it a real column.
+    """
+    original = pd.DataFrame._repr_html_
+
+    def without_index(self: pd.DataFrame) -> str | None:
+        # A RangeIndex is the automatic one and never means anything. An index
+        # the caller set deliberately is left alone.
+        if isinstance(self.index, pd.RangeIndex):
+            return self.to_html(index=False, border=0, na_rep="")
+        return original(self)
+
+    pd.DataFrame._repr_html_ = without_index  # type: ignore[method-assign]
+
+
+_hide_index_in_rendered_tables()
+
+BOOK = load_codebook()
+
+#: The headline experiment: Montreal, three severity levels, reports with at
+#: most one blank field. Argued for in @sec-quality.
+EXPERIMENT = load_experiment("montreal_ternary_complete")
+```

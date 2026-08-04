@@ -166,7 +166,17 @@ class Variable(_Frozen):
 
     @property
     def is_nullable(self) -> bool:
-        """Whether the documentation admits an unspecified value."""
+        """Whether the *documentation* admits an unspecified value.
+
+        This is a statement about the SAAQ's data dictionary, not about the
+        data. A variable can be undocumented for blankness and still be blank on
+        most records: ``RDWX`` carries no "Non précisé" row and is empty on 98%
+        of the extract, because the documentation defines a value for "in a work
+        zone" and none for "not in one".
+
+        Anything reporting this to a reader should say which of the two it
+        means, and ideally report both.
+        """
         return self.missing is not None
 
     def name_in(self, lang: Language = "en") -> str:

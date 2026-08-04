@@ -1,0 +1,257 @@
+# How the numbers were produced {#sec-methods}
+
+Every figure and table in this book is produced by the code in the repository
+that accompanies it. This appendix records how, and where the machinery is
+weaker than the figures might suggest.
+
+## Reproducing this book
+
+The twelve source extracts are committed alongside the code, so a clone carries
+the data as well as the analysis. Nothing has to be downloaded and no account is
+needed.
+
+```bash
+git clone https://github.com/tmfreiberg/towards-vision-zero
+cd towards-vision-zero
+uv sync                 # resolve the locked dependency set
+uv run tvz data prepare # compile the twelve extracts into one table
+make render-fresh       # execute every chapter and build the book
+```
+
+`uv sync` installs from a lockfile, so the dependency versions are those the
+figures were produced with rather than whatever is current. `tvz data prepare`
+reads the raw CSVs and writes a single compiled table; it is the only step that
+touches the raw files, and every later command reads its output.
+
+Rendered results are cached under `_freeze/`, and that cache is committed. Two
+consequences follow. Continuous integration can build and publish the book
+without the data and without executing anything, which is what the published
+copy is built from. And anyone can read the book's source and see the figures
+without running the analysis at all.
+
+::: {.callout-warning appearance="simple"}
+## The cache does not watch the package
+
+Results are cached under `_freeze/` so that the book can be published without
+the source extracts, and a chapter is re-executed when its own source changes.
+A change to the code it calls does not trigger re-execution, because Quarto
+tracks the document and not the modules the document imports.
+
+Almost every number in this book comes from a function in `vision_zero`, so
+changing one of those functions and re-rendering will produce a book that looks
+untouched. Use `make render-fresh`, which clears the cache first, whenever the
+package has changed.
+:::
+
+## How results are scored
+
+Written out, because the choice of metric is where an imbalanced problem is
+most easily flattered.
+
+**Nothing is aggregated with weights a reader would have to accept.** Precision,
+recall and F1 are reported for every class alongside its support, which is what
+`sklearn`'s classification report gives and what most published work shows.
+Where a table has room for one class, that class is named by the experiment's
+`focus_class`, and the others remain available in full.
+
+**Where a single number is needed**, for ranking estimator families or tracing a
+learning curve, it is the Matthews correlation coefficient [@matthews1975]. It
+has no tunable parameters. It falls to zero for any degenerate predictor, including the rule that always
+answers with the majority class, which on this data scores about 0.8 on
+accuracy. On imbalanced problems it is the conventional choice for that reason
+[@chicco2020]. Balanced accuracy and macro-averaged F1 are reported beside it,
+and neither has free parameters either.
+
+**Accuracy appears only beside the figure it has to be compared against.** Four
+collisions in five caused no injury, so a model earns accuracy mostly by
+agreeing that nobody was hurt.
+
+::: {.callout-note appearance="simple"}
+## A weighted score this project used, and dropped
+
+An earlier version of this analysis scored results with a weighted average of
+per-class F-beta scores, with a different beta for each class: recall weighted
+more heavily for serious collisions, precision weighted more heavily for
+material damage, and per-class weights to counteract the imbalance.
+
+What it was reaching for was reasonable. Missing a serious collision is not the
+same kind of error as raising a false alarm about one, and a score that treats
+them alike answers the wrong question.
+
+How it went about that was less so. Weighted F-beta averaging is a real
+technique, but a different beta per class is not conventional and the weights
+were chosen by judgement. The result was a number nobody else computes, whose value could not
+be compared with any published figure, and whose implied trade-off was not
+legible: it is hard to say what "beta of 2 and weight of 16" commits one to.
+
+The conventional way to express the same preference is an explicit cost matrix.
+One states what each kind of mistake costs, in units anyone can argue with, and
+minimises expected cost [@elkan2001]. "Missing a serious collision costs as much as twenty false alarms" is a claim a
+reader can dispute. A set of per-class weights
+is not.
+
+This book does neither. It reports the trade-off directly instead, through
+:func:`~vision_zero.ceiling.bayes_error.achievable_frontier` in @sec-limits,
+which shows what precision and recall are jointly available for the serious
+class without anyone having to choose a weighting first. Nothing in the
+conclusions rests on a metric only this project computes.
+:::
+
+## Estimating conditional entropy
+
+@sec-limits reports the uncertainty remaining in the outcome once the features
+are known, $H(Y \mid X)$, as a range rather than a number. Neither available
+estimator is unbiased, and knowing which way each one errs is what makes the
+range usable.
+
+**The plug-in estimate is biased downward.** Group the records by their feature
+combination, compute the entropy of the outcomes within each group from the
+observed frequencies, and average over groups weighted by size:
+
+$$\hat{H}_{\text{plug}}(Y \mid X) = \sum_{c} \frac{n_c}{n} \hat{H}(Y \mid
+\text{cell } c) .$$
+
+A cell holding one record has one observed outcome and so contributes exactly
+zero, however uncertain that cell really is. With eighteen variables most cells
+are that small, so the estimate is dragged toward zero and the features look
+more informative than they are. The bias is well studied and substantial at this
+sample size [@miller1955; @paninski2003].
+
+**The held-out estimate is biased upward.** Learn each cell's outcome
+distribution $\hat{p}$ from one part of the data, then measure the average
+surprise of the other part under it. That quantity is a cross-entropy, and it
+decomposes:
+
+$$\mathbb{E}\big[-\log \hat{p}(y \mid x)\big] = H(Y \mid X) +
+\mathbb{E}_x\big[D_{\text{KL}}\big(p(\cdot \mid x) \,\|\, \hat{p}(\cdot
+\mid x)\big)\big] .$$
+
+The second term is a divergence and so cannot be negative, and it vanishes only
+when the learned distributions are exactly right, which they are not. So the held-out
+figure overstates the remaining uncertainty by however much the learned cell
+distributions miss.
+
+The two therefore bracket the truth from opposite sides, and the book reports
+both rather than picking one.
+
+**The conservative floor is what the book quotes.** Fano's inequality turns
+remaining uncertainty into a floor under the error rate, so a smaller estimate of
+$H(Y \mid X)$ gives a weaker floor. Quoting the floor implied by the plug-in
+estimate therefore means quoting the one that follows from the assumption most
+favourable to prediction. A bound that errs toward the problem being easier
+cannot manufacture this book's conclusion, which is the only reason to prefer
+the weaker of two numbers.
+
+## Where the estimators break down
+
+Every method here has a range outside which it stops meaning anything, and the
+book uses several of them near the edge of that range. What follows is where
+each one fails and how the code responds.
+
+**The cell-majority ceiling needs cells with several records in them.** Learning
+a cell's commonest outcome from one record and applying it to another is
+learning nothing; the estimate then reflects how many distinct combinations
+exist rather than how predictable the outcome is. @sec-permutation demonstrates
+this by shuffling the outcomes at random, which leaves the in-sample figure
+almost unchanged.
+
+On the pedestrian subproblem the effect is severe enough to invalidate the
+estimate outright. That subset holds a few thousand records across nearly as
+many distinct combinations, and the held-out cell-majority rule scores *below* a
+rule that always answers with the commonest class. A ceiling beneath the floor
+is not a ceiling. The code compares the two and logs a warning rather than
+letting the number through silently, and @sec-matters reports the subproblem's
+ablation without quoting a ceiling for it.
+
+**The frontier cannot reach combinations it has never seen.** A rule built from
+cells has nothing to say about a held-out record whose combination did not occur
+in training, so it flags nothing there. Recall is therefore capped at the share
+of the target class that has any precedent at all, and the last row of
+@tbl-frontier is that cap rather than a recall of one.
+
+**The locality lifts need enough pairs to be stable.** At the closest distances
+there may be only a handful of pairs, and a ratio computed from a handful is
+noise. The reported tables show only rows where the base rate alone would
+produce at least a hundred neighbours in the target class, and the figure that
+threshold is applied to is included in the output so the judgement can be
+checked.
+
+**Balanced accuracy on a class with few records is unstable** for the same
+reason, since it averages per-class recalls and a recall computed over a few
+hundred records moves easily. It appears beside Matthews correlation rather than
+instead of it.
+
+## Estimators
+
+The headline experiment fits gradient-boosted trees [@chen2016]. Nothing in the conclusions depends on that choice, which is what the comparison
+in @sec-limits establishes: four other families under identical conditions land in the same
+place, so the estimator is not what the analysis turns on.
+
+## Determinism
+
+Every stochastic step draws its seed from the experiment specification: the
+train and test split, the cross-validation folds, any resampling, the
+subsampling used to keep the sweeps affordable, the permutation tests, and the
+random control blocks in @sec-matters. Changing the seed in a configuration file
+changes all of them together, and changing nothing changes nothing.
+
+The estimators themselves are seeded from the same place, so a rerun of any
+command on the same data reproduces its output exactly. Tests assert this at
+each level rather than trusting it: that compiling the raw extracts twice gives
+identical tables, that loading them twice gives identical frames, that fitting
+twice gives identical predictions, and that the permutation tests and stochastic
+baselines repeat.
+
+The practical consequence is that any figure in this book can be regenerated
+from the repository and compared, and a difference means something changed
+rather than that the dice fell differently.
+
+## What the held-out set has and has not seen
+
+This section is written out, because a reader entitled to be sceptical about a
+held-out set deserves an exact account rather than an assurance.
+
+**The split is taken once, on the Montréal population, before any quality
+filter.** It depends only on the records, the seed and the target. Experiments
+that filter more strictly than others therefore hold out the same records, and
+the looser experiment's training set contains the stricter one's. If the filter
+came first, two experiments would split different pools, their splits would be
+unrelated, and one experiment's training data would overlap another's held-out
+set. That would be invisible in every reported figure.
+
+**No model was fitted on a held-out record, and no score was computed against
+one, until the final evaluation.** Every figure in @sec-limits and @sec-matters
+comes from cross-validation within the training records. The command that opens
+the held-out set requires a flag that is deliberately awkward to type, and is
+the only path to those records in the entire codebase.
+
+Three things qualify that, in decreasing order of harmlessness.
+
+Some descriptive statistics in @sec-data are computed over the whole published
+extract, held-out records included: how many reports there are,
+how the severity classes are distributed, how often each field is blank. These
+are marginal quantities rather than relationships between the variables and the
+outcome, and describing a dataset without them is not really possible. They are nonetheless information from the vault, and a strict accounting should
+record that.
+
+More substantially, the decisions this book makes about specification, which
+variables to exclude, where to cap blank fields, which severity scale to use,
+were made in light of exploratory analysis. That analysis
+stayed within the training records once the split existed, but the shape of the
+problem was understood before it did. Repeated choices informed by the same
+cross-validation folds make those cross-validated figures optimistic as
+estimates of performance on genuinely unseen data. This is why the final numbers
+are reported from the held-out set rather than from cross-validation, and why
+the held-out set is opened exactly once.
+
+Lastly, the explorer at the front of this book draws on every published record,
+held-out ones included, because it fits nothing and predicts nothing: it counts records matching a description. There is no quantity for a
+held-out record to leak into. A reader who would prefer otherwise may object, but restricting a descriptive
+tool to 85% of the data would make it worse at its job for no gain in the
+integrity of any estimate.
+
+None of this touches the bounds in @sec-limits, which are not model performance
+figures at all. How often identically recorded collisions disagree is a fact
+about the data, and it would be the same fact computed on any subset large
+enough to measure it. Those figures come from the training records for
+consistency rather than because they are at risk.

@@ -96,19 +96,15 @@ def _score_fold(
     predictions = classes[np.argmax(probabilities, axis=1)]
     truth = dataset.y_train.iloc[validation_index].to_numpy()
 
-    scores = classification_scores(
-        truth,
-        predictions,
-        beta=experiment.evaluation.beta,
-        weights=experiment.evaluation.weights,
-        classes=list(dataset.classes),
-    )
+    scores = classification_scores(truth, predictions, classes=list(dataset.classes))
+    focus = experiment.evaluation.focus_class
     return {
-        "accuracy": scores.accuracy,
-        "balanced_accuracy": scores.balanced_accuracy,
-        "f_star": scores.f_star,
         "mcc": scores.mcc,
-        "severe_recall": float(scores.recall[-1]),
+        "balanced_accuracy": scores.balanced_accuracy,
+        "macro_f1": scores.macro_f1,
+        "accuracy": scores.accuracy,
+        "focus_recall": scores.recall_for(focus),
+        "focus_precision": scores.precision_for(focus),
         "fit_seconds": elapsed,
     }
 
@@ -184,15 +180,15 @@ def model_sweep(
             row[f"{column}_std"] = float(frame[column].std(ddof=1)) if folds > 1 else 0.0
         rows.append(row)
         log.info(
-            "%s: F* %.4f, MCC %.4f, severe recall %.4f",
+            "%s: MCC %.4f, balanced accuracy %.4f, recall on the focus class %.4f",
             kind,
-            row["f_star_mean"],
             row["mcc_mean"],
-            row["severe_recall_mean"],
+            row["balanced_accuracy_mean"],
+            row["focus_recall_mean"],
         )
 
     rows.append(_baseline_row(experiment, reduced, indices))
-    return pd.DataFrame(rows).sort_values("f_star_mean", ascending=False).reset_index(drop=True)
+    return pd.DataFrame(rows).sort_values("mcc_mean", ascending=False).reset_index(drop=True)
 
 
 def _baseline_row(
@@ -210,20 +206,16 @@ def _baseline_row(
             n=len(truth),
             classes=np.asarray(dataset.classes),
         )
-        scores = classification_scores(
-            truth,
-            prediction.labels,
-            beta=experiment.evaluation.beta,
-            weights=experiment.evaluation.weights,
-            classes=list(dataset.classes),
-        )
+        scores = classification_scores(truth, prediction.labels, classes=list(dataset.classes))
+        focus = experiment.evaluation.focus_class
         per_fold.append(
             {
-                "accuracy": scores.accuracy,
-                "balanced_accuracy": scores.balanced_accuracy,
-                "f_star": scores.f_star,
                 "mcc": scores.mcc,
-                "severe_recall": float(scores.recall[-1]),
+                "balanced_accuracy": scores.balanced_accuracy,
+                "macro_f1": scores.macro_f1,
+                "accuracy": scores.accuracy,
+                "focus_recall": scores.recall_for(focus),
+                "focus_precision": scores.precision_for(focus),
                 "fit_seconds": 0.0,
             }
         )
@@ -312,12 +304,12 @@ def learning_curve(
             {
                 "fraction": fraction,
                 "n_train": int(fraction * len(X) * (folds - 1) / folds),
-                "f_star": float(frame["f_star"].mean()),
-                "accuracy": float(frame["accuracy"].mean()),
                 "mcc": float(frame["mcc"].mean()),
-                "severe_recall": float(frame["severe_recall"].mean()),
+                "balanced_accuracy": float(frame["balanced_accuracy"].mean()),
+                "accuracy": float(frame["accuracy"].mean()),
+                "focus_recall": float(frame["focus_recall"].mean()),
             }
         )
-        log.info("Fraction %.2f: F* %.4f", fraction, rows[-1]["f_star"])
+        log.info("Fraction %.2f: MCC %.4f", fraction, rows[-1]["mcc"])
 
     return pd.DataFrame(rows)

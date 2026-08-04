@@ -1,0 +1,774 @@
+# Which variables matter {#sec-matters}
+
+{{< include _setup.qmd >}}
+
+```{python}
+#| label: matters-setup
+#| include: false
+
+from vision_zero.ceiling.ablation import block_ablation, cumulative_ablation
+from vision_zero.data.schema import FEATURE_BLOCKS, blocks_for
+from vision_zero.descriptive import class_shares
+
+DATA = build_dataset(EXPERIMENT)
+BLOCKS = blocks_for(DATA.features)
+FRAME = load_compiled()
+MONTREAL = FRAME[FRAME["REGION"] == "Montréal (06)"]
+```
+
+## A different question
+
+@sec-limits asked how well anything could predict severity, and found the limit
+low and lying in the data. A city adopting Vision Zero wants an answer to a
+different question: whether anything under its control affects how badly
+collisions turn out.
+
+The two questions come apart here, and how they come apart is the substance of
+this chapter. The variables that predict are largely the ones nobody chooses,
+while the variables a city could change predict least.
+
+Separating them means grouping the variables by what kind of thing they describe.
+@tbl-blocks gives that grouping, declared once in the schema rather than
+assembled afresh for each analysis.
+
+```{python}
+#| label: tbl-blocks
+#| tbl-cap: "The variables, grouped by what they describe and by who could change them."
+
+descriptions = {
+    "participants": "Who and what took part. Fixed once the collision is under way, though not in the longer run.",
+    "environment": "The road and the conditions on it. What an engineer could change.",
+    "temporal": "When it happened. Partly reachable through enforcement and scheduling.",
+    "geography": "Which administrative region. Not a property of any site.",
+}
+pd.DataFrame(
+    [
+        {
+            "Block": name,
+            "Variables": len(members),
+            "What it describes": descriptions[name],
+            "Members": ", ".join(BOOK[m].name_in("en") for m in members),
+        }
+        for name, members in BLOCKS.items()
+    ]
+)
+```
+
+The `geography` block does not appear, because this analysis is restricted to one
+region and a variable with one value cannot separate anything. It exists in the
+schema so that a province-wide version of the same question has somewhere to put
+it.
+
+::: {.callout-important appearance="simple"}
+## What "outside anyone's control" does and does not mean
+
+Calling the participant variables uncontrollable is true only in a narrow sense.
+
+Once two vehicles are converging, nobody chooses whether one of them is a
+bicycle. But over years a city chooses a great deal about how often bicycles and
+cars converge at all. Separated lanes, signal phases that hold turning traffic
+while people cross, and junctions designed so that a right-turning driver is not
+crossing a cycle track are exactly interventions in who meets whom, and the
+Montréal collisions in @sec-conclusion turn on exactly such geometry.
+
+This analysis cannot see any of that, because of what it conditions on. Every
+figure in this book is computed over collisions that occurred. Design that
+prevents an encounter removes a collision from the record rather than changing
+its severity, and a dataset of collisions has nothing to say about the ones that
+did not happen.
+
+So the finding of this chapter is narrower than "road design does not matter":
+**given a collision has occurred, the recorded features of the road say little
+about how badly it turns out**. Whether design changes how often
+collisions occur, and between whom, is a different question, answerable from
+different data, and @sec-conclusion describes work that answers it.
+:::
+
+## What each block contributes
+
+Write $S(F)$ for the Matthews correlation of a model fitted using the feature set
+$F$ and scored by cross-validation, with the folds, the preprocessing and the
+estimator held identical throughout. The estimator comes from the experiment specification, gradient-boosted trees; @sec-limits established that the choice makes
+almost no difference, and any of the five families there would give the same
+picture.
+
+Each block $B$ then gets two figures.
+
+$$\text{alone}(B) = S(B), \qquad
+\text{added}(B) = S(\text{all variables}) - S(\text{all variables except } B)$$
+
+**Alone** is what the block achieves by itself, with everything else withheld:
+how much it would tell you if it were all you had.
+
+**Added** is a difference of two correlations rather than a correlation. It fits
+on the full variable set, fits again with this block removed, and subtracts. A
+positive value means the block contributes something the others do not; zero
+means it contributes nothing new; and a negative value means the model does
+better without it.
+
+The two figures can disagree, and where they do the disagreement tells you
+something. A block that scores well alone while adding nothing is carrying
+information the other blocks already carry. For deciding what to collect, the
+second figure is the relevant one.
+
+```{python}
+#| label: fig-ablation
+#| fig-cap: "Each block alone, and what it adds to the others. The dotted line is a rule that uses no variables at all."
+
+ABLATION = block_ablation(EXPERIMENT, DATA)
+viz.plot_ablation(ABLATION)
+```
+
+```{python}
+#| label: tbl-ablation
+#| tbl-cap: "The same comparison in figures."
+
+pd.DataFrame(
+    {
+        "Block": ABLATION["block"],
+        "Variables": [int(v) for v in ABLATION["n_features"]],
+        "MCC alone": ABLATION["mcc_alone"].round(4),
+        "MCC added": ABLATION["mcc_added"].round(4),
+        "Balanced accuracy alone": ABLATION["balanced_accuracy_alone"].round(4),
+        "Recall on serious, alone": ABLATION["focus_recall_alone"].round(4),
+    }
+)
+```
+
+```{python}
+#| label: ablation-figures
+#| include: false
+
+indexed = ABLATION.set_index("block")
+added = indexed["mcc_added"].dropna()
+participants_added = float(added.get("participants", float("nan")))
+environment_added = float(added.get("environment", float("nan")))
+temporal_added = float(added.get("temporal", float("nan")))
+baseline_mcc = float(indexed.loc["majority baseline", "mcc_alone"])
+environment_alone = float(indexed.loc["environment", "mcc_alone"])
+ratio = environment_added / participants_added if participants_added else float("nan")
+```
+
+```{python}
+#| label: ablation-more
+#| include: false
+
+participants_alone = float(indexed.loc["participants", "mcc_alone"])
+everything = float(indexed.loc["all features", "mcc_alone"])
+```
+
+The pattern is not close. Knowing who was involved adds
+`{python} f"{participants_added:+.4f}"` to the Matthews correlation. Knowing
+everything the SAAQ records about the road and the conditions on it adds
+`{python} f"{environment_added:+.4f}"`. The three time variables add
+`{python} f"{temporal_added:+.4f}"`.
+
+Taken alone, the environment block reaches
+`{python} f"{environment_alone:.4f}"` against a baseline of
+`{python} f"{baseline_mcc:.4f}"` for a rule that reads no variables at all.
+
+Two features of that table deserve more than a passing mention.
+
+**A negative contribution is possible, and one block has one.** Where removing a
+block improves the score, the block was contributing noise that the model fitted
+and that did not survive to the validation fold. A contribution below zero
+therefore says more than a contribution of zero would.
+
+**The participant block alone scores
+`{python} f"{participants_alone:.4f}"`, and the full variable set scores
+`{python} f"{everything:.4f}"`.** The best model available on this data uses six
+variables and would be no better, on this measure, for having the other twelve.
+
+There is one qualification, and it points the other way. Read the recall column
+of @tbl-cumulative rather than the correlation. Recall on serious collisions
+rises as blocks are added, from nothing at all to a couple of percent. The extra
+variables do let the model occasionally name the severe class and occasionally
+be right about it, at a net cost in overall agreement. Both figures are true,
+and neither is a working model: a couple of percent is not a detector.
+
+## From the unavoidable to the actionable
+
+@tbl-cumulative adds the blocks one at a time, starting from what nobody
+controls and ending with what a city could change. The order is an argument
+rather than a discovery: it puts the actionable variables last so that their
+contribution is measured after everything else has already been accounted for.
+
+```{python}
+#| label: tbl-cumulative
+#| tbl-cap: "Blocks added in order. A road authority would act on the last step."
+
+STEPS = cumulative_ablation(EXPERIMENT, DATA)
+pd.DataFrame(
+    {
+        "Step": STEPS["step"],
+        "Variables": [int(v) for v in STEPS["n_features"]],
+        "MCC": STEPS["mcc"].round(4),
+        "Change": [
+            "-" if pd.isna(v) else f"{v:+.4f}" for v in STEPS["mcc_delta"]
+        ],
+        "Balanced accuracy": STEPS["balanced_accuracy"].round(4),
+        "Recall on serious": STEPS["focus_recall"].round(4),
+    }
+)
+```
+
+This is the central result of the chapter. Once it is known who was involved and
+when, everything the SAAQ records
+about the road itself, its configuration, its surface, its lighting, its posted
+speed limit, its surroundings, adds close to nothing to what can be said about
+how badly a collision turned out.
+
+The last row is not higher than the second. A model given every variable does
+not do better than a model given the six that describe who took part.
+
+## The variables an engineer could change
+
+An ablation reports a number, and a number on its own invites the suspicion that
+something has been done wrong, so it helps to see why this one comes out as it
+does.
+
+@tbl-environment breaks the outcome down by each environment variable in turn.
+If any of them mattered, its values would show visibly different outcome
+distributions.
+
+The **rate of serious injury** for a given value of a variable is the number of
+collisions carrying that value whose outcome was serious or fatal, divided by
+the number carrying that value. Records where the variable was left blank are
+excluded from both. For scale, the rate across all Montréal collisions is
+`{python} f"{float((MONTREAL['TNRY_SEV'] == 2).mean()):.4f}"`.
+
+```{python}
+#| label: tbl-environment
+#| tbl-cap: "Outcome by value, for the variables describing the road. Montréal."
+
+def spreads(block: str) -> pd.DataFrame:
+    """How far the rate of serious injury moves across each variable's values.
+
+    Records where the variable was left blank are excluded. @sec-quality showed
+    that blankness itself tracks severity, so a blank row would contribute a
+    spread that measures how the report was filled in rather than anything
+    about the road.
+    """
+    rows = []
+    for name in BLOCKS[block]:
+        recorded = MONTREAL[MONTREAL[name].notna()]
+        table = class_shares(recorded, name, "TNRY_SEV", min_records=500)
+        if table.empty:
+            continue
+        severe = table["p_class_2"]
+        rows.append(
+            {
+                "Variable": BOOK[name].name_in("en"),
+                "Values shown": len(table),
+                "Lowest rate of serious injury": f"{severe.min():.4f}",
+                "Highest rate of serious injury": f"{severe.max():.4f}",
+                "Spread": f"{severe.max() - severe.min():.4f}",
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+spreads("environment")
+```
+
+```{python}
+#| label: spread-figures
+#| include: false
+
+# `spreads` is defined in the cell above and reused here.
+
+def widest(block: str) -> tuple[str, float, float, float]:
+    """The variable in a block whose serious rate varies most across its values."""
+    table = spreads(block)
+    row = table.loc[table["Spread"].astype(float).idxmax()]
+    return (
+        str(row["Variable"]),
+        float(row["Lowest rate of serious injury"]),
+        float(row["Highest rate of serious injury"]),
+        float(row["Spread"]),
+    )
+
+env_name, env_low, env_high, env_spread = widest("environment")
+par_name, par_low, par_high, par_spread = widest("participants")
+overall_severe = float((MONTREAL["TNRY_SEV"] == 2).mean())
+```
+
+These spreads are not zero. The widest of them is `{python} env_name`, whose rate of serious
+injury runs from `{python} f"{env_low:.2%}"` to `{python} f"{env_high:.2%}"`
+across its values. Against an overall rate of
+`{python} f"{overall_severe:.2%}"` that is a difference of several times over,
+not a rounding error.
+
+So how does a variable show a tenfold difference in outcome rate and then
+contribute `{python} f"{environment_added:+.4f}"` to a model?
+
+Because the two questions are different. A breakdown by one variable at a time
+shows every association, including associations that belong to something else.
+Collisions in the dark involve a different mix of road users, at different
+speeds, in different places. The lighting variable is standing in for all of
+that. Once the model already knows who was involved, the lighting column has
+little left to tell it, and what remains after everything else has spoken is what
+the ablation measures.
+
+This is the ordinary difference between a marginal and a conditional
+association, and it explains why a table of one-variable breakdowns makes a poor
+guide to what a city should collect.
+
+### A variable that is not what it is filed under
+
+The lighting variable illustrates this well enough to follow up.
+
+Read its definition rather than its name. It takes four values, and the first
+two are daytime: full daylight, and the half-light around dawn and dusk. The
+second two are night, distinguished by whether the road had working lighting
+installed.
+
+```{python}
+#| label: tbl-light-values
+#| tbl-cap: "What the lighting variable actually records."
+
+light = BOOK["LIGHT"]
+pd.DataFrame(
+    [
+        {
+            "Value": light.short_for(key, "en"),
+            "Definition": light.values[key].gloss.en,
+        }
+        for key in light.values
+    ]
+)
+```
+
+So most of what this variable encodes is the time of day. Only one contrast
+within it, the third value against the fourth, describes anything a city
+installs and maintains.
+
+```{python}
+#| label: tbl-light-hour
+#| tbl-cap: "Lighting against time of day. Each row is one time band and sums to one."
+
+from vision_zero.descriptive import crosstab_shares
+
+crosstab_shares(MONTREAL, "HOUR", "LIGHT", normalise="index").round(3)
+```
+
+Each row covers the collisions in one four-hour band and divides them among the
+four lighting states, so the entries in a row sum to one. The figure in row $i$
+and column $j$ is the share of collisions in band $i$ that were recorded with
+lighting state $j$.
+
+```{python}
+#| label: light-hour-figures
+#| include: false
+
+shares = crosstab_shares(MONTREAL, "HOUR", "LIGHT", normalise="index")
+daylight = light.short_for("1", "en")
+lit, unlit = light.short_for("3", "en"), light.short_for("4", "en")
+
+by_band = pd.DataFrame(
+    {
+        "day": shares[daylight],
+        "night": shares[lit] + shares[unlit],
+    }
+)
+settled = by_band[(by_band["day"] > 0.85) | (by_band["night"] > 0.85)]
+```
+
+The correspondence is nearly complete. In `{python} len(settled)` of the six time
+bands, one of the two states accounts for more than eighty-five percent of
+collisions: the
+middle of the day is daylight and the middle of the night is not, which is not a
+finding about roads.
+
+The two bands that are genuinely mixed are the ones straddling sunrise and
+sunset. There the lighting variable does carry something the hour does not,
+because six in the morning is dark in December and bright in June. What it adds
+over the time variables, in other words, is mostly a seasonal correction to
+them.
+
+This matters for reading @tbl-ablation. The block called `environment` contains
+a variable that is largely a time variable, and the block called `temporal`
+therefore has less left to contribute than its name suggests. Blocks are a
+convenience for asking a question, not a property of the data, and no assignment
+of these twenty-five variables into four groups is going to be clean.
+
+It also suggests a better question. Rather than asking what lighting contributes
+in general, ask what it contributes where a city could change it: among
+collisions that happened at night, does a lit road differ from an unlit one?
+
+```{python}
+#| label: tbl-lit-unlit
+#| tbl-cap: "Night-time collisions only, by whether the road was lit. Montréal."
+
+night = MONTREAL[MONTREAL["LIGHT"].astype("string").isin(["3", "4"])]
+by_light = class_shares(night, "LIGHT", "TNRY_SEV")
+pd.DataFrame(
+    {
+        "At night, the road was": by_light["label"],
+        "Collisions": [f"{int(v):,}" for v in by_light["n"]],
+        "No injury": by_light["p_class_0"].round(4),
+        "Minor injury": by_light["p_class_1"].round(4),
+        "Serious or fatal": by_light["p_class_2"].round(4),
+    }
+)
+```
+
+```{python}
+#| label: lit-unlit-figures
+#| include: false
+
+indexed_light = by_light.set_index("label")
+lit_row, unlit_row = indexed_light.loc[lit], indexed_light.loc[unlit]
+severe_ratio = float(unlit_row["p_class_2"]) / float(lit_row["p_class_2"])
+unlit_share = float(unlit_row["n"]) / float(by_light["n"].sum())
+```
+
+The unlit column has a rate of serious injury
+`{python} f"{severe_ratio:.1f}"` times that of the lit one. Taken at face value
+the difference is substantial, and it does not come from a small sample: there
+are `{python} f"{int(unlit_row['n']):,}"` collisions in that column.
+
+It should not be taken at face value, for two reasons.
+
+The first is the shape of the difference. If darkness were the mechanism, one
+would expect outcomes to shift toward the worse across the board. They do not.
+The unlit column has a *higher* share of collisions causing no injury at all as
+well as a higher share causing serious injury, and a lower share of the minor
+injuries in between. A pattern like that points to a different mix of collisions
+rather than a shift in severity. Fewer people on foot and on bicycles, who
+generate most of the minor injuries, together with higher speeds, which generate
+the serious ones, would produce exactly this.
+
+The second is that unlit roads are not a random sample of roads. They are
+`{python} f"{unlit_share:.1%}"` of night-time collisions in Montréal, and the
+places within a city that have no street lighting are systematically the
+peripheral, faster and emptier ones. Comparing them with lit roads compares two
+different kinds of place, and the extract records the difference between those
+places only through the same coarse variables that @tbl-environment already
+showed carry little.
+
+So this comparison does not estimate what installing street lighting would
+achieve. It reports that collisions on unlit roads at night differ from
+collisions on lit roads at night, which is true, and consistent with several
+explanations, of which lighting is one.
+
+For comparison, @tbl-participants gives the same breakdown for the variables
+describing who was involved.
+
+```{python}
+#| label: tbl-participants
+#| tbl-cap: "The same breakdown for the variables describing who took part."
+
+spreads("participants")
+```
+
+The contrast is the point. The widest spread among the participant variables is
+`{python} par_name`, running from `{python} f"{par_low:.2%}"` to
+`{python} f"{par_high:.2%}"`, which is
+`{python} f"{par_spread / env_spread:.1f}"` times the widest spread among the
+variables describing the road.
+
+One row in @tbl-participants deserves a note of its own. The heavy vehicle
+indicator shows no difference at all: collisions involving a heavy vehicle in
+Montréal are as likely to produce a serious injury as those that do not. The
+intuition that says otherwise comes from highway collisions at speed, and a dense
+urban network is a different setting, where most heavy vehicle involvement is
+low-speed manoeuvring.
+
+## The same question without a model
+
+Everything above rests on fitting something. A sceptic may reasonably ask how
+much of the answer belongs to the data and how much to the estimator, the
+folds, or the choice of metric.
+
+The question can be put without fitting anything at all.
+
+Take two collisions that agree on every recorded variable outside one block, so
+that whatever separates them lies inside it. How often do they share an outcome?
+If the block carries nothing, agreeing outside it means agreeing on everything
+that matters, and such pairs should usually turn out alike. If the block carries
+a great deal, differing within it should pull them apart.
+
+```{python}
+#| label: tbl-confined
+#| tbl-cap: "Outcome agreement among pairs differing only within one block, against blocks of the same size drawn at random."
+
+from vision_zero.ceiling.locality import confined_difference_agreement
+
+CONFINED = confined_difference_agreement(
+    DATA.X_train, DATA.y_train, BLOCKS, seed=EXPERIMENT.split.seed
+)
+pd.DataFrame(
+    {
+        "Block": CONFINED["block"],
+        "Variables": [int(v) for v in CONFINED["variables"]],
+        "Pairs": [f"{int(v):,}" for v in CONFINED["pairs"]],
+        "Share alike": CONFINED["agreement"].round(4),
+        "Same size, at random": CONFINED["same_size_control"].round(4),
+        "Difference": CONFINED["difference"].round(4),
+    }
+)
+```
+
+::: {.callout-note appearance="simple"}
+## Why the comparison is against random blocks
+
+The obvious reference, records identical throughout, cannot be used. Agreement
+over a partition weights each group by the pairs it contains, so refining a
+partition destroys its large groups and the weight does not redistribute evenly.
+A finer partition can therefore show *lower* agreement than a coarser one, and
+records identical throughout are not an upper bound on anything.
+
+The same objection rules out comparing blocks with each other directly, since
+agreeing outside a small block is a stronger condition than agreeing outside a
+large one. The control here is a block of the same size drawn at random, which
+faces identical granularity, and the difference between them measures what the
+block's membership buys.
+:::
+
+```{python}
+#| label: confined-figures
+#| include: false
+
+confined_by_block = CONFINED.set_index("block")
+chance = float(CONFINED.attrs["chance_agreement"])
+participants_gap = float(confined_by_block.loc["participants", "difference"])
+environment_gap = float(confined_by_block.loc["environment", "difference"])
+participants_alike = float(confined_by_block.loc["participants", "agreement"])
+```
+
+Two rows repay a closer look.
+
+Pairs differing only in **who was involved** share an outcome
+`{python} f"{participants_alike:.4f}"` of the time, against
+`{python} f"{chance:.4f}"` for two collisions picked at random from the whole
+dataset. Holding the road, the conditions and the time of day all fixed, and
+letting only the participants vary, leaves two collisions *less* alike than if
+nothing had been held fixed at all. A variable that determines the outcome looks
+exactly like this from this angle.
+
+Pairs differing only in **the road and the conditions on it** run
+`{python} f"{environment_gap:+.4f}"` *above* a random block of the same size. So
+those variables are not merely uninformative in the sense of adding nothing to a
+model. They carry less than an arbitrary handful of variables would.
+
+No model was fitted to produce that table, no metric was chosen, and no
+hyperparameter was set, and the result agrees with @tbl-ablation, which is why
+it was computed.
+
+### One variable at a time
+
+The same construction narrows to a single variable: pairs agreeing on all
+seventeen others and differing in exactly one.
+
+Take a collision that was serious and another that agrees with it on all
+seventeen remaining variables, differing only in the one named. How likely is
+that second collision to have been serious too?
+
+Write $\pi$ for the share of all records that were serious. For a variable $v$,
+let $q(v)$ be the share of such neighbours that were serious. The **lift** is
+
+$$\mathrm{lift}(v) = \frac{q(v)}{\pi} .$$
+
+A lift of one would mean the neighbour is no more likely to be serious than a
+collision drawn at random; larger values mean the pair resembles itself in
+outcome as well as in circumstance.
+
+```{python}
+#| label: tbl-single-difference
+#| tbl-cap: "The lift on serious collisions when exactly one variable differs."
+
+from vision_zero.ceiling.locality import difference_set_profile
+
+SINGLE = difference_set_profile(
+    DATA.X_train, DATA.y_train, target_class=EXPERIMENT.evaluation.focus_class, max_size=1
+)
+reference = float(SINGLE.attrs["identical_lift"])
+pd.DataFrame(
+    {
+        "Variable": [BOOK[v].name_in("en") if v in BOOK else v for v in SINGLE["variables"]],
+        "Pairs": [f"{int(v):,}" for v in SINGLE["pairs"]],
+        "Lift": SINGLE["lift"].round(3),
+        "Share of the reference": (SINGLE["lift"] / reference).round(2),
+    }
+)
+```
+
+The reference is `{python} f"{reference:.3f}"`, the lift among records identical
+throughout. Changing a variable that carries nothing leaves the enrichment
+intact, so an inert variable sits at the reference; one that carries something
+pulls it below.
+
+Only a handful of variables appear, because pairs differing in exactly one of
+eighteen are rare and most variables have too few for the ratio to mean
+anything. The participant variables are absent for that reason rather than
+because they do nothing, which is a limitation of this view and not a finding.
+
+Within what is shown, location along the road and the posted speed limit are the
+two that move the outcome most. Both belong to the block that @tbl-ablation
+found contributes almost nothing. There is no contradiction. This table asks what a variable does with every other
+held fixed; the ablation asks what it adds once every other is already known. A
+variable that shifts the outcome on its own can still add nothing to a model
+that already knows the rest.
+
+## Conditioning the obvious away
+
+The dominance of the participant variables is not a discovery. Pedestrians and
+cyclists get hurt when vehicles strike them, which nobody disputes and which no
+road authority can design around by wishing there were fewer pedestrians.
+
+A more useful question is what happens once that is taken as given. Among
+collisions that struck a pedestrian, what distinguishes the serious ones from
+the rest?
+
+That subproblem is better posed in two ways. The class balance is far less
+extreme, so the scarce class is no longer buried, and the participant variables
+that dominate the general problem are largely constant within it and cannot do
+the work.
+
+```{python}
+#| label: tbl-pedestrian-balance
+#| tbl-cap: "Class balance in the general problem and within pedestrian collisions."
+
+PEDESTRIAN = load_experiment("pedestrian_injury")
+PED_DATA = build_dataset(PEDESTRIAN)
+
+labels = ["Material damage only", "At least one minor injury", "Serious injury or fatality"]
+general = DATA.y_train.value_counts(normalize=True).sort_index()
+restricted = PED_DATA.y_train.value_counts(normalize=True).sort_index()
+pd.DataFrame(
+    {
+        "Outcome": labels,
+        "All Montréal collisions": [f"{100 * general.get(i, 0):.1f}%" for i in range(3)],
+        "Pedestrian collisions only": [f"{100 * restricted.get(i, 0):.1f}%" for i in range(3)],
+    }
+)
+```
+
+```{python}
+#| label: tbl-pedestrian-ablation
+#| tbl-cap: "The same ablation, within pedestrian collisions only."
+
+PED_ABLATION = block_ablation(PEDESTRIAN, PED_DATA, subsample=None)
+pd.DataFrame(
+    {
+        "Block": PED_ABLATION["block"],
+        "Variables": [int(v) for v in PED_ABLATION["n_features"]],
+        "MCC alone": PED_ABLATION["mcc_alone"].round(4),
+        "MCC added": PED_ABLATION["mcc_added"].round(4),
+        "Recall on serious, alone": PED_ABLATION["focus_recall_alone"].round(4),
+    }
+)
+```
+
+```{python}
+#| label: pedestrian-figures
+#| include: false
+
+ped_indexed = PED_ABLATION.set_index("block")
+ped_all = float(ped_indexed.loc["all features", "mcc_alone"])
+ped_participants = float(ped_indexed.loc["participants", "mcc_added"])
+ped_environment = float(ped_indexed.loc["environment", "mcc_added"])
+ped_temporal = float(ped_indexed.loc["temporal", "mcc_added"])
+general_share = environment_added / participants_added if participants_added else float("nan")
+ped_share = ped_environment / ped_participants if ped_participants else float("nan")
+```
+
+Everything is smaller here, as it should be. Conditioning on a pedestrian being
+struck removes the part of the problem that was easy, and what remains is the
+part nobody knew the answer to. The full variable set reaches
+`{python} f"{ped_all:.4f}"`, against roughly four tenths in the general problem.
+
+The ordering, though, is unchanged. Who else was involved adds
+`{python} f"{ped_participants:+.4f}"`. Everything about the road adds
+`{python} f"{ped_environment:+.4f}"`. The time variables again subtract.
+
+The participant variables here are no longer the type of collision, which is
+constant by construction, but whether the vehicle that struck the pedestrian was
+a car, a truck, a motorcycle, or one of several. Their continued dominance
+carries a blunt summary: what hit you matters more than where you were
+standing.
+
+There is one respect in which the environment does better. Relative to what the
+participant variables contribute, it accounts for
+`{python} f"{ped_share:.1%}"` here against
+`{python} f"{general_share:.1%}"` in the general problem. That change runs in the direction one would expect, since speed limit and
+lighting have a plausible mechanism for a person on foot that they do not have
+for two cars meeting at a junction.
+
+Little rests on it. This subproblem has a few thousand records rather than a few
+hundred thousand, and a contribution of a few thousandths of a correlation
+coefficient at that sample size is not distinguishable from nothing.
+The most that can be said is that the environment variables are not measurably
+more useful here, only less overwhelmed.
+
+## Night, and what cannot be said about it
+
+Suppose the time variables do carry more weight in the pedestrian problem than
+in the general one, and that lighting is among the variables that move the
+outcome. The obvious reading is that pedestrians struck in the dark are hurt
+worse because drivers cannot see them, and the obvious recommendation is more
+street lighting.
+
+That reading may be correct. This data cannot establish it, for reasons that
+generalise well beyond this variable.
+
+Several explanations fit equally well.
+
+*   Drivers see less in the dark, so collisions happen at higher effective
+    speed and with less braking.
+*   Traffic is lighter at night, so drivers travel faster on the same roads.
+*   More drivers and more pedestrians have been drinking in the evening.
+*   The people out walking at two in the morning are not the same people out
+    walking at two in the afternoon, in age, in sobriety, and in where they are
+    walking.
+*   Emergency response and hospital staffing differ overnight, which affects how
+    an injury is graded and how it resolves.
+
+The extract records none of the quantities that would separate these. There is
+no speed travelled, no alcohol measurement, no traffic volume, no age, no time
+to treatment. Every one of the explanations above shows up in this data as the
+same thing: a collision at night that hurt somebody.
+
+And even if darkness were the whole story, the intervention does not follow
+cleanly. No amount of street lighting turns night into day. The question a road
+authority faces is not whether darkness is worse but how much a given lighting
+improvement would buy, and that is a question about magnitudes on a scale this
+data does not measure.
+
+::: {.callout-important appearance="simple"}
+## The shape of the problem
+
+The variables that predict are the ones nobody chooses. The variables anyone
+could change barely predict. And where an actionable variable does appear to
+matter, the data cannot distinguish its effect from several confounders it never
+recorded.
+
+Each of those three is a limitation. Together they are a finding about what
+administrative collision records can support, and it applies well beyond
+Quebec.
+:::
+
+## What this means for a road safety programme
+
+None of this says that road design has no effect on how badly collisions turn
+out. That would be a strange conclusion, and the data does not support it.
+
+The two claims are easily confused. @tbl-environment showed that the rate of
+serious injury does vary across road conditions, by several times over in the
+case of lighting. What the ablation adds is that this variation is not
+information the road variables contribute; it is information already carried by
+who was involved and where they were. The association holds, and adds nothing
+once the rest of the form has been read.
+
+What the data supports is narrower and, for anyone planning to use records like
+these, more useful. Collision reports as collected here are not an instrument
+capable of detecting the effect of road design on severity. The variables are
+too coarse, the most relevant ones are missing, and the ones that are present
+are dominated by a fact about who was involved that no design can alter.
+
+An analysis of this data that reported which road features are dangerous would
+not be reporting a discovery. It would be reporting the noise left over after
+the participant variables had taken everything there was.
+
+@sec-conclusion sets out what would be needed instead.

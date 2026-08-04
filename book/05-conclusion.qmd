@@ -1,0 +1,340 @@
+# What the record supports {#sec-conclusion}
+
+{{< include _setup.qmd >}}
+
+```{python}
+#| label: conclusion-setup
+#| include: false
+
+import json
+
+from vision_zero.config import get_settings
+
+HELD_OUT_PATH = get_settings().report_dir / f"{EXPERIMENT.name}-heldout.json"
+HELD_OUT = json.loads(HELD_OUT_PATH.read_text(encoding="utf-8")) if HELD_OUT_PATH.is_file() else None
+```
+
+## What the data supports
+
+These reports carry real but small information about how badly a collision turns
+out, and almost all of it concerns who was involved rather than where or under
+what conditions.
+
+There is a limit on what any method could achieve with them. It was established
+four ways in @sec-limits: by counting how often identically recorded collisions
+disagree, by bounding the error rate from the information the variables carry,
+by fitting five estimator families that arrive at the same place, and by
+watching the learning curve fail to climb. The limit belongs to the data, not to
+the model or the sample size.
+
+Within that limit, the variables a city could act on contribute least. The block
+describing the road adds almost nothing once who was involved is known, and the
+block describing the time of day subtracts.
+
+What this dataset can honestly produce is a distribution over outcomes rather
+than a predicted label.
+
+::: {.callout-note appearance="simple"}
+## What is not being claimed
+
+**We do not claim that these features predict no better than chance.** They do
+better than chance, and @sec-permutation establishes it. The claim is about how
+much better, and about which variables the improvement comes from.
+
+**We do not claim that road design has no effect on how badly collisions turn
+out.** That is not a conclusion this data could support in either direction, and
+we would be surprised if it were true. What @sec-matters shows is that these
+records are not an instrument capable of detecting such an effect.
+
+**We do not claim that collision records are useless.** A different question put
+to similar records is producing results that boroughs are acting on, and the
+next section describes it.
+:::
+
+## Held out until now
+
+Every figure so far comes from cross-validation within the training records.
+This section is the first and only use of the records set aside in @sec-data.
+
+```{python}
+#| label: tbl-heldout
+#| tbl-cap: "The held-out set, opened once, after the analysis was otherwise complete."
+
+if HELD_OUT is None:
+    aggregates = pd.DataFrame([{"No held-out evaluation found at": str(HELD_OUT_PATH)}])
+else:
+    model, baseline = HELD_OUT["model"], HELD_OUT["baseline"]
+    aggregates = pd.DataFrame(
+        [
+            {
+                "Measure": name,
+                "Model": f"{model[key]:.4f}",
+                "Ignores every variable": f"{baseline[key]:.4f}",
+            }
+            for name, key in (
+                ("Matthews correlation", "mcc"),
+                ("Balanced accuracy", "balanced_accuracy"),
+                ("Macro F1", "macro_f1"),
+                ("Accuracy", "accuracy"),
+            )
+        ]
+    )
+
+aggregates
+```
+
+```{python}
+#| label: tbl-heldout-per-class
+#| tbl-cap: "Per class, on the held-out records."
+
+if HELD_OUT is None:
+    per_class = pd.DataFrame([{"No held-out evaluation found at": str(HELD_OUT_PATH)}])
+else:
+    labels = ["Material damage only", "At least one minor injury", "Serious injury or fatality"]
+    model = HELD_OUT["model"]
+    per_class = pd.DataFrame(
+        {
+            "Outcome": labels[: len(model["support"])],
+            "Actual": [f"{v:,}" for v in model["support"]],
+            "Predicted": [f"{v:,}" for v in model["predicted"]],
+            "Precision": [round(v, 4) for v in model["precision"]],
+            "Recall": [round(v, 4) for v in model["recall"]],
+            "F1": [round(v, 4) for v in model["f1"]],
+        }
+    )
+
+per_class
+```
+
+::: {.callout-note appearance="simple"}
+## Where these figures come from
+
+They are read from a file written by `tvz evaluate`, the only command in the
+project that touches the held-out records, and one that requires a flag awkward
+to type on purpose. Nothing above is recomputed when the book is rebuilt, so
+rendering it again does not consult the vault a second time.
+:::
+
+```{python}
+#| label: heldout-figures
+#| include: false
+
+if HELD_OUT is not None:
+    model = HELD_OUT["model"]
+    severe = len(model["support"]) - 1
+    severe_support = int(model["support"][severe])
+    severe_predicted = int(model["predicted"][severe])
+    severe_found = round(model["recall"][severe] * severe_support)
+    accuracy_gain = model["accuracy"] - HELD_OUT["baseline"]["accuracy"]
+    severe_calibration = float(HELD_OUT["calibration"]["error_by_class"][str(severe)])
+```
+
+The aggregate figures are a little better than the cross-validated ones in
+@sec-limits, which is the expected direction: those were computed on a subsample
+of the training records with fewer folds, while this model was fitted on all of
+them. Nothing here suggests the specification search described in @sec-methods
+cost anything measurable.
+
+Read the aggregates and the model looks respectable. Matthews correlation of
+around `{python} f'{HELD_OUT["model"]["mcc"]:.2f}'` against zero for a rule that
+reads nothing, and accuracy `{python} f"{accuracy_gain:.3f}"` above that rule.
+
+Now read the per-class table.
+
+The held-out set contains `{python} f"{severe_support:,}"` serious or fatal
+collisions. The model predicted that outcome
+`{python} f"{severe_predicted:,}"` times in
+`{python} f'{HELD_OUT["n_test"]:,}'` records, and was right
+`{python} f"{severe_found:,}"` of those times.
+
+Every aggregate in the table above is consistent with that. None of them
+contains it.
+
+## Calibrated, and useless as a classifier
+
+Two facts that look like a contradiction and are not.
+
+```{python}
+#| label: tbl-reliability
+#| tbl-cap: "What the model said about serious injury, against what occurred. Held-out records."
+
+if HELD_OUT is None:
+    reliability = pd.DataFrame([{"No held-out evaluation found at": str(HELD_OUT_PATH)}])
+else:
+    severe_key = str(HELD_OUT["classes"][-1])
+    bins = pd.DataFrame(HELD_OUT["calibration"]["reliability"][severe_key])
+    reliability = pd.DataFrame(
+        {
+            "Stated chance of serious injury": bins["predicted"].round(4),
+            "Collisions": [f"{int(v):,}" for v in bins["n"]],
+            "Of those, actually serious": bins["observed"].round(4),
+            "Gap": bins["gap"].round(4),
+        }
+    )
+
+reliability
+```
+
+The model's stated probabilities are close to the frequencies that follow them.
+Averaged over the bins and weighted by how many collisions fall in each, the gap
+between what it says and what occurs is
+`{python} f"{severe_calibration:.4f}"`.
+
+Its recall on the same class, from the table above, is
+`{python} f'{HELD_OUT["model"]["recall"][-1]:.4f}'`.
+
+Those are different abilities and only one of them fails. Naming the most likely
+outcome requires some outcome to be the most likely one, and when four
+collisions in five cause no injury, almost no combination of circumstances ever
+makes serious injury the leading answer. Stating the odds requires only that the
+odds be right, and they are.
+
+A model that is well calibrated and cannot discriminate has told you the truth in
+the only form the data supports. Treating such a model as a classifier in need of
+improvement is what produces the appearance of failure, when what it has produced
+is a distribution.
+
+Hence the tool at the front of this book reports counts rather than predictions. Given a combination of recorded conditions, it shows what became of
+the collisions on record that matched. No model is involved, no threshold is
+chosen, and nothing is claimed beyond arithmetic.
+
+## A question this data cannot answer, and one that can be
+
+The failure here belongs to a particular question rather than to collision
+records in general.
+
+This book asked: **given a collision, how badly did it turn out?** That question
+needs the circumstances to distinguish outcomes, and they do not.
+
+A different question is being asked productively in Montréal at the same time:
+**where do collisions happen?** In July 2026, CBC obtained SAAQ data showing
+which intersections had the most collisions involving cyclists between 2023 and
+2025 [@kozicka2026]. The most affected was Gilford, St-Denis and Villeneuve in
+the Plateau, with fourteen. It has ranked in the top two every year since 2018.
+
+That analysis needs a location and a count. It does not need to predict
+anything, and it produced something a borough could act on: bollards were installed to discourage the tight right turns across the bike path
+that the count had drawn attention to.
+
+::: {.callout-note appearance="simple"}
+## Where the location is recorded
+
+The extract used here places a collision only within an administrative region,
+with a five-value description of how far it was from an intersection. It carries
+no street, address or coordinates.
+
+The underlying police report carries more. The City of Montréal publishes a
+collision dataset geocoded from exactly those fields, the civic number, the
+street and the intersection, matched against the city's road network
+[@vmtl2024]. It covers the agglomeration since 2012 and describes itself as a
+subset of what the SAAQ published before December 2023.
+
+The SAAQ's dataset page notes that its data was revised to comply with Law 25,
+Quebec's privacy legislation, and the extract used in this book is the revised
+one. Where a collision happened and who was in it are both personal information
+about identifiable people, and how that is balanced against research access is a
+question for others.
+
+The point for this book is narrower. The published extract is not the only form
+in which these reports exist, and the analyses that have produced action in
+Montréal have drawn on forms of it that carry more.
+:::
+
+There is a stronger move still, which avoids collision records altogether.
+SafeMobility, a research group at Polytechnique Montréal, rates intersections by
+hazard using speed, traffic volume and heavy vehicle presence, and identifies
+some four thousand Montréal intersections as very hazardous without waiting for
+anyone to be hurt at any of them [@safemobility; @kozicka2026]. Its founder puts the case against the alternative in these terms:
+
+> The current approach in traffic engineering is often that we wait for the
+> horrible event, like a death, to occur before you really say: OK, let's change
+> that intersection.
+
+Every variable that method relies on is one this extract does not contain.
+
+## Both approaches share a blind spot
+
+The counting approach is more tractable than ours, and it inherits a limitation
+that no analysis of collision records escapes.
+
+A collision record exists only where somebody was travelling. A road so hostile
+that cyclists avoid it produces few collisions and appears safe, and a road that
+carries a million cyclists a year will produce collisions even if it is
+comparatively well designed. Counting collisions measures exposure multiplied by
+risk, and this data measures neither factor separately.
+
+The CBC piece makes the point about its own findings: the intersections with the most
+collisions are not the ones cyclists report feeling most at risk on, because
+those concerns attach to places that are less travelled and that cyclists avoid
+altogether [@kozicka2026]. A survey of more than 1,500 Montréal cyclists
+produced a list of dangerous intersections that overlaps only partly with the
+collision counts [@tram2024].
+
+Two measurements of the same thing that disagree are not a problem to be
+resolved by picking one. They are measuring different quantities, and the
+difference between them is information about which roads people have already
+given up on.
+
+## What would be needed instead
+
+For the question this book asked, the missing variables are the ones listed in
+@sec-data, and the most important of them is speed travelled. Kinetic energy
+grows with the square of speed, and the relationship between speed and injury
+severity is among the best established findings in road safety [@elvik2005]. The
+extract records the posted limit, which is a fact about a sign.
+
+The others are alcohol, restraint use, occupant age, vehicle mass, traffic
+volume and time to treatment. Most are recorded somewhere: by coroners, by
+hospitals, by toxicology laboratories, by the police in their own reports. None
+appears here, and joining them is a matter for an authority with the mandate to
+do it.
+
+For a road safety programme, the more useful conclusion is that severity
+prediction from report attributes is the wrong instrument, and that two better
+ones exist. Count collisions where they happen, which requires location. Assess
+road geometry directly, which requires no collision records at all.
+
+## What this project is
+
+A learning exercise that produced a negative result.
+
+There is no useful model here to take away. What the project demonstrates instead
+is that a limit can be established rather than merely run into: that "this model
+is not good enough" and "no model could be" are distinguishable claims, and that
+the distinction can be checked rather than argued from how hard someone tried.
+
+Most of the work went into being able to make the second claim responsibly.
+That meant finding a variable that was the outcome under another name, noticing
+that blank fields were not blank at random, discarding a homemade scoring rule
+in favour of conventional ones, and repeatedly correcting estimators whose bias
+ran in the flattering direction. @sec-methods records those decisions, including
+the ones that were wrong first.
+
+## Limitations
+
+**One region in the modelling.** Every model and every bound in this book is
+fitted to Montréal, since a Vision Zero programme is a municipal thing and asking what a city can
+change makes more sense within one city. The published
+extract covers the whole province, and the explorer at the front of this book
+uses all of it, so a province-wide replication would need no new data. Whether
+the shape of the result holds elsewhere is unexamined.
+
+**One reporting regime**, over twelve years during which recording practice may
+have changed. @sec-quality found blank fields tracking severity; other drifts
+would be harder to see.
+
+**Severity as an administrative classification.** The published definition of the
+severest class turns on facts that are not available when the report is filed:
+whether a victim died within thirty days, and whether an injury required
+hospitalisation. So the field reflects follow-up rather than a judgement at the
+scene, which is reassuring. What the extract does not allow is any assessment of
+how complete or how prompt that follow-up is, or of where the line falls when a
+person is held for observation rather than admitted.
+
+**A specification arrived at by exploration.** The held-out figures are clean
+with respect to fitting and mildly optimistic with respect to the choices that
+led here. @sec-methods sets out exactly what was looked at and when.
+
+**The blind spot above.** A collision record exists only where somebody was
+travelling. Nothing in this book sees the road that people have learned to
+avoid, on foot, on a bicycle or in a car.

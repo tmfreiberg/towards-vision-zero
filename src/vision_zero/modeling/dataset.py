@@ -169,30 +169,38 @@ def _restrict(frame: pd.DataFrame, restrict: dict[str, list[str]]) -> pd.DataFra
     return out
 
 
-def _cap_missing_fields(frame: pd.DataFrame, features: tuple[str, ...], limit: int) -> pd.DataFrame:
+def _cap_missing_fields(
+    X: pd.DataFrame,
+    y: pd.Series,
+    features: tuple[str, ...],
+    limit: int,
+    part: str,
+) -> tuple[pd.DataFrame, pd.Series]:
     """Discard records with too many blank feature fields.
 
-    Reports both what fraction of records is lost and what fraction of each
-    class, because those differ: blanks concentrate on the mildest outcomes, so
-    the filter removes far more of the majority class than of the severe one.
-    That asymmetry is the reason the filter is worth applying and the reason its
-    cost has to be stated rather than assumed small.
+    Applied to the training and held-out parts separately and after the split,
+    so that the split itself does not depend on the filter.
+
+    Blanks concentrate on the mildest outcomes, so this removes far more of the
+    majority class than of the severe one. That asymmetry is the reason the
+    filter is worth applying and the reason its cost is logged rather than
+    assumed small.
     """
-    present = [name for name in features if name in frame.columns]
-    blanks = frame[present].isna().sum(axis=1)
-    keep = blanks <= limit
+    present = [name for name in features if name in X.columns]
+    keep = X[present].isna().sum(axis=1) <= limit
 
     if keep.all():
-        return frame
+        return X, y
 
     log.info(
-        "Capping blank fields at %d: %d -> %d records (%.1f%% kept)",
+        "Capping blank fields at %d in the %s part: %d -> %d records (%.1f%% kept)",
         limit,
-        len(frame),
+        part,
+        len(X),
         int(keep.sum()),
         100 * keep.mean(),
     )
-    return frame[keep]
+    return X[keep], y[keep]
 
 
 def _drop_constant_features(
@@ -251,11 +259,6 @@ def build_dataset(experiment: Experiment, frame: pd.DataFrame | None = None) -> 
     if working.empty:
         raise ValueError("The specification selects no records")
 
-    if experiment.data.max_missing_features is not None:
-        working = _cap_missing_fields(
-            working, experiment.features, experiment.data.max_missing_features
-        )
-
     candidates = tuple(name for name in experiment.features if name in working.columns)
     X = working[list(candidates)].reset_index(drop=True)
     y = working[experiment.data.target].reset_index(drop=True).astype("int64")
@@ -264,6 +267,12 @@ def build_dataset(experiment: Experiment, frame: pd.DataFrame | None = None) -> 
     if len(classes) < MIN_DISTINCT_VALUES:
         raise ValueError(f"Target {experiment.data.target} takes one value; nothing to classify")
 
+    # The split is taken before any quality filter, so that it depends only on
+    # the population, the seed and the target. Two experiments differing only in
+    # how strictly they filter therefore hold out the same records, and the
+    # looser one's training set contains the stricter one's. Filtering first
+    # would give them unrelated splits, and one experiment's training data would
+    # overlap another's held-out set.
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
@@ -272,6 +281,11 @@ def build_dataset(experiment: Experiment, frame: pd.DataFrame | None = None) -> 
         shuffle=True,
         stratify=y if experiment.split.stratify else None,
     )
+
+    if experiment.data.max_missing_features is not None:
+        limit = experiment.data.max_missing_features
+        X_train, y_train = _cap_missing_fields(X_train, y_train, candidates, limit, "training")
+        X_test, y_test = _cap_missing_fields(X_test, y_test, candidates, limit, "held-out")
 
     # Which features are constant is decided from the training records alone.
     # Deciding it from the whole frame would let the held-out records influence

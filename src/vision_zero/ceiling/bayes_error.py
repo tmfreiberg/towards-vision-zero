@@ -36,7 +36,7 @@ Examples
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd
@@ -48,12 +48,30 @@ if TYPE_CHECKING:
 
 __all__ = [
     "CeilingEstimate",
+    "DecisionRule",
     "HeldOutCeiling",
+    "achievable_frontier",
     "cell_labels",
     "held_out_ceiling",
     "in_sample_ceiling",
     "multiplicity_profile",
 ]
+
+#: Which rule to apply within a cell.
+#:
+#: All records in a cell present the same input, so any method answers them
+#: identically. What it should answer depends on what is being scored, and the
+#: two options here are the two the analysis uses.
+#:
+#: ``"accuracy"`` answers with the cell's commonest outcome. This maximises the
+#: proportion correct, and on imbalanced data it will answer with the majority
+#: class almost everywhere.
+#:
+#: ``"balanced"`` answers with the outcome whose share in the cell is largest
+#: *relative to its share overall*. This maximises the mean of the per-class
+#: recalls, and it will name a rare class in any cell where that class is
+#: enriched. It is deliberately worse on accuracy.
+DecisionRule = Literal["accuracy", "balanced"]
 
 log = get_logger(__name__)
 
@@ -231,6 +249,12 @@ class HeldOutCeiling:
     per_class_recall
         Recall by class, over covered records. The severe class is the one to
         read: if even this classifier cannot find it, no model will.
+    rule
+        Which within-cell decision rule produced these figures.
+    balanced_accuracy
+        Mean of the per-class recalls over covered records. Reported alongside
+        accuracy because the two disagree sharply here, and which of them a
+        rule maximises is a choice rather than a fact.
     predictions
         The classifier's prediction per covered record.
     truth
@@ -247,10 +271,16 @@ class HeldOutCeiling:
     predictions: np.ndarray
     truth: np.ndarray
     majority_baseline: float = float("nan")
+    rule: DecisionRule = "accuracy"
+    balanced_accuracy: float = float("nan")
 
     @property
     def beats_baseline(self) -> bool:
         """Whether the estimate exceeds always answering with the commonest class.
+
+        Meaningful only for the accuracy rule. The balanced rule gives accuracy
+        away deliberately, so it will usually be false there and that is not a
+        finding.
 
         When it does not, the estimate is not a ceiling. The cell-majority rule
         is Bayes-optimal only in the limit of many records per cell; where cells
@@ -284,8 +314,9 @@ def held_out_ceiling(
     *,
     features: Sequence[str] | None = None,
     min_multiplicity: int = 1,
+    rule: DecisionRule = "accuracy",
 ) -> HeldOutCeiling:
-    """Estimate the ceiling by fitting cell majorities on train and scoring on validation.
+    """Estimate the ceiling by fitting a within-cell rule on train and scoring on validation.
 
     Parameters
     ----------
@@ -299,11 +330,26 @@ def held_out_ceiling(
         Require a combination to appear at least this often in training before
         its majority is trusted. One is the natural default and already honest,
         since the validation record is not among the training records.
+    rule
+        Which within-cell decision to take. See :data:`DecisionRule`. The
+        default maximises accuracy, which on this data means answering with the
+        majority class nearly everywhere; ``"balanced"`` maximises the mean of
+        the per-class recalls instead, at a considerable cost in accuracy.
 
     Returns
     -------
     HeldOutCeiling
-        Accuracy, coverage, and per-class recall.
+        Accuracy, balanced accuracy, coverage, and per-class recall.
+
+    Notes
+    -----
+    There is no single best rule. A rule is optimal with respect to something,
+    and different somethings give different rules and different ceilings. What
+    does not depend on the choice is that the rule must be *constant within a
+    cell*, since every record in a cell presents the same input. Everything a
+    method can do is therefore determined by the cells' class distributions, and
+    :func:`achievable_frontier` traces what that permits for one class without
+    fixing a metric at all.
     """
     columns = list(features) if features is not None else list(X_train.columns)
     combined = pd.concat([X_train[columns], X_val[columns]], ignore_index=True)
@@ -317,8 +363,18 @@ def held_out_ceiling(
 
     totals = counts.groupby(level="cell").sum()
     eligible = set(totals[totals >= min_multiplicity].index)
-    majority = counts.groupby(level="cell").idxmax()
-    lookup = {cell: int(pair[1]) for cell, pair in majority.items() if cell in eligible}
+
+    if rule == "balanced":
+        # Weighting each class by the reciprocal of its overall frequency turns
+        # "commonest in this cell" into "most over-represented in this cell",
+        # which is the decision that maximises the mean per-class recall.
+        priors = frame["y"].value_counts(normalize=True)
+        weighted = counts / priors.reindex(counts.index.get_level_values("y")).to_numpy()
+        chosen = weighted.groupby(level="cell").idxmax()
+    else:
+        chosen = counts.groupby(level="cell").idxmax()
+
+    lookup = {cell: int(pair[1]) for cell, pair in chosen.items() if cell in eligible}
 
     seen = np.array([cell in lookup for cell in val_cells])
     truth = np.asarray(y_val)[seen]
@@ -337,7 +393,10 @@ def held_out_ceiling(
     commonest = train_labels[int(np.argmax(train_counts))]
     baseline = float((truth == commonest).mean()) if len(truth) else float("nan")
 
-    if len(truth) and accuracy <= baseline:
+    # Only meaningful for the rule that is trying to maximise accuracy. The
+    # balanced rule trades accuracy away on purpose, so scoring it against a
+    # majority baseline would report a deliberate choice as a failure.
+    if rule == "accuracy" and len(truth) and accuracy <= baseline:
         log.warning(
             "Held-out ceiling %.4f does not beat the majority baseline %.4f. "
             "Cells are too sparse for this estimator; treat it as uninformative.",
@@ -352,6 +411,7 @@ def held_out_ceiling(
         len(y_val),
         100 * len(truth) / len(y_val) if len(y_val) else 0.0,
     )
+    observed = [value for value in recall.values() if not np.isnan(value)]
     return HeldOutCeiling(
         accuracy=accuracy,
         covered=len(truth),
@@ -360,6 +420,103 @@ def held_out_ceiling(
         predictions=predictions,
         truth=truth,
         majority_baseline=baseline,
+        rule=rule,
+        balanced_accuracy=float(np.mean(observed)) if observed else float("nan"),
+    )
+
+
+def achievable_frontier(
+    X_train: pd.DataFrame,
+    y_train: pd.Series,
+    X_val: pd.DataFrame,
+    y_val: pd.Series,
+    target_class: int,
+    *,
+    features: Sequence[str] | None = None,
+) -> pd.DataFrame:
+    r"""Trace every precision and recall pair any method could reach for one class.
+
+    This is the metric-free form of the argument, and the strongest form of it.
+
+    Because every record in a cell presents the same input, any method either
+    names the target class for a whole cell or for none of it. A method is
+    therefore fully described, as far as this class is concerned, by which cells
+    it names. To name a given number of records while getting as many as
+    possible right, one names the cells where the class is commonest. Sweeping
+    from the richest cell downwards traces the outer boundary of what any method
+    could achieve.
+
+    The consequence worth stating is that precision is capped by the richest
+    cell. If :math:`S` is the set of named cells, then
+
+    .. math::
+
+                ext{precision} = rac{\sum_{c \in S} n_c p_c}{\sum_{c \in S} n_c}
+        \;\le\; \max_{c \in S} p_c ,
+
+    so no rule, however it is tuned or scored, can exceed the largest share the
+    class reaches in any single cell. Recall can always be driven to one by
+    naming every cell, at which point precision falls to the class's overall
+    rate.
+
+    Parameters
+    ----------
+    X_train, y_train
+        Records from which each cell's class distribution is learned.
+    X_val, y_val
+        Records on which the resulting rules are scored.
+    target_class
+        The class to trace the frontier for.
+    features
+        Columns forming the cell.
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per attainable operating point, ordered from the most selective
+        rule to the least, with the threshold on the cell's class share, the
+        number of validation records named, and the resulting precision and
+        recall.
+    """
+    columns = list(features) if features is not None else list(X_train.columns)
+    combined = pd.concat([X_train[columns], X_val[columns]], ignore_index=True)
+    identifiers = cell_labels(combined, columns)
+
+    train_cells = identifiers.iloc[: len(X_train)].to_numpy()
+    val_cells = identifiers.iloc[len(X_train) :].to_numpy()
+
+    fitted = pd.DataFrame({"cell": train_cells, "y": np.asarray(y_train)})
+    grouped = fitted.groupby("cell", observed=True)["y"]
+    share = grouped.apply(lambda values: float((values == target_class).mean()))
+
+    truth = np.asarray(y_val) == target_class
+    total_positive = int(truth.sum())
+    if total_positive == 0:
+        return pd.DataFrame(
+            columns=["threshold", "cells_named", "records_named", "precision", "recall"]
+        )
+
+    val_share = pd.Series(val_cells).map(share).to_numpy()
+    seen = ~pd.isna(val_share)
+
+    order = np.argsort(-np.where(seen, val_share, -np.inf))
+    ranked_truth = truth[order][seen[order]]
+    ranked_share = val_share[order][seen[order]]
+
+    hits = np.cumsum(ranked_truth)
+    named = np.arange(1, len(ranked_truth) + 1)
+
+    # One row per distinct cell share: naming half a cell is not a rule anyone
+    # could implement, since its records are indistinguishable.
+    boundary = np.append(np.diff(ranked_share) != 0, True)
+
+    return pd.DataFrame(
+        {
+            "threshold": ranked_share[boundary],
+            "records_named": named[boundary],
+            "precision": hits[boundary] / named[boundary],
+            "recall": hits[boundary] / total_positive,
+        }
     )
 
 

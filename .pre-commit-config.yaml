@@ -4,11 +4,18 @@
 default_language_version:
   python: python3.12
 
-# The raw extracts are the citable source of record and are never rewritten. A
-# whitespace or line-ending fixer would modify a quarter of a gigabyte of data
-# files on every commit, and — worse — change their bytes enough that git no
-# longer recognises a move as a move, storing the whole lot again.
-exclude: ^data/raw/
+# Two trees no hook may rewrite.
+#
+# `data/raw/` is the citable source of record. A whitespace or line-ending fixer
+# would modify a quarter of a gigabyte on every commit and change its bytes
+# enough that git no longer recognises a move as a move, storing the lot again.
+#
+# `_freeze/` is Quarto's cache of executed output. Its JSON holds rendered HTML
+# with its own escaping, and the vendored site libraries are minified
+# third-party code. Rewriting either is at best noise in the diff and at worst
+# corrupts what the published site is built from. Quarto owns these files;
+# nothing else should edit them.
+exclude: ^(data/raw/|_freeze/)
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

@@ -15,7 +15,9 @@ from __future__ import annotations
 from vision_zero.ceiling.ablation import block_ablation, cumulative_ablation
 from vision_zero.ceiling.bayes_error import (
     CeilingEstimate,
+    DecisionRule,
     HeldOutCeiling,
+    achievable_frontier,
     cell_labels,
     held_out_ceiling,
     in_sample_ceiling,
@@ -36,6 +38,12 @@ from vision_zero.ceiling.leakage import (
     deterministic_values,
     leakage_report,
 )
+from vision_zero.ceiling.locality import (
+    confined_difference_agreement,
+    difference_set_profile,
+    locality_profile,
+    pair_agreement,
+)
 from vision_zero.ceiling.missingness import (
     missing_count_profile,
     missingness_indicators,
@@ -52,18 +60,22 @@ from vision_zero.ceiling.sweep import learning_curve, model_sweep
 
 __all__ = [
     "CeilingEstimate",
+    "DecisionRule",
     "EntropyBracket",
     "HeldOutCeiling",
     "PermutationResult",
+    "achievable_frontier",
     "ambiguous_cells",
     "block_ablation",
     "cell_labels",
     "conditional_class_distribution",
     "conditional_entropy",
     "conditional_entropy_bracket",
+    "confined_difference_agreement",
     "cumulative_ablation",
     "describe_cell",
     "deterministic_values",
+    "difference_set_profile",
     "drop_one_profile",
     "entropy",
     "fano_error_bound",
@@ -72,12 +84,14 @@ __all__ = [
     "in_sample_ceiling",
     "leakage_report",
     "learning_curve",
+    "locality_profile",
     "missing_count_profile",
     "missingness_indicators",
     "missingness_report",
     "model_sweep",
     "multiplicity_profile",
     "mutual_information_per_feature",
+    "pair_agreement",
     "permutation_null",
     "resolution_profile",
     "single_feature_profile",

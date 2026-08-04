@@ -4,7 +4,7 @@
 #     git clone ... && cd towards-vision-zero && make install && make check
 
 .DEFAULT_GOAL := help
-.PHONY: help install lock lint format typecheck test test-fast test-data check clean
+.PHONY: help install lock lint format typecheck test test-fast test-data check render render-fresh preview clean
 
 help:  ## Show this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -39,6 +39,17 @@ test-data:  ## Run the checks that need the full dataset
 
 check: lint typecheck test  ## Everything CI runs
 
+render:  ## Render the book, reusing cached results where the source is unchanged
+	uv run quarto render
+
+render-fresh:  ## Re-execute every chapter, ignoring the cache
+	rm -rf _freeze
+	uv run quarto render
+
+preview:  ## Render and watch, for writing
+	uv run quarto preview
+
 clean:  ## Remove caches and build output
 	rm -rf .pytest_cache .mypy_cache .ruff_cache .coverage coverage.xml htmlcov dist build
+	rm -rf _book .quarto
 	find . -type d -name __pycache__ -not -path "./.venv/*" -exec rm -rf {} +

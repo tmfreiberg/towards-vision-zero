@@ -167,3 +167,27 @@ def test_blocks_reference_only_real_columns() -> None:
     known = set(columns()) | {derived.name for derived in DERIVED}
     for name, block in FEATURE_BLOCKS.items():
         assert block <= known, f"{name} references unknown columns: {sorted(block - known)}"
+
+
+def test_withheld_variables_never_reach_a_feature_set() -> None:
+    """RDWX cannot be read without choosing what a blank means, so it is not read.
+
+    Withholding it in one declared place matters: in a Montréal-only population
+    it is constant and would be dropped anyway, which looks like the same
+    outcome but is an accident of the filter rather than a decision. Widen the
+    population and the accident stops happening.
+    """
+    from vision_zero.data.schema import WITHHELD
+
+    assert "RDWX" in WITHHELD
+    for target in ("TNRY_SEV", "SEV4", "SEVERITY", "ACCDN_TYPE"):
+        assert not (set(feature_candidates(target)) & WITHHELD), target
+
+
+def test_withholding_survives_a_province_wide_population() -> None:
+    """The Montréal filter is not what keeps it out."""
+    from vision_zero.data.schema import WITHHELD, columns
+
+    everything = (*columns(), *(derived.name for derived in DERIVED))
+    candidates = set(feature_candidates("TNRY_SEV", available=everything))
+    assert not (candidates & WITHHELD)

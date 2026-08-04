@@ -1,0 +1,404 @@
+# The record {#sec-data}
+
+{{< include _setup.qmd >}}
+
+```{python}
+#| label: load
+#| include: false
+
+from vision_zero.descriptive import class_shares, frequency
+
+FRAME = load_compiled()
+N_TOTAL = len(FRAME)
+N_MONTREAL = int((FRAME["REGION"] == "Montréal (06)").sum())
+FIRST_YEAR = int(FRAME["YEAR"].min())
+LAST_YEAR = int(FRAME["YEAR"].max())
+```
+
+## Where it comes from
+
+When police attend a collision in Quebec they complete a report. The Société de
+l'assurance automobile du Québec collects those reports and publishes an extract
+of them through Données Québec [@saaq2023]. This book uses every report
+published for the years `{python} FIRST_YEAR` to `{python} LAST_YEAR`
+inclusive: `{python} f"{N_TOTAL:,}"` of them.
+
+The purpose of that publication bears stating at the outset. The
+SAAQ administers Quebec's public automobile insurance scheme and reports
+annually on road safety. The extract exists to serve those two purposes: to
+establish who was involved in what, and to count how many collisions of each
+kind occurred, which makes it an accounting record. Asking it a question it was not built
+to answer is the substance of this book, and the answer turns out to depend far
+more on what the record contains than on how cleverly one asks.
+
+## What a report records
+
+Twenty-five variables, listed in @tbl-variables. They fall into four groups:
+when the collision happened, where, who was involved, and how it turned out.
+
+```{python}
+#| label: tbl-variables
+#| tbl-cap: "The twenty-five published variables. The last two columns report different things: whether the documentation permits a blank, and how often the data actually contains one."
+
+rows = []
+for name in BOOK:
+    variable = BOOK[name]
+    blank_rate = 100 * float(FRAME[name].isna().mean())
+    rows.append(
+        {
+            "Variable": name,
+            "SAAQ column": variable.source_column,
+            "Name": variable.name_in("en"),
+            "Values": len(variable.values) or "not enumerated",
+            "Blank permitted": "yes" if variable.is_nullable else "no",
+            "Blank observed": f"{blank_rate:.1f}%",
+        }
+    )
+pd.DataFrame(rows)
+```
+
+The final two columns of @tbl-variables report different things, and the
+difference matters.
+
+**Blank permitted** describes the documentation. Thirteen variables carry a row
+in the SAAQ's data dictionary reading "Non précisé", with the corresponding
+value cell left empty. For those, a blank field is a documented state: the code
+for "not specified" is the absence of a code.
+
+**Blank observed** describes the data: the fraction of published records on which
+the field is in fact empty.
+
+For most variables the two agree in the way one would expect. For one they
+disagree completely, and the disagreement is instructive.
+
+::: {.callout-warning appearance="simple"}
+## The work-zone indicator is documented for one value only
+
+`CD_ZON_TRAVX_ROUTR` records whether the collision happened in or near a road
+work zone. The published documentation defines a single value, meaning yes, and
+sub-divides it into "approaching the zone" and "within the zone". It defines no
+value for "not in a work zone", and it carries no "Non précisé" row either.
+
+The data is empty on `{python} f'{100 * float(FRAME["RDWX"].isna().mean()):.1f}%'`
+of records.
+
+So a blank here might mean the collision was not in a work zone, or it might
+mean the field was not filled in. Nothing in the documentation distinguishes
+them.
+
+Either reading could be defended, and they describe different variables. On the
+first this is a complete binary indicator; on the second it is almost entirely
+absent. Choosing one silently would be an inference dressed as a fact.
+
+This book therefore sets the variable aside. Every feature set excludes it, the
+exclusion is declared once in the schema rather than arrived at by accident, and
+the codebook records the ambiguity where anyone reading the variable's definition
+will meet it.
+:::
+
+Most of them are coarse. Time of day is recorded in four-hour bands rather than
+as a clock time. Speed limit takes one of seven values, and records the limit posted on the road
+rather than the speed anybody was travelling. Location along the
+road distinguishes an intersection from a point more than a hundred metres away
+from one, and nothing finer than that. Weather has ten categories and lighting
+has four.
+
+The coarseness is not an oversight. A form completed at the roadside by an
+officer with other things to attend to has to be quick, and a categorical answer
+is quick. It does, however, set a limit on what the resulting data can
+distinguish, and @sec-limits is largely concerned with measuring that limit.
+
+::: {.callout-important appearance="simple"}
+## Every variable is recorded after the fact
+
+The report is completed once the collision has already happened. Nothing in it
+describes a state of affairs that existed beforehand, and the severity of the
+collision is not inferred from the other fields; it is recorded alongside them
+on the same form.
+
+The question this data can therefore support is a retrospective one. Given collisions recorded like this one, what became of them? The answer is a
+distribution over past outcomes, which is exactly what the explorer at the front
+of this book reports.
+:::
+
+## What it does not record
+
+The absences matter more than the coarseness, and they are systematic. Nowhere
+in the extract is there any record of:
+
+*   the speed anybody was actually travelling
+*   whether alcohol or drugs were involved
+*   whether occupants were wearing seatbelts, or children properly restrained
+*   the age or experience of any driver
+*   the mass, age or safety rating of any vehicle
+*   traffic volume on the road at the time
+*   how long it took anyone to reach hospital
+
+That list is close to a summary of what determines whether a collision hurts
+somebody. Speed above all: kinetic energy grows with the square of it, and the
+relationship between speed and injury severity is among the best established
+findings in road safety [@elvik2005]. The extract records the posted limit,
+which is a fact about the road, and says nothing at all about compliance.
+
+Some of this is collected elsewhere. Toxicology results exist, coroners' reports
+exist, hospital records exist. None of it appears here, and linking them is a
+matter for an authority with the mandate to do so rather than for anyone working
+from a published extract.
+
+## How severity is recorded
+
+Severity is the outcome this book asks about, and the SAAQ records it on the
+four-level scale defined in @tbl-severity.
+
+```{python}
+#| label: tbl-severity
+#| tbl-cap: "The published severity scale, as the SAAQ defines it."
+
+severity = BOOK["SEVERITY"]
+pd.DataFrame(
+    [
+        {
+            "Level": severity.short_for(key, "en"),
+            "Definition": severity.values[key].gloss.en,
+        }
+        for key in severity.values
+    ]
+)
+```
+
+Two features of that scale deserve attention.
+
+The first is that the lowest two levels differ only by a threshold on the
+estimated cost of repair, set at two thousand dollars since March 2010. Whether
+a collision falls above or below that line says something about an insurance
+claim and nothing about anybody's safety. Where this book asks about injury it
+therefore uses a three-level scale, merging those two. Where it simply displays
+the record, as the explorer does, it keeps all four. Both are available
+throughout, and the active one is always stated.
+
+The second is that severity is not established at the scene. The published
+definition of the severest class turns on a victim having died within thirty
+days, or on an injury having required hospitalisation. Neither is knowable while
+the officer is still standing on the road, so the field records the outcome as
+it was eventually determined rather than as it appeared at the time.
+
+Defining it that way is right, and it makes the classification depend on
+administrative follow-up. Nothing in the extract says how complete
+that follow-up is, how promptly a record is amended, or where the line falls when
+a person is held for observation rather than admitted. Those are questions about
+a process this data cannot see.
+
+```{python}
+#| label: tbl-severity-shares
+#| tbl-cap: "How the outcomes are distributed, province-wide and in Montréal."
+
+both = []
+for label, subset in (
+    ("Québec", FRAME),
+    ("Montréal", FRAME[FRAME["REGION"] == "Montréal (06)"]),
+):
+    shares = subset["TNRY_SEV"].value_counts(normalize=True).sort_index()
+    both.append(
+        {
+            "Population": label,
+            "Records": f"{len(subset):,}",
+            "Material damage only": f"{100 * shares.get(0, 0):.1f}%",
+            "At least one minor injury": f"{100 * shares.get(1, 0):.1f}%",
+            "Serious injury or fatality": f"{100 * shares.get(2, 0):.1f}%",
+        }
+    )
+pd.DataFrame(both)
+```
+
+The imbalance in @tbl-severity-shares is the central difficulty of everything
+that follows. Roughly four collisions in five damaged property and hurt nobody.
+Roughly one in a hundred seriously hurt or killed somebody. A model that
+answered "material damage" every single time would be right about eighty percent
+of the time and would have learned nothing whatever, which is why accuracy
+appears in this book only alongside the figure it has to be compared against.
+
+## The codebook
+
+The SAAQ documents this dataset in French, in a seven-page PDF giving each
+variable's name, its permitted values, and a definition of each value. That
+documentation is the authority on what everything means, and the
+machine-readable codebook this project carries reproduces it in full, alongside
+an English translation prepared here. @tbl-codebook-example shows one variable in both
+languages.
+
+```{python}
+#| label: tbl-codebook-example
+#| tbl-cap: "One variable as documented, in both languages."
+
+variable = BOOK["PUB_PRIV_RD"]
+pd.DataFrame(
+    [
+        {
+            "Value": variable.short_for(key, "en"),
+            "Definition (EN)": variable.values[key].gloss.en,
+            "Definition (FR)": variable.values[key].gloss.fr,
+        }
+        for key in variable.values
+    ]
+)
+```
+
+The definitions are administrative rather than everyday, and reading them
+changes what some variables appear to mean. A "public road" here includes ramps,
+service roads and laneways; a private one includes parking lots and forest
+tracks. The distinction concerns jurisdiction, not traffic. Anyone using this
+data without reading the definitions will import assumptions the SAAQ never
+made.
+
+Where the two languages differ, the French is authoritative. The English is a
+translation, and any error in it is mine.
+
+## When collisions happen, and when they hurt people
+
+@fig-monthly and @fig-hourly show collision counts across the year and across
+the day, with the share that were serious or fatal drawn over them.
+
+```{python}
+#| label: fig-monthly
+#| fig-cap: "Collisions by month across Québec, with the share that were serious or fatal."
+
+monthly = class_shares(FRAME, "MONTH", "TNRY_SEV").sort_values("MONTH")
+viz.plot_volume_and_rate(
+    monthly,
+    "p_class_2",
+    rate_label="share serious or fatal",
+    title="Collision counts and collision severity do not peak together",
+)
+```
+
+```{python}
+#| label: fig-hourly
+#| fig-cap: "Collisions by time of day across Québec, with the share that were serious or fatal."
+
+hourly = class_shares(FRAME, "HOUR", "TNRY_SEV").sort_values("HOUR")
+viz.plot_volume_and_rate(
+    hourly,
+    "p_class_2",
+    rate_label="share serious or fatal",
+    title="The same pattern across the day",
+)
+```
+
+<!-- WRITE THIS ONCE THE FIGURES HAVE RENDERED. Do not assert a direction from
+     memory.
+
+     The expectation, to be confirmed or corrected against the plots: counts
+     peak in winter (ice, snow, short days) while the severe share peaks in
+     summer; counts peak at the afternoon rush while the severe share peaks
+     overnight.
+
+     If that holds, the reading is that frequency and severity are driven by
+     different things. Winter collisions are frequent, slow and expensive.
+     Summer and overnight collisions are rarer, faster, and involve more people
+     outside a vehicle. Say plainly that the data cannot separate speed from
+     exposure from anything else here, and that @sec-matters returns to exactly
+     this problem. -->
+
+Neither figure is here for the seasonal pattern itself, which is not surprising
+and not useful. They are here for three other reasons.
+
+The first is a check, and a weak one, which needs saying.
+Any collision dataset will show more collisions in a Quebec winter and more at
+five in the afternoon than at five in the morning. If these figures showed
+something else, that would point to a broken date field, a mis-parsed extract or
+a filter applied without noticing. They do not, so nothing is obviously wrong.
+The evidence runs one way only: failure here would have been informative, and
+success is close to uninformative.
+
+The second is that frequency and severity are separate things, which the rest of
+the book depends on and which a single count would obscure. Where they move
+together, a reader can safely use one as a proxy for the other. Where they
+diverge, as they appear to here, a policy aimed at reducing collisions and a
+policy aimed at reducing harm are aimed at different targets.
+
+The third is that these figures already show the difficulty the whole book runs
+into. Suppose the severe share does peak in the warmer months and the small
+hours. Several explanations fit: higher speeds where the roads are clear, more
+people walking and cycling, alcohol, a different population out at those times,
+lower traffic volumes permitting greater speeds. Every one of them is plausible
+and this data distinguishes none of them, because it records none of the
+quantities involved. @sec-matters returns to exactly this problem, with the same
+answer.
+
+## Blank fields
+
+Not every field is filled in on every report. Some variables are blank on a
+substantial fraction of records, as @tbl-blank-rates shows.
+
+```{python}
+#| label: tbl-blank-rates
+#| tbl-cap: "Variables left blank on more than one percent of records, province-wide."
+
+rates = (100 * FRAME[list(BOOK)].isna().mean()).round(2)
+rates = rates[rates > 1].sort_values(ascending=False)
+pd.DataFrame(
+    {
+        "Variable": [BOOK[name].name_in("en") for name in rates.index],
+        "Column": rates.index,
+        "Blank": [f"{value:.1f}%" for value in rates],
+    }
+)
+```
+
+The documentation admits this for thirteen variables, which carry a "Non
+précisé" row with a blank code: for those, an empty field is a documented state
+rather than a failure to record one. The rates are nonetheless higher than one
+might expect, and one of them matters a great deal. Speed limit is blank on
+close to a quarter of records, and speed limit is among the more plausibly
+relevant things the extract contains.
+
+Whether a field was filled in also turns out to carry information about the
+outcome, which is a fact about how reports get written rather than about how
+collisions happen. @sec-quality takes that up, because it has to be dealt with
+before any modelling can be trusted.
+
+## The population this book studies
+
+The chapters that follow narrow the data in three ways. Each narrowing is argued
+for where it is made, and stated wherever a figure depends on it.
+
+**To Montréal.** The Vision Zero programme this book takes its title from is a
+municipal one [@montreal2019], and asking what a city can change makes more sense within one city than across a
+province of very different road environments. Montréal contributes `{python} f"{N_MONTREAL:,}"` of the
+`{python} f"{N_TOTAL:,}"` published reports. The explorer at the front of this
+book is not narrowed at all, and region is one of the variables it can be sliced
+by, so nothing here prevents the same questions being asked elsewhere.
+
+**To three severity levels**, merging the two material-damage categories, for
+the reason given above.
+
+**To adequately completed reports**, for the reason given in @sec-quality.
+
+@tbl-population records what each step costs.
+
+```{python}
+#| label: tbl-population
+#| tbl-cap: "From the published extract to the records this book models."
+
+montreal = FRAME[FRAME["REGION"] == "Montréal (06)"]
+modelled = build_dataset(EXPERIMENT)
+
+pd.DataFrame(
+    [
+        {"Step": "Published extract", "Records": f"{len(FRAME):,}"},
+        {"Step": "Montréal only", "Records": f"{len(montreal):,}"},
+        {
+            "Step": "At most one blank field",
+            "Records": f"{modelled.n_train + modelled.n_test:,}",
+        },
+        {"Step": "Available for fitting", "Records": f"{modelled.n_train:,}"},
+        {"Step": "Held out until the end", "Records": f"{modelled.n_test:,}"},
+    ]
+)
+```
+
+Keep the final row in mind. Those records are set aside before any
+analysis begins and are not looked at again until @sec-conclusion. Every figure
+in the intervening chapters is computed by cross-validation within the
+`{python} f"{modelled.n_train:,}"` records available for fitting, and none of
+them has seen the held-out set.

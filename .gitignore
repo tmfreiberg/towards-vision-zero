@@ -24,10 +24,19 @@ app/meta.json
 
 # ---------------------------------------------------------------------------
 # Quarto. `_freeze/` IS committed: it is what lets CI publish the site without
-# executing Python or reading the data.
+# executing Python or reading the data. Everything else here is build output.
 # ---------------------------------------------------------------------------
+/_book/
 /_site/
 /.quarto/
+
+# Quarto writes its intermediate notebook as `chapter.quarto_ipynb_1`, with a
+# numeric suffix, so a pattern without the trailing wildcard misses every one.
+*.quarto_ipynb*
+
+# Per-document output directories, written beside the source during a render
+# and rebuilt on the next one.
+*_files/
 
 # ---------------------------------------------------------------------------
 # Python

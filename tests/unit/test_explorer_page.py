@@ -164,3 +164,32 @@ def test_the_provenance_line_describes_scope_not_a_filter_state(blocks: dict[str
     for block in blocks.values():
         assert "all regions" not in block
         assert "toutes les régions" not in block
+
+
+def test_the_payload_is_revalidated_rather_than_cached(source: str) -> None:
+    """The payload is regenerated whenever the data or schema changes.
+
+    A cached `meta.json` describes a field list the records no longer match,
+    and the page shows the old fields with no indication anything is wrong.
+    `no-cache` revalidates, so an unchanged payload still costs one round trip
+    rather than five megabytes.
+    """
+    assert 'cache: "no-cache"' in source
+
+
+def test_a_missing_payload_is_reported_rather_than_guessed_at(source: str) -> None:
+    assert "payload not found" in source
+
+
+def test_the_masthead_names_the_page_not_the_publisher(source: str, blocks: dict[str, str]) -> None:
+    """The publisher's name at the top made this look like the publisher's tool."""
+    masthead = source[source.index('class="eyebrow"') : source.index("</header>")]
+    assert "assurance automobile" not in masthead
+    for block in blocks.values():
+        assert "independent" in block or "indépendante" in block
+
+
+def test_the_page_disclaims_affiliation(blocks: dict[str, str]) -> None:
+    """Showing someone's data is not the same as speaking for them."""
+    assert "not affiliated" in blocks["en"]
+    assert "pas affiliée" in blocks["fr"]

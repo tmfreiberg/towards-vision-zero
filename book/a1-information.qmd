@@ -1,0 +1,193 @@
+# A little information theory {#sec-information}
+
+@sec-limits leans on a result called Fano's inequality, which sets a floor under
+the error rate of *any* method of guessing one thing from another. This appendix
+explains what that means and why it is true, assuming nothing but arithmetic.
+
+None of it is needed to follow the argument. The argument's central move,
+finding collisions recorded identically and noticing that they turned out
+differently, requires no mathematics at all. Fano's inequality states the same observation generally, and the generality is
+why it belongs here: it holds for every method, including ones nobody has thought
+of yet.
+
+## Measuring how much you do not know
+
+Suppose you must guess the outcome of a collision, and you know nothing about it
+beyond the overall frequencies. In this data those frequencies are roughly:
+
+| outcome | share |
+|---|---|
+| material damage only | 79.8% |
+| at least one minor injury | 19.3% |
+| serious injury or fatality | 0.9% |
+
+How uncertain are you? "Three possibilities" overstates it, since one of them
+happens four times out of five. A useful measure should say you are *less*
+uncertain here than if all three were equally likely.
+
+The measure information theory uses is **entropy**, introduced by Shannon in the
+paper that founded the subject [@shannon1948]. For outcomes with probabilities
+$p_1, \dots, p_M$ it is
+
+$$
+H(Y) \;=\; -\sum_{k=1}^{M} p_k \log_2 p_k .
+$$
+
+Read it as an average of $\log_2(1/p_k)$, the *surprise* of each outcome,
+weighted by how often that outcome occurs. A rare outcome is surprising; a
+near-certain one carries almost no surprise.
+
+The units are bits, and the interpretation is concrete: entropy is roughly the
+number of well-chosen yes-or-no questions you need to pin the answer down, on
+average, over many trials.
+
+A few values to keep in mind:
+
+| distribution | entropy |
+|---|---|
+| a fair coin | 1 bit |
+| a certainty | 0 bits |
+| three equally likely outcomes | $\log_2 3 \approx 1.585$ bits |
+| the severity distribution above | $\approx 0.777$ bits |
+
+Hold onto that last figure. Severity has three possible values but
+carries only 0.777 bits of uncertainty, less than a single coin flip, because
+the distribution is so lopsided. Most collisions damage property and nothing
+else, and any sensible guesser knows it.
+
+## Measuring what a clue removes
+
+Now suppose you also know something: the weather, say, or that a pedestrian was
+struck. Some of your uncertainty should go away.
+
+**Conditional entropy** is what remains:
+
+$$
+H(Y \mid X) \;=\; \sum_{x} P(X = x) \, H(Y \mid X = x),
+$$
+
+the entropy of the outcome within each group of records sharing the same
+features, averaged over the groups. It is never larger than $H(Y)$, since a clue cannot make you more uncertain on
+average.
+
+The difference between the two is the **mutual information**:
+
+$$
+I(X;Y) \;=\; H(Y) - H(Y \mid X),
+$$
+
+the uncertainty the features remove. If they determine the outcome, $I(X;Y) =
+H(Y)$ and nothing is left. If they are irrelevant, $I(X;Y) = 0$ and knowing them
+changes nothing.
+
+This is already enough to state the problem. Features that removed most of the 0.777 bits would be valuable indeed. @sec-limits reports how much they
+actually remove.
+
+::: {.callout-warning appearance="simple"}
+## Estimating conditional entropy is where the trouble is
+
+$H(Y \mid X)$ has to be estimated from finite data, and the obvious estimate is
+badly biased. Group the records by their exact feature combination, compute the
+entropy within each group, and average: a group containing one record shows
+*zero* entropy, because whatever happened to that record is all that ever
+happened to it.
+
+With eighteen features, most combinations occur once or twice, so most groups
+report no uncertainty at all and the estimate collapses toward zero, which
+makes the features look far more informative than they are. This is not a
+subtlety; it is the dominant effect at this sample size.
+
+The bias has been known since the 1950s and is understood in some detail
+[@miller1955; @paninski2003]. @sec-methods describes the two corrections used
+here.
+:::
+
+## The floor under every method
+
+Here is the result that repays all the preceding effort.
+
+Suppose you build *any* procedure that looks at $X$ and announces a guess
+$\hat{Y}$. It can be a lookup table, a decision tree, a neural network, or a
+person with an intuition. Let $P_e$ be the probability it is wrong. Then
+
+$$
+H_b(P_e) + P_e \log_2 (M - 1) \;\ge\; H(Y \mid X),
+$$
+
+where $M$ is the number of possible outcomes and $H_b(p) = -p\log_2 p -
+(1-p)\log_2(1-p)$ is the entropy of a coin with bias $p$.
+
+This is **Fano's inequality** [@fano1961; @cover2006, ch. 2]. Since the left side
+increases with $P_e$ over the range that matters, the inequality can be inverted
+to give a *lower bound on the error rate* from the conditional entropy alone.
+
+### A sketch of the proof
+
+The argument is short enough to sketch, and the sketch is more useful than the
+formal proof.
+
+Imagine someone must tell you the true outcome $Y$, and you already have the
+guess $\hat{Y}$. They could do it in two parts: first say whether the guess was
+wrong, which costs one bit at most and on average $H_b(P_e)$, and then, if it
+was wrong, say which of the other $M-1$ outcomes it actually was, costing at most
+$\log_2(M-1)$ bits.
+
+So the total cost of describing $Y$ given $\hat{Y}$ is at most $H_b(P_e) + P_e
+\log_2(M-1)$.
+
+But $\hat{Y}$ was computed from $X$ and nothing else, so it cannot be more
+informative about $Y$ than $X$ is. Whatever uncertainty about $Y$ remains after
+seeing $X$, that is $H(Y \mid X)$, must still be there after seeing
+$\hat{Y}$, and must therefore be covered by that description cost. Hence the
+inequality.
+
+The essential point is the middle step: **a guess computed from $X$ cannot know
+more than $X$ does.** Processing does not create information. This is the data processing inequality, and it explains why the bound covers
+every method rather than some particular family of them.
+
+### Two limiting cases
+
+The two extremes give the shape of the bound.
+
+**Useless features.** If $X$ tells you nothing, $H(Y \mid X) = H(Y)$. For $M$
+equally likely outcomes that is $\log_2 M$, and inverting the inequality gives
+$P_e \\ge (M-1)/M$, exactly the error rate of guessing at random, which is the
+right answer and shows the bound to be tight.
+
+**Perfect features.** If $X$ determines $Y$ then $H(Y \mid X) = 0$, the bound
+gives $P_e \ge 0$, and it says nothing. Correctly: nothing about the information
+content forbids a perfect classifier when the information is all there.
+
+Everything interesting is in between, and the bound is genuinely useful there:
+it converts a statement about information into a statement about achievable
+accuracy, without anyone having to fit a model.
+
+## Two directions, one conclusion
+
+@sec-limits bounds performance from both sides, and the two arguments should be
+kept distinct because they can fail independently.
+
+**From above**, by counting. Group the records by their exact feature
+combination. Within a group, no method can do better than always answering with
+that group's commonest outcome, because it sees the same input every time and
+must give the same answer. Summing the commonest outcome's count across groups
+gives the largest number of records any method could get right.
+
+**From below**, by Fano. Estimate how much uncertainty the features leave, and
+convert it into a floor under the error rate.
+
+The first is concrete and easy to check. The second requires an entropy estimate
+and is only as good as that estimate. They approach the same quantity from
+opposite sides, and where they meet, the answer is pinned.
+
+On a constructed example this is exact: for a dataset where every feature
+combination splits evenly between two outcomes, the counting argument gives a
+ceiling of 0.5 and Fano gives a floor of 0.5, and the two agree to six decimal
+places. The test asserting that is in `tests/unit/test_ceiling_golden.py`,
+because a bound that is wrong is worse than no bound at all.
+
+## Further reading
+
+@cover2006 is the standard text and its second chapter covers everything above
+at greater length and with proofs. @mackay2003 is more discursive and better for
+intuition. @fano1961 is the original, and is harder going than either.

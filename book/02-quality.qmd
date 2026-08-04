@@ -1,0 +1,336 @@
+# What the data was hiding {#sec-quality}
+
+{{< include _setup.qmd >}}
+
+```{python}
+#| label: quality-setup
+#| include: false
+
+from vision_zero.ceiling import missing_count_profile, missingness_report
+from vision_zero.ceiling.leakage import excluded_outcomes
+from vision_zero.descriptive import class_shares
+
+FRAME = load_compiled()
+MONTREAL = FRAME[FRAME["REGION"] == "Montréal (06)"]
+
+UNCAPPED = build_dataset(load_experiment("montreal_ternary"))
+CAPPED = build_dataset(EXPERIMENT)
+```
+
+Three problems had to be dealt with before any modelling could be trusted. All
+three were found by looking at the data rather than at the model, and one of
+them would have produced a respectable-looking result that meant nothing at all.
+
+## A variable that was the answer
+
+Five variables record who was involved in a collision. They look alike, they are
+named alike, and four of them mean the same kind of thing. @tbl-indicators gives
+the SAAQ's definition of each.
+
+```{python}
+#| label: tbl-indicators
+#| tbl-cap: "The five road-user indicators, as the SAAQ defines them. One is not like the others."
+
+pd.DataFrame(
+    [
+        {
+            "Variable": name,
+            "SAAQ column": BOOK[name].source_column,
+            "Definition": BOOK[name].summary.en,
+        }
+        for name in ("LT_TRK", "HVY_VEH", "MTRCYC", "BICYC", "PED")
+    ]
+)
+```
+
+Four of them say that a vehicle of some kind took part. The fifth says that a
+pedestrian was **hurt**. In the SAAQ's French the four read *impliqué*, involved,
+and the fifth reads *victime piéton, blessée ou décédée*.
+
+The difference in wording is not a small one. Severity above material damage is
+defined by the presence of a victim. So a pedestrian victim entails a victim,
+which entails a severity above material damage, by definition and not by any
+empirical relationship about roads. @tbl-indicator-outcomes shows what that
+looks like in the data.
+
+```{python}
+#| label: tbl-indicator-outcomes
+#| tbl-cap: "Outcome when each indicator is positive, across Québec. One column is not like the others."
+
+rows = []
+for name in ("LT_TRK", "HVY_VEH", "MTRCYC", "BICYC", "PED"):
+    positive = FRAME[FRAME[name].astype("string") == "Y"]
+    shares = positive["TNRY_SEV"].value_counts(normalize=True)
+    rows.append(
+        {
+            "Indicator": BOOK[name].name_in("en"),
+            "Records": f"{len(positive):,}",
+            "Material damage only": f"{100 * shares.get(0, 0.0):.1f}%",
+            "Minor injury": f"{100 * shares.get(1, 0.0):.1f}%",
+            "Serious or fatal": f"{100 * shares.get(2, 0.0):.1f}%",
+        }
+    )
+pd.DataFrame(rows)
+```
+
+Every other indicator leaves the outcome open. A heavy vehicle can be involved
+in a collision that hurts nobody, and usually is. A pedestrian victim cannot be
+involved in a collision that hurt nobody, because that is what the words mean.
+The first column of that row is exactly zero, and no quantity of data would ever
+move it.
+
+A model given this variable is being rewarded for restating the question. The variable is also useless to an engineer: nobody designing an intersection
+knows in advance whether a pedestrian will be hurt at it.
+
+::: {.callout-note appearance="simple"}
+## How the variable came to light
+
+Not by reading the column names, which is how it was missed in the first place.
+Five estimator families with very different inductive biases all scored within
+0.01 of each other on Matthews correlation, which is what a lookup table looks
+like rather than what learning looks like, and going back to the published
+definitions explained why.
+
+Removing it moved the aggregate score less than expected: on the headline
+configuration the Matthews correlation fell by roughly 0.03. So this was not a
+result held up entirely by leakage. It was a small effect that was nonetheless
+wholly illegitimate, which is the awkward case: too small to be obvious, too
+circular to keep.
+:::
+
+The project now checks for this rather than relying on anyone reading carefully.
+Two tests are applied to every candidate variable. The first asks whether any
+value is followed by exactly one outcome. The second, stricter test, the one that catches victim indicators, asks whether
+any value makes some outcome **impossible**.
+
+```{python}
+#| label: tbl-ped-excluded
+#| tbl-cap: "The exclusion test applied to the five indicators. A class that should have occurred hundreds of times and never occurs is not a coincidence."
+
+indicators = FRAME[["LT_TRK", "HVY_VEH", "MTRCYC", "BICYC", "PED"]].reset_index(drop=True)
+excluded_outcomes(indicators, FRAME["TNRY_SEV"].reset_index(drop=True))
+```
+
+The distinction matters because the weaker test misses it. `PED = Y` does not
+determine a single outcome: a pedestrian victim may be minor or serious. What it
+does is rule out the mildest class entirely, and an impossibility is as much a
+definition as a certainty.
+
+## Blank fields are not blank at random
+
+Not every field is completed on every report, and the pattern of what is left
+empty carries information about the outcome. @fig-missingness shows how the
+outcome distribution shifts as more fields are left blank.
+
+```{python}
+#| label: fig-missingness
+#| fig-cap: "Outcome by how many feature fields were left blank. Montréal, with no cap applied."
+
+# Deliberately not `EXPERIMENT`, which discards reports with more than one blank
+# field. This figure is the argument for doing that: drawn from the capped data
+# it could only ever show the columns that survived the cap, which would build
+# the case for the cap out of its own conclusion.
+viz.plot_missingness_profile(
+    missing_count_profile(UNCAPPED.X_train, UNCAPPED.y_train)
+)
+```
+
+The trend runs close to monotone across the range, and steeply. A report with
+nothing left blank is far more likely to describe an injury than one with
+several fields empty; a report with almost everything blank describes property
+damage almost every time.
+
+The mechanism is not mysterious. A collision that hurt somebody produces a
+thorough report, because there is an injured person, an ambulance, a possible
+prosecution and an insurance claim of some size. A collision that bent a bumper
+produces a cursory one. Report completeness tracks severity because both track
+how serious the event was, and neither is a fact about the road.
+
+In the vocabulary of missing data this is neither missing completely at random
+nor missing at random: the probability that a field is blank depends on the
+outcome itself, which is the case that cannot be imputed away [@rubin1976].
+
+@tbl-missingness-lift breaks it down by variable.
+
+```{python}
+#| label: tbl-missingness-lift
+#| tbl-cap: "For each variable, the outcome shares when it is blank against when it is filled."
+
+report = missingness_report(UNCAPPED.X_train, UNCAPPED.y_train)
+severe = UNCAPPED.classes[-1]
+pd.DataFrame(
+    {
+        "Variable": [BOOK[name].name_in("en") for name in report["feature"]],
+        "Blank on": [f"{int(n):,}" for n in report["n_missing"]],
+        "P(no injury) when blank": report["p_class_0_missing"].round(3),
+        "P(no injury) when filled": report["p_class_0_present"].round(3),
+        f"Relative risk of class {severe}": report[f"lift_class_{severe}"].round(3),
+    }
+)
+```
+
+Read the final column. A value below one means that a blank in
+that field accompanies a *lower* rate of serious injury than a completed one.
+Every variable in the table is below one, several of them far below.
+
+This is available to any model, and every model will use it. For prevention it is useless, since nobody planning a road knows how thoroughly a
+future report about it will be filled in. A model that has learned
+"sparse report, therefore minor collision" has learned something true and
+worthless.
+
+### What the cap costs
+
+The remedy used here is blunt: discard reports with more than one blank field
+among the variables being modelled. That removes the steep part of the trend
+while keeping the bulk of the data.
+
+The cost falls unevenly. Blanks concentrate on the mildest collisions, so the
+filter removes far more of the majority class than of the severe one.
+@tbl-blank-cap gives both figures.
+
+Both columns describe the same records. The split into training and held-out
+parts is taken before any filter is applied, so the capped training set is a
+subset of the uncapped one rather than a differently drawn sample, and the
+retained proportions are exact rather than estimated. @sec-methods explains why
+the ordering matters.
+
+```{python}
+#| label: tbl-blank-cap
+#| tbl-cap: "What capping blank fields at one costs, by outcome. Montréal, records available for fitting."
+
+before = UNCAPPED.y_train.value_counts().sort_index()
+after = CAPPED.y_train.value_counts().sort_index()
+labels = ["Material damage only", "At least one minor injury", "Serious injury or fatality"]
+
+pd.DataFrame(
+    {
+        "Outcome": labels,
+        "Uncapped": [f"{int(v):,}" for v in before],
+        "At most one blank": [f"{int(v):,}" for v in after],
+        "Retained": [f"{100 * a / b:.1f}%" for a, b in zip(after, before, strict=True)],
+    }
+)
+```
+
+```{python}
+#| label: balance-shift
+#| include: false
+
+severe_before = 100 * float((UNCAPPED.y_train == 2).mean())
+severe_after = 100 * float((CAPPED.y_train == 2).mean())
+kept = 100 * CAPPED.n_train / UNCAPPED.n_train
+```
+
+Retaining a larger share of the severe records than of the mild ones is the
+right direction, since the severe class is the scarce one and the one the
+analysis is about. Overall the cap keeps `{python} f"{kept:.1f}%"` of the
+records available for fitting.
+
+The cap also shifts the class balance, which is better stated here than
+discovered later. The serious and fatal class rises from
+`{python} f"{severe_before:.2f}%"` of records to
+`{python} f"{severe_after:.2f}%"`. The scarce class becomes slightly less scarce, which helps, though not by much: the problem remains one
+where roughly ninety-nine collisions in a hundred are not the ones being looked
+for.
+
+::: {.callout-note appearance="simple"}
+## The cap counts blanks over the variables actually used
+
+An earlier version of this counted blanks over a candidate list that still
+included the work-zone indicator described in @sec-data, a field blank on
+roughly 98% of records. Nearly every report therefore began with one blank
+before anything else was considered, and a cap of one blank was in practice a
+cap of zero.
+
+The effect was to discard about a third of the data for a reason that had
+nothing to do with report quality. Withholding that variable, for the separate
+reasons given in @sec-data, removes the problem.
+:::
+
+## An undocumented value
+
+One further oddity, small enough to be a footnote and recorded because
+recording it costs nothing.
+
+```{python}
+#| label: tbl-undocumented
+#| tbl-cap: "Values found in the published extract that the documentation does not define."
+
+from vision_zero.data.schema import UNDOCUMENTED_VALUES
+
+pd.DataFrame(
+    [
+        {
+            "Variable": BOOK[name].name_in("en"),
+            "SAAQ column": BOOK[name].source_column,
+            "Documented values": ", ".join(BOOK[name].values),
+            "Found but undocumented": ", ".join(sorted(values)),
+        }
+        for name, values in UNDOCUMENTED_VALUES.items()
+    ]
+)
+```
+
+The lighting variable is documented as taking four values. Four records across
+the twelve years carry a fifth, which the documentation does not define: two in
+2012, one in 2014, one in 2016. Scattered across separate years rather than
+confined to a period, so this is data entry rather than a change of coding
+practice.
+
+No meaning can be assigned to a code the documentation does not define, so none
+is assigned. Such values are read as unrecorded. The coercion is declared in the
+schema rather than performed silently, and its count is logged every time the
+data is compiled, which is why the compiled extract no longer contains them and
+this table lists the declaration rather than a count. Should four records ever become four thousand, the log would report it.
+
+## Nothing else answers the question
+
+With the pedestrian indicator removed, the same two tests were applied to every
+remaining variable. Neither finds anything: no value determines an outcome, and
+no value rules one out.
+
+The near misses are still instructive, because the closest of them is exactly the
+case a careless reading would treat as leakage.
+
+```{python}
+#| label: tbl-accdn-type
+#| tbl-cap: "Outcome by type of collision, Montréal. Being struck is not the same as being hurt."
+
+by_type = class_shares(MONTREAL, "ACCDN_TYPE", "TNRY_SEV", min_records=100)
+pd.DataFrame(
+    {
+        "Type of collision": by_type["label"],
+        "Records": [f"{int(n):,}" for n in by_type["n"]],
+        "No injury": by_type["p_class_0"].round(3),
+        "Minor injury": by_type["p_class_1"].round(3),
+        "Serious or fatal": by_type["p_class_2"].round(3),
+    }
+)
+```
+
+A collision recorded as involving a pedestrian is overwhelmingly likely to have
+hurt somebody. Certainty is another matter, and the gap between the two is the whole
+distinction. Roughly one pedestrian collision in seven produced no injury at
+all, which is thousands of records rather than a rounding error. The variable is
+therefore evidence, and strong evidence, rather than a restatement of the
+outcome.
+
+That figure also disposes of a worry that could not otherwise be settled from
+inside the data. If collisions with unharmed pedestrians simply went unreported,
+this variable would behave like an outcome through the reporting process rather
+than through its definition, and nothing in the extract would reveal it. A cell
+containing thousands of unharmed pedestrians says that is not happening.
+
+## Why this chapter comes first
+
+None of the above is about modelling. All of it had to be settled before
+modelling, because each item changes what a subsequent number means.
+
+The pedestrian indicator would have inflated every result. The blank fields
+would have supplied a real but useless signal that no amount of validation would
+have flagged, since it generalises perfectly to held-out data and is wrong for
+reasons validation cannot see. The undocumented value is trivial, but the habit
+of recording rather than silently repairing is what made the other two
+findable.
+
+@sec-limits asks how well any method could do with what remains.

@@ -106,8 +106,8 @@ def test_ablation_marks_the_baseline() -> None:
         {
             "block": ["majority baseline", "all features", "participants", "environment"],
             "n_features": [0, 18, 6, 9],
-            "f_star_alone": [0.037, 0.144, 0.127, 0.043],
-            "f_star_added": [np.nan, np.nan, 0.090, 0.014],
+            "mcc_alone": [0.0, 0.408, 0.411, 0.029],
+            "mcc_added": [np.nan, np.nan, 0.090, 0.014],
         }
     )
     fig = viz.plot_ablation(ablation)
@@ -117,14 +117,14 @@ def test_ablation_marks_the_baseline() -> None:
 
 def test_learning_curve_renders() -> None:
     curve = pd.DataFrame(
-        {"fraction": [0.25, 0.5, 1.0], "n_train": [10, 20, 40], "f_star": [0.14, 0.15, 0.14]}
+        {"fraction": [0.25, 0.5, 1.0], "n_train": [10, 20, 40], "mcc": [0.41, 0.43, 0.44]}
     )
     assert viz.plot_learning_curve(curve).axes
 
 
 def test_sweep_distinguishes_the_baseline() -> None:
     sweep = pd.DataFrame(
-        {"family": ["xgboost", "logistic", "majority baseline"], "f_star_mean": [0.15, 0.13, 0.04]}
+        {"family": ["xgboost", "logistic", "majority baseline"], "mcc_mean": [0.44, 0.43, 0.0]}
     )
     fig = viz.plot_sweep(sweep)
     colours = {patch.get_facecolor() for patch in fig.axes[0].patches}
@@ -151,3 +151,32 @@ def test_plots_do_not_write_files(tmp_path: Path) -> None:
     table = pd.DataFrame({"label": ["a"], "n": [1], "share": [1.0]})
     viz.plot_trend(table, "MONTH")
     assert not list(tmp_path.iterdir())
+
+
+def test_volume_and_rate_share_a_figure() -> None:
+    """Shown separately, a reader assumes severity follows frequency. It does not."""
+    table = pd.DataFrame(
+        {
+            "label": ["Jan", "Jul"],
+            "n": [3200, 2600],
+            "p_class_2": [0.006, 0.014],
+        }
+    )
+    fig = viz.plot_volume_and_rate(table, "p_class_2", rate_label="share severe")
+    assert len(fig.axes) == 2, "counts and rate must share one figure"
+    assert len(fig.axes[0].patches) == 2
+    assert len(fig.axes[1].get_lines()) == 1
+
+
+def test_every_plot_function_is_exported() -> None:
+    """A new figure added to `plots` and not re-exported fails only at render.
+
+    Quarto reports it as `module 'vision_zero.viz' has no attribute ...`, several
+    minutes into a build, which is a slow way to learn about a missing line in an
+    `__init__`.
+    """
+    from vision_zero.viz import plots
+
+    defined = {name for name in dir(plots) if name.startswith("plot_")}
+    exported = {name for name in dir(viz) if name.startswith("plot_")}
+    assert defined == exported, f"not exported from vision_zero.viz: {sorted(defined - exported)}"

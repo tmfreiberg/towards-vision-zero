@@ -1,3 +1,40 @@
+# The SAAQ collision codebook, in English and French.
+#
+# The SAAQ documents this dataset in a French-language PDF: one row per
+# variable, giving its name, its permitted values, and a definition of each.
+# This file is that documentation in machine-readable form, with an English
+# translation alongside.
+#
+# Provenance, field by field:
+#
+#   source_column   The published French column name, verbatim.
+#   label.fr        The published *description variable*, shortened to fit a
+#                   form label. The SAAQ's words.
+#   label.en        Translated here.
+#   summary         The published variable description. French verbatim,
+#                   English translated here.
+#   values[].label  The published value names. French verbatim where the value
+#                   is named rather than coded; English translated here.
+#   values[].gloss  The published *description valeur* and *explication
+#                   valeur*. French verbatim, English translated here.
+#   values[].code   The integer encoding used by this project. Not published.
+#   missing         Present where the documentation shows a "Non précisé" row,
+#                   which carries a blank *valeur possible*: a blank field is
+#                   the code, not a category of its own.
+#   notes           Recorded where the published documentation is incomplete.
+#
+# So every French string here is either the SAAQ's or a shortening of it, and
+# every English string is an original translation. Where the two disagree, the
+# French is authoritative.
+#
+# Citation: SOCIÉTÉ DE L'ASSURANCE AUTOMOBILE DU QUÉBEC (SAAQ). Rapports
+# d'accident, [Jeu de données], dans Données Québec, 2017, mis à jour le
+# 18 décembre 2023. https://www.donneesquebec.ca/recherche/dataset/rapports-d-accident
+#
+# This file is edited by hand. It is the source of truth for what every
+# variable and value means, and is read by the package, the book and the
+# explorer alike.
+
 schema_version: 1
 dataset: saaq
 source:

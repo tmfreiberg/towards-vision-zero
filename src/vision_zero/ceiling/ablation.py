@@ -54,7 +54,7 @@ __all__ = ["block_ablation", "cumulative_ablation"]
 
 log = get_logger(__name__)
 
-SCORE_COLUMNS = ("f_star", "mcc", "accuracy", "balanced_accuracy", "severe_recall")
+SCORE_COLUMNS = ("mcc", "balanced_accuracy", "macro_f1", "accuracy", "focus_recall")
 
 
 def _prepare(
@@ -121,20 +121,14 @@ def _baseline(
             n=len(truth),
             classes=np.asarray(dataset.classes),
         )
-        scores = classification_scores(
-            truth,
-            prediction.labels,
-            beta=experiment.evaluation.beta,
-            weights=experiment.evaluation.weights,
-            classes=list(dataset.classes),
-        )
+        scores = classification_scores(truth, prediction.labels, classes=list(dataset.classes))
         per_fold.append(
             {
-                "f_star": scores.f_star,
                 "mcc": scores.mcc,
-                "accuracy": scores.accuracy,
                 "balanced_accuracy": scores.balanced_accuracy,
-                "severe_recall": float(scores.recall[-1]),
+                "macro_f1": scores.macro_f1,
+                "accuracy": scores.accuracy,
+                "focus_recall": scores.recall_for(experiment.evaluation.focus_class),
             }
         )
     frame = pd.DataFrame(per_fold)
@@ -166,10 +160,9 @@ def block_ablation(
     -------
     pandas.DataFrame
         One row per block plus rows for the majority baseline and the full
-        feature set. ``f_star_alone`` is the block by itself; ``f_star_added``
-        is the full set minus the full set without this block, so a value near
-        zero means the block contributes nothing the others do not already
-        carry.
+        feature set. ``mcc_alone`` is the block by itself; ``mcc_added`` is the
+        full set minus the full set without this block, so a value near zero
+        means the block contributes nothing the others do not already carry.
     """
     reduced, indices = _prepare(experiment, dataset, subsample, folds)
     blocks = blocks_for(dataset.features)
@@ -200,10 +193,10 @@ def block_ablation(
             row[f"{column}_added"] = everything[column] - rest[column]
         rows.append(row)
         log.info(
-            "%s: F* alone %.4f, added %.4f",
+            "%s: MCC alone %.4f, added %.4f",
             name,
-            row["f_star_alone"],
-            row["f_star_added"],
+            row["mcc_alone"],
+            row["mcc_added"],
         )
 
     return pd.DataFrame(rows)
@@ -244,7 +237,7 @@ def cumulative_ablation(
         accumulated = (*accumulated, *blocks[name])
         scores = _score_features(experiment, reduced, indices, accumulated)
         rows.append({"step": f"+ {name}", "n_features": len(accumulated), **scores})
-        log.info("+ %s (%d features): F* %.4f", name, len(accumulated), scores["f_star"])
+        log.info("+ %s (%d features): MCC %.4f", name, len(accumulated), scores["mcc"])
 
     frame = pd.DataFrame(rows)
     for column in SCORE_COLUMNS:

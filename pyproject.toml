@@ -53,10 +53,16 @@ dev = [
     "pandas-stubs>=2.2",
     "types-pyyaml>=6.0",
 ]
+# Quarto is a standalone binary and is installed separately, but it executes
+# code cells by starting a Jupyter kernel, so it needs that machinery present in
+# whichever interpreter it finds. These are the four packages it actually
+# imports; the `jupyter` metapackage would also work and drags in JupyterLab,
+# the notebook server and qtconsole for nothing.
 docs = [
-    "jupyter>=1.1",               # Quarto's Python execution engine
-    "nbformat>=5.10",
-    "nbclient>=0.10",
+    "ipykernel>=6.29",            # the kernel Quarto starts
+    "jupyter-client>=8.6",        # how it talks to that kernel
+    "nbclient>=0.10",             # how it runs the cells
+    "nbformat>=5.10",             # how it reads and writes them
 ]
 
 [project.urls]
@@ -72,7 +78,11 @@ tvz = "vision_zero.cli:app"
 packages = ["src/vision_zero"]
 
 [tool.uv]
-default-groups = ["dev"]
+# `docs` is installed by default because rendering the book is part of the
+# ordinary workflow, not an occasional extra. Leaving it out means `quarto
+# render` fails on a fresh clone with an import error from inside Quarto's own
+# code, which is a poor way to learn about a dependency group.
+default-groups = ["dev", "docs"]
 
 # ---------------------------------------------------------------------------
 # ruff — lint and format.
@@ -84,12 +94,8 @@ target-version = "py312"
 src = ["src", "tests"]
 extend-exclude = [
     "_freeze",
-    # Legacy trees, retained only until the code that replaces them lands.
-    # Remove these entries once the directories are gone.
-    "scripts",
-    "streamlit",
+    # The original notebooks, kept for reference until the book replaces them.
     "notebooks",
-    "legacy_src",
 ]
 # Without this, ruff lints excluded files anyway when paths are passed
 # explicitly — which is exactly how pre-commit invokes it.
@@ -152,7 +158,7 @@ convention = "numpy"
 # `Variable.values` is the codebook's documented-value mapping. pandas-vet reads
 # every `.values` as the deprecated DataFrame accessor.
 "src/vision_zero/export.py" = ["N803", "N806", "PD011"]
-"tools/*.py" = ["T20"]              # these are scripts; printing is the output
+"tools/*.py" = ["T20"]              # a script, and printing is its output
 "conftest.py" = ["D", "ANN"]
 
 [tool.ruff.lint.isort]

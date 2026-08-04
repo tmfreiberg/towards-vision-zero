@@ -33,7 +33,7 @@ def test_defaults_are_supplied() -> None:
     assert experiment.split.folds == 5
     assert experiment.split.stratify is True
     assert experiment.resampling.max_repeats == 1
-    assert experiment.evaluation.beta == [0.5, 1.0, 2.0]
+    assert experiment.evaluation.focus_class == 2
 
 
 def test_unknown_target_is_rejected() -> None:
@@ -91,11 +91,22 @@ def test_test_size_must_be_a_proper_fraction() -> None:
             Experiment.model_validate({**MINIMAL, "split": {"test_size": bad}})
 
 
-def test_beta_and_weights_must_agree_in_length() -> None:
-    with pytest.raises(ValidationError, match="entries"):
-        Experiment.model_validate(
-            {**MINIMAL, "evaluation": {"beta": [1.0, 1.0], "weights": [1.0, 2.0, 3.0]}}
-        )
+def test_the_focus_class_is_configurable() -> None:
+    """Which class a summary singles out is a property of the question asked."""
+    experiment = Experiment.model_validate({**MINIMAL, "evaluation": {"focus_class": 1}})
+    assert experiment.evaluation.focus_class == 1
+
+
+def test_no_aggregate_weighting_can_be_configured() -> None:
+    """Scores are reported per class and ranked by a metric with no parameters.
+
+    A weighting a reader would have to accept on trust is not something this
+    project offers to configure.
+    """
+    with pytest.raises(ValidationError):
+        Experiment.model_validate({**MINIMAL, "evaluation": {"beta": [1.0, 1.0, 1.0]}})
+    with pytest.raises(ValidationError):
+        Experiment.model_validate({**MINIMAL, "evaluation": {"weights": [1.0, 1.0, 1.0]}})
 
 
 def test_unknown_keys_are_rejected() -> None:

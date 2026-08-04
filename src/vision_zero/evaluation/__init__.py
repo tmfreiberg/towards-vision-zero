@@ -9,12 +9,7 @@ from vision_zero.evaluation.calibration import (
     expected_calibration_error,
     reliability_table,
 )
-from vision_zero.evaluation.metrics import (
-    ClassificationScores,
-    classification_scores,
-    f_beta,
-    f_star,
-)
+from vision_zero.evaluation.metrics import ClassificationScores, classification_scores
 
 __all__ = [
     "CalibrationReport",
@@ -23,7 +18,5 @@ __all__ = [
     "calibration_report",
     "classification_scores",
     "expected_calibration_error",
-    "f_beta",
-    "f_star",
     "reliability_table",
 ]

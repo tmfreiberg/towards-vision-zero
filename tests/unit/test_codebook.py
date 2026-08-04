@@ -217,3 +217,16 @@ def test_readable_names_differ_between_the_languages(book: Codebook) -> None:
     """A French name identical to the English one is usually an untranslated stub."""
     identical = [name for name in book if book[name].name_in("en") == book[name].name_in("fr")]
     assert identical == ["Year"] or not identical, f"untranslated: {identical}"
+
+
+def test_documented_blankness_is_not_the_same_as_observed_blankness(book: Codebook) -> None:
+    """`is_nullable` describes the documentation, and the two can disagree.
+
+    RDWX is the case that makes the distinction matter: the SAAQ documents a
+    value for "in a work zone" and none for "not in one", so no blank is
+    permitted, while the data is empty on almost every record. Anything
+    presenting this to a reader has to say which it means.
+    """
+    assert book["RDWX"].is_nullable is False
+    assert book["RDWX"].notes is not None
+    assert set(book["RDWX"].values) == {"Y"}

@@ -50,15 +50,15 @@ def test_sweep_scores_every_family_and_the_baseline(dataset: tuple[Experiment, D
 def test_sweep_reports_spread_across_folds(dataset: tuple[Experiment, Dataset]) -> None:
     spec, data = dataset
     result = model_sweep(spec, data, families=FAMILIES, folds=2, subsample=None)
-    for column in ("f_star_mean", "f_star_std", "mcc_mean", "severe_recall_mean"):
+    for column in ("mcc_mean", "mcc_std", "balanced_accuracy_mean", "focus_recall_mean"):
         assert column in result.columns
-    assert (result["f_star_std"] >= 0).all()
+    assert (result["mcc_std"] >= 0).all()
 
 
 def test_sweep_is_sorted_by_the_aggregate_score(dataset: tuple[Experiment, Dataset]) -> None:
     spec, data = dataset
     result = model_sweep(spec, data, families=FAMILIES, folds=2, subsample=None)
-    assert result["f_star_mean"].is_monotonic_decreasing
+    assert result["mcc_mean"].is_monotonic_decreasing
 
 
 def test_no_family_meaningfully_beats_the_baseline_on_noise(

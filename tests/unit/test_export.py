@@ -288,3 +288,50 @@ def test_every_grouping_partitions_the_classes_exactly(
         assert sorted(covered) == list(range(n_classes)), grouping["name"]
         folded = [sum(base[index] for index in group) for group in grouping["partition"]]
         assert sum(folded) == pytest.approx(1.0)
+
+
+def test_a_variable_the_codebook_does_not_enumerate_still_exports(tmp_path: Path) -> None:
+    """`YEAR` is an integer, not a documented code. It is still worth filtering on."""
+    frame = pd.DataFrame(
+        {
+            "YEAR": pd.Series([2013, 2011, 2012, 2011] * 25).astype("Int64"),
+            "ASPECT": pd.Series(["Straight", "Curve"] * 50).astype("category"),
+        }
+    )
+    y = pd.Series([0, 1] * 50)
+    experiment = Experiment.model_validate(
+        {
+            "name": "years",
+            "data": {"years": [2011], "target": "TNRY_SEV"},
+            "model": {"kind": "decision_tree", "params": {}},
+        }
+    )
+    data = Dataset(
+        X_train=frame.iloc[:80].reset_index(drop=True),
+        y_train=y.iloc[:80].reset_index(drop=True),
+        X_test=frame.iloc[80:].reset_index(drop=True),
+        y_test=y.iloc[80:].reset_index(drop=True),
+        features=("YEAR", "ASPECT"),
+        target="TNRY_SEV",
+        classes=(0, 1),
+        dropped_constant=(),
+    )
+    result = export_for_browser(experiment, data, tmp_path)
+    meta = json.loads(result.meta_path.read_text(encoding="utf-8"))
+
+    year = next(entry for entry in meta["features"] if entry["name"] == "YEAR")
+    assert [value["key"] for value in year["values"]] == ["2011", "2012", "2013"]
+    assert year["values"][0]["label"]["en"] == "2011"
+    assert year["values"][0]["definition"]["en"] is None
+
+    columns, _ = _decode(result.data_path, result.n_records, result.n_features)
+    index = [entry["name"] for entry in meta["features"]].index("YEAR")
+    assert MISSING_CODE not in set(columns[index]), "no value should encode as unrecorded"
+
+
+def test_observed_values_sort_numerically_when_they_are_numbers() -> None:
+    """A string sort would put 2011 after 199, and years after 1000 out of order."""
+    from vision_zero.export import _observed_values
+
+    assert _observed_values(pd.Series([100, 20, 3])) == ["3", "20", "100"]
+    assert _observed_values(pd.Series(["b", "a"])) == ["a", "b"]

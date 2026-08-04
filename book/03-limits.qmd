@@ -1,0 +1,1013 @@
+# How well could anything do? {#sec-limits}
+
+{{< include _setup.qmd >}}
+
+```{python}
+#| label: limits-setup
+#| include: false
+
+import numpy as np
+
+from vision_zero.ceiling import (
+    conditional_entropy_bracket,
+    held_out_ceiling,
+    multiplicity_profile,
+    mutual_information_per_feature,
+    permutation_null,
+)
+from vision_zero.ceiling.bayes_error import (
+    achievable_frontier,
+    cell_labels,
+    in_sample_ceiling,
+)
+from vision_zero.ceiling.examples import ambiguous_cells, describe_cell
+from vision_zero.ceiling.resolution import resolution_profile, single_feature_profile
+from vision_zero.ceiling.sweep import learning_curve, model_sweep
+
+DATA = build_dataset(EXPERIMENT)
+CELLS = cell_labels(DATA.X_train)
+
+# One fold, used consistently wherever the chapter needs a train and validation
+# split. Fixed by the experiment's seed, so every figure below refers to the
+# same division of the same records.
+TRAIN_IDX, VAL_IDX = next(DATA.folds(EXPERIMENT))
+X_FIT, Y_FIT = DATA.X_train.iloc[TRAIN_IDX], DATA.y_train.iloc[TRAIN_IDX]
+X_VAL, Y_VAL = DATA.X_train.iloc[VAL_IDX], DATA.y_train.iloc[VAL_IDX]
+
+# Computed once and referred to in two places. Each call groups a quarter of a
+# million records twice over, and doing that twice for one number is waste.
+BRACKET = conditional_entropy_bracket(X_FIT, Y_FIT, X_VAL, Y_VAL)
+```
+
+Everything in this chapter concerns the `{python} f"{DATA.n_train:,}"` Montréal
+records available for fitting, described at the end of @sec-data, with the
+`{python} len(DATA.features)` features that survive the exclusions in
+@sec-quality. The held-out records are not touched.
+
+The question is not whether the model built in the usual way performs well. The question is whether **any** method could, which is a different question with
+a different kind of answer. It can be settled without building a good model,
+because it does not depend on how good the model is.
+
+## Collisions recorded identically
+
+Start with something concrete.
+
+Group the records so that every collision in a group has exactly the same value
+for every one of the `{python} len(DATA.features)` recorded variables: the same
+weather, the same road surface, the same lighting, the same road configuration,
+the same hour, the same month, the same vehicle types, everything. Call each such
+group a **cell**.
+
+@tbl-identical shows the three largest cells in which the outcomes disagree.
+
+```{python}
+#| label: tbl-identical
+#| tbl-cap: "Three cells that are both large and internally mixed."
+
+groups = ambiguous_cells(
+    DATA.X_train, DATA.y_train, min_multiplicity=30, top_n=3, cells=CELLS
+)
+pd.DataFrame(
+    {
+        "Collisions": [f"{int(n):,}" for n in groups["n"]],
+        "No injury": [int(v) for v in groups["n_class_0"]],
+        "Minor injury": [int(v) for v in groups["n_class_1"]],
+        "Serious or fatal": [int(v) for v in groups["n_class_2"]],
+        "Commonest outcome's share": groups["max_share"].round(3),
+    }
+)
+```
+
+```{python}
+#| label: tbl-identical-shared
+#| tbl-cap: "What every collision in the first of those cells has in common."
+
+shared = describe_cell(
+    DATA.X_train, int(groups.iloc[0]["cell"]), cells=CELLS, codebook=BOOK
+)
+pd.DataFrame(
+    {
+        "Variable": [BOOK[name].name_in("en") for name in shared],
+        "Recorded value": list(shared.values()),
+    }
+)
+```
+
+```{python}
+#| label: fig-identical
+#| fig-cap: "Outcomes within that one cell. No method reading these variables can tell these collisions apart."
+
+viz.plot_ambiguous_group(groups.iloc[0], DATA.classes)
+```
+
+Now consider what a classifier does with that cell. It reads the recorded
+variables and returns an answer. Every collision in the cell presents it with
+the same input, so it returns the same answer for all of them. It has no choice
+about this: identical inputs, identical output.
+
+The most accurate thing it can do on that cell is answer with whichever outcome
+is commonest there. Nothing does better on the proportion correct, though a
+method chasing something else may well prefer a different answer, and
+@sec-target takes that up. That
+holds for a lookup table, a boosted ensemble, a neural network of any size, and
+a person with an intuition, because it follows from the inputs being identical
+rather than from anything about the method.
+
+::: {.callout-important appearance="simple"}
+## The whole argument, in one sentence
+
+A method has to give the same answer to the same input, so within a cell it
+cannot be right more often than the rule that always answers with that cell's
+commonest outcome.
+:::
+
+Call that the **cell-majority rule**, a name that recurs throughout the chapter.
+Nothing about it is a model: it holds no parameters, is fitted to nothing, and
+looks up what happened last time to collisions recorded the same way.
+
+Which means it cannot generalise at all. Faced with a combination of
+circumstances that has never occurred, it has nothing to look up and no answer
+to give. The limitation is a serious one and @sec-nearby measures it; for the
+moment the rule serves only to establish what could be achieved on collisions
+that *do* have counterparts on record.
+
+@tbl-identical supports two readings, and the chapter needs both of them kept
+apart.
+
+The **pessimistic** one is that these collisions cannot be told apart. Whatever
+distinguished the one that hurt somebody from the ones that did not, it is not
+written on the form.
+
+The **optimistic** one is that the cell is not the same as the dataset. If the
+outcome shares within it differ from the overall shares, then knowing where a
+collision falls does tell you something, just not enough to name the outcome.
+@sec-conclusion returns to that, since it is the most the data will support.
+
+## How often do identical collisions disagree?
+
+Do that for every cell, count the records that match their own cell's commonest
+outcome, and divide by the number of records counted. @tbl-multiplicity reports
+the result.
+
+::: {.callout-warning appearance="simple"}
+## What this table is for, and what it is not for
+
+The figure it produces is a genuine upper bound on accuracy, and a nearly
+useless one. Read the first row and it says that no method exceeds about
+ninety-three percent, while a rule that ignores every variable and always answers
+"no injury" reaches about seventy-seven. A bound sixteen points above the trivial
+answer forbids very little.
+
+Two things are wrong with it, and both are instructive. Most cells hold one
+record and a cell of one always agrees with itself, so the bound is inflated by
+cells that could not have been wrong. And accuracy was the wrong target from the
+start, for reasons @sec-target sets out.
+
+The table is here for what its last column shows rather than for the bound in
+its third. Read down that column. The statements this book relies on come
+later: @tbl-two-rules for accuracy and for balanced accuracy,
+and @tbl-frontier for a statement that needs no metric at all.
+:::
+
+```{python}
+#| label: tbl-multiplicity
+#| tbl-cap: "The accuracy bound, and how much of the data it speaks for."
+
+profile = multiplicity_profile(DATA.X_train, DATA.y_train)
+pd.DataFrame(
+    {
+                "Cells of at least": [int(v) for v in profile["min_multiplicity"]],
+        "Distinct cells": [f"{int(v):,}" for v in profile["cells"]],
+        "Records covered": [f"{int(v):,}" for v in profile["covered_records"]],
+        "Share of records": [f"{v:.1%}" for v in profile["coverage"]],
+        "Accuracy bound": profile["ceiling"].round(4),
+        "Share in mixed cells": profile["ambiguous_share"].round(3),
+    }
+)
+```
+
+Each row keeps only the cells at or above the stated size and reports on the
+records in them, so the rows describe progressively smaller parts of the data,
+made up of the collisions whose exact circumstances recur most often. Two of the columns need defining.
+
+**Accuracy bound** is the share of covered records whose outcome matches their
+own cell's commonest outcome. No method can achieve better accuracy on those
+records.
+
+**Share in mixed cells** is the fraction of covered records living in a cell
+where more than one outcome occurs. In a cell with only one outcome, the cell-majority rule names that outcome and
+is right about every record in it, so those records raise the bound without ever
+constraining it. Only mixed cells force any error. This
+column therefore says how much of each row rests on cells that could have brought
+the bound down.
+
+The cut-offs are a selection rather than a complete list. Every integer from one
+upwards gives a row, and the six shown are enough to see the shape.
+
+### A small example, worked by hand
+
+The same calculation on a dataset small enough to check by hand makes
+@tbl-multiplicity easier to read. Suppose there are ten collisions
+falling into five cells:
+
+| Cell | Records | Outcomes | Commonest outcome occurs |
+|:-----|--------:|:---------|-------------------------:|
+| A | 4 | no injury, no injury, no injury, minor injury | 3 |
+| B | 3 | no injury, no injury, no injury | 3 |
+| C | 1 | minor injury | 1 |
+| D | 1 | no injury | 1 |
+| E | 1 | serious | 1 |
+
+```{python}
+#| label: tbl-worked-example
+#| tbl-cap: "The profile of that ten-record dataset, computed by the same function that produced @tbl-multiplicity."
+
+example_x = pd.DataFrame({"f": ["A"] * 4 + ["B"] * 3 + ["C", "D", "E"]})
+example_y = pd.Series([0, 0, 0, 1] + [0, 0, 0] + [1, 0, 2])
+example = multiplicity_profile(example_x, example_y, thresholds=(1, 2, 3, 4))
+
+pd.DataFrame(
+    {
+                "Cells of at least": [int(v) for v in example["min_multiplicity"]],
+        "Distinct cells": [int(v) for v in example["cells"]],
+        "Records covered": [int(v) for v in example["covered_records"]],
+        "Share of records": [f"{v:.0%}" for v in example["coverage"]],
+        "Accuracy bound": example["ceiling"].round(4),
+        "Share in mixed cells": example["ambiguous_share"].round(4),
+    }
+)
+```
+
+Every figure in that table can be checked directly.
+
+The first row counts all five cells and all ten records. Its bound is the sum of
+the final column of the list above, divided by ten: $(3+3+1+1+1)/10 = 0.9$. Only
+cell A is mixed, and it holds four records, so four in ten of the covered
+records are in a mixed cell.
+
+The second row ignores cells C, D and E, leaving A and B with seven of the ten
+records between them. The bound is now $(3+3)/7 \approx 0.857$, and four of those
+seven records are in a mixed cell.
+
+The third row is identical to the second, because no cell holds exactly two
+records: raising the cut-off from two to three excludes nothing. A row changes
+only when the cut-off passes an actual cell size, which here means at 2 and at
+4. On the full dataset cells occur at every size, so consecutive cut-offs differ
+and no rows coincide.
+
+The fourth row keeps only cell A. The bound is $3/4 = 0.75$ over four records,
+and every one of them is in a mixed cell.
+
+Three things follow, and all three carry over to the real data.
+
+**The rows are nested, not a partition.** Every record in the second row is also
+in the first. Adding the rows together, or multiplying a cut-off by a cell
+count, does not give the size of the dataset: for this example that arithmetic
+gives thirteen, and there are ten records.
+
+**The bound is not the share of the commonest outcome overall.** Seven of these
+ten collisions caused no injury, so a rule that always answered "no injury"
+would score 0.7. The bound in the first row is 0.9, because the cell-majority rule answers
+differently in different cells. The gap between those two numbers measures what
+the variables buy you.
+
+**Singletons push the first row up.** Cells C, D and E each contribute a perfect
+score while demonstrating nothing, which is why the bound falls once they are
+excluded. The data does not become harder to predict further down the table. The earlier
+rows were counting cells that could not have been wrong.
+
+### Reading the real table
+
+Read across the rows of @tbl-multiplicity and the bound appears to fall as the
+cut-off rises. The bound is not falling: each row describes a different population, and the
+ones further down cover fewer records, all of them from combinations that occur
+many times over. The reason to raise the cut-off is that the first row is inflated by cells too
+small to say anything.
+
+The last column carries the finding. In the first row, roughly three quarters of
+records sit in a cell with a single outcome, which sounds encouraging until one
+notices that most of those cells hold one record. Further down, where cells are
+large enough to say anything at all, almost every record still counted sits in a
+cell whose outcomes disagree.
+
+The rest of the chapter rests on that claim, which is not a claim about
+accuracy. It says the recorded variables do not determine the outcome: take
+collisions that agree on all eighteen and occur often enough to be counted, and
+they still turn out differently from each other. How much that costs, and in
+which currency, is what the following sections measure.
+
+::: {.callout-warning appearance="simple"}
+## Why the first row proves little
+
+A cell containing one record always agrees with itself. Its commonest outcome is
+the only outcome it has, so it contributes a perfect score to the bound while
+demonstrating nothing.
+
+With `{python} len(DATA.features)` variables most cells are that small. The
+first row of @tbl-multiplicity is therefore mostly measuring how many distinct
+combinations exist, not how predictable anything is. The demonstration is in
+@sec-permutation: shuffle the outcomes at random, so that nothing is
+predictable by construction, and that first number barely moves.
+:::
+
+## What if accuracy is the wrong target? {#sec-target}
+
+Everything so far has measured accuracy, and accuracy is close to the worst
+thing to measure here. Nobody cares about the proportion correct when only one collision in a hundred
+matters.
+
+The cell-majority rule maximises the proportion correct, which is why it appeared
+first. On data where four collisions in five caused no injury it will answer "no
+injury" in almost every cell, and its recall on serious collisions will be close
+to zero. It scores well by declining to look for the thing the analysis is
+about.
+
+So the question is whether the argument survives a change of target. It does,
+and the reason is the part that never mentioned accuracy:
+
+::: {.callout-important appearance="simple"}
+## What the cells fix, and what they leave open
+
+Because every record in a cell presents the same input, any method answers a
+whole cell the same way. So a method is entirely described, as far as these
+variables are concerned, by which outcome it names in each cell.
+
+There are finitely many such methods, and each produces one confusion matrix and
+hence one value for whatever one chooses to measure. Collect those values and the
+result is a fixed set of attainable scores, determined by the cells' outcome
+distributions and by nothing else.
+
+Choosing a metric picks a point in that set. It does not move the set, and it
+does not move the set's outer edge: the methods that cannot be improved in one
+respect without giving something up in another. That edge is what the rest of
+this section is about.
+:::
+
+@tbl-two-rules gives two rules on the same cells. The first is the cell-majority
+rule. The second answers with whichever outcome is most **over-represented** in
+the cell, and that phrase should be made exact.
+
+Write $x_k$ for the share of class $k$ across the whole dataset and $y_k$ for its
+share within some cell. The second rule names the class $j$ maximising the ratio
+$y_j / x_j$. Where the cell-majority rule asks which outcome is commonest here,
+this asks which outcome is commonest here *compared with how common it is
+generally*.
+
+That ratio is not an arbitrary choice. The mean of the per-class recalls, which
+is balanced accuracy, is $\frac{1}{M}\sum_k C_k / N_k$, where $N_k$ is the
+number of records of class $k$ and $C_k$ the number the rule gets right. Write $n_j$ for the number of records of class $j$ in some particular cell. If
+that cell is assigned class $j$ it adds $n_j$ to $C_j$ and nothing to any other
+$C_k$, so each cell independently wants the $j$ maximising $n_j / N_j$. Since
+$n_j$ is the cell's size times $y_j$, and $N_j$ is the dataset's size times
+$x_j$, that is the same as maximising $y_j / x_j$.
+
+An example makes the difference concrete. Suppose the three outcomes occur
+overall in the proportions $x = (0.77, 0.19, 0.04)$, and consider a cell in which
+they occur as $y = (0.60, 0.30, 0.10)$. The ratios are
+
+$$\frac{0.60}{0.77} = 0.78, \qquad \frac{0.30}{0.19} = 1.57, \qquad
+\frac{0.10}{0.04} = 2.40 .$$
+
+The cell-majority rule names the first outcome, which occurs in three collisions
+out of five there. The second rule names the third outcome, which occurs in one
+out of ten, because one in ten is more than twice its usual rate. The first rule will be right more often. The second will find serious collisions
+that the first never looks for.
+
+```{python}
+#| label: tbl-two-rules
+#| tbl-cap: "Two within-cell rules on identical cells. Neither is best; they are best at different things."
+
+labels = {
+    0: "Material damage only",
+    1: "At least one minor injury",
+    2: "Serious injury or fatality",
+}
+rules = {
+    "Commonest outcome": held_out_ceiling(X_FIT, Y_FIT, X_VAL, Y_VAL, rule="accuracy"),
+    "Most over-represented outcome": held_out_ceiling(
+        X_FIT, Y_FIT, X_VAL, Y_VAL, rule="balanced"
+    ),
+}
+first = next(iter(rules.values()))
+
+rows = [
+    {
+        "Quantity": "Accuracy",
+        **{name: f"{result.accuracy:.4f}" for name, result in rules.items()},
+    },
+    {
+        "Quantity": "Balanced accuracy",
+        **{name: f"{result.balanced_accuracy:.4f}" for name, result in rules.items()},
+    },
+]
+rows += [
+    {
+        "Quantity": f"Recall, {labels[cls]}",
+        **{
+            name: f"{result.per_class_recall[cls]:.4f}"
+            for name, result in rules.items()
+        },
+    }
+    for cls in sorted(first.per_class_recall)
+]
+pd.DataFrame(rows)
+```
+
+Each column is a ceiling for the thing its rule maximises, and neither is a
+ceiling for anything else. A rule tuned for some third objective would beat both
+columns on that objective and lose to both on theirs, while still landing inside
+the same fixed set.
+
+For scale: always answering "material damage only", using no variables at all,
+achieves an accuracy of `{python} f"{first.majority_baseline:.4f}"` on the same
+records. Compare that with the first column.
+
+**What the figures speak for.** They are computed over the
+`{python} f"{first.coverage:.1%}"` of validation records whose exact combination
+of variables appeared at least once in the training part. The rest are
+combinations never seen before, about which any rule built from cells has
+nothing to say at all.
+
+That share is itself a finding, and a discouraging one. Even with
+`{python} f"{len(X_FIT):,}"` records to learn from, a large fraction of new
+collisions are unlike anything on record.
+
+## The bound that does not need a metric
+
+The limit can be stated without choosing an objective at all, and this is the
+strongest form of the argument in the chapter.
+
+Change the question from classification to flagging. Suppose a road authority
+wants to mark some collisions as the ones likely to be serious, and can accept
+being wrong sometimes. How well could that be done?
+
+The question has become a two-way one rather than a three-way one, and the
+reduction is deliberate. Every collision receives one of two verdicts, **flagged** or **not
+flagged**, where not flagged means predicted not serious and puts material
+damage and minor injury together. Precision and recall then have their ordinary
+binary meanings for the flagged class: precision is the share of flagged
+collisions that were serious, recall is the share of serious collisions that
+were flagged.
+
+Collapsing three outcomes into two is what makes the rest of this section
+possible. With three classes a rule must choose one of them for each cell, and
+describing everything attainable means describing a large and awkward set. With
+one class singled out, a rule is nothing more than a set of cells to flag, the
+sensible ones are nested inside each other, and the whole attainable set is a
+single sweep that can be written down.
+
+Since every record in a cell looks identical, a rule flags either all of a cell
+or none of it. A rule is therefore fully described by which cells it flags, and
+the sensible strategy is clear: to flag a given number of collisions and be
+right as often as possible, flag the cells where serious injury was commonest in
+the past. Start with the worst cell, then add the next worst, and so on.
+
+Each stopping point along that sweep is one rule, and @tbl-frontier lists them.
+
+```{python}
+#| label: tbl-frontier
+#| tbl-cap: "Every operating point available for flagging serious collisions, from the most selective rule to the least. Held-out records."
+
+frontier = achievable_frontier(X_FIT, Y_FIT, X_VAL, Y_VAL, target_class=DATA.classes[-1])
+shown = frontier.iloc[:: max(1, len(frontier) // 12)]
+pd.DataFrame(
+    {
+        "Flag cells whose past rate is at least": shown["threshold"].round(4),
+        "Collisions flagged": [f"{int(v):,}" for v in shown["records_named"]],
+        "Of those, actually serious": shown["precision"].round(4),
+        "Of all serious ones, share flagged": shown["recall"].round(4),
+    }
+)
+```
+
+Every row is a complete rule, not a description of one cell. Given a held-out
+collision, look up its cell's **past rate**, the share of that cell's training
+records that were serious. If the rate is at or above the row's stated figure,
+flag the collision; otherwise leave it. That yields a verdict for every held-out
+record, and the third and fourth columns are the ordinary precision and recall of
+those verdicts, over the whole held-out set rather than within any cell.
+
+The first row is the most selective rule available and it gives the ceiling on
+precision, for a reason that takes one line. The precision of any rule is the
+number of serious collisions among the flagged records divided by the number
+flagged, which is an average of the flagged cells' rates. An average cannot
+exceed its largest term. **So no method can achieve a precision higher than the
+share of serious collisions in the single worst cell**, however it is built,
+tuned or scored.
+
+The last row is the least selective rule available: flag every cell the rule has
+ever seen. Precision falls to the rate of serious injury among those records,
+which is close to the overall rate.
+
+Recall, though, does not reach one. A cell that never appeared in training has
+no past rate, so the rule has nothing to look up and flags nothing. Those
+collisions are missed whatever the threshold.
+
+```{python}
+#| label: frontier-figures
+#| include: false
+
+max_recall = float(frontier["recall"].max())
+overall_seen = float(first.coverage)
+```
+
+So the recall of any rule built from cells is capped at
+`{python} f"{max_recall:.4f}"`, the share of held-out serious collisions whose
+exact combination had been seen before. Flagging everything it recognises still
+leaves the rest, and no threshold reaches them.
+
+Set that figure against the one from the previous section.
+`{python} f"{overall_seen:.1%}"` of held-out collisions fall in a cell that
+appeared during training. Among the serious ones,
+`{python} f"{max_recall:.1%}"` do.
+
+Serious collisions are therefore markedly less likely than average to resemble
+anything on record, which follows from their being rare: an unusual combination
+of circumstances is by definition one that seldom recurs. The two effects
+compound. The class this analysis exists to study is both the scarcest and the
+one the data has least precedent for, and the second is not merely a restatement
+of the first.
+
+Everything a cell-based method can do for this class lies along that sweep, and
+where it lies is fixed by the data. Choosing a metric picks a row. It cannot
+produce a row that is not there, and it cannot reach past the last one.
+
+### Why this constrains the three-class models too
+
+Nothing above requires anyone to build a binary classifier, and the models
+elsewhere in this book are not binary.
+
+Take any classifier over the three outcomes and read its verdicts as flags:
+where it predicts serious, treat the collision as flagged; where it predicts
+anything else, treat it as not flagged.
+
+Its precision and recall **on the serious class** are then not merely bounded by
+the binary quantities defined above, they are equal to them. Both are per-class
+figures, and both count the same things: the collisions predicted serious form
+the flagged set, and the collisions both predicted and actually serious form the
+numerator of each. Neither quantity ever inspects how the remaining predictions
+were divided between material damage and minor injury, so the further decision a
+three-class classifier makes has no bearing on either.
+
+The classifier reads only the recorded variables, so it answers every record in
+a cell the same way, and the flagging rule induced from it flags whole cells. It
+is therefore one of the rules the sweep already accounts for, and its precision
+and recall on the serious class name a point in @tbl-frontier. The sweep bounds
+every model in this book, not merely the rules used to construct it.
+
+::: {.callout-note appearance="simple"}
+## Why this needs no metric
+
+Accuracy, balanced accuracy and every weighted combination of per-class scores
+are functions of a confusion matrix. A rule that flags a set of cells determines
+its confusion matrix, so it determines every such score at once.
+
+The table above lists the confusion matrices available. Any metric one might prefer is a way of ranking those rows, and no ranking
+creates a row. Hence this bound survives the objection @sec-target raises, and
+hence @sec-methods reports no weighted aggregate of its own.
+:::
+
+### How far does resemblance carry? {#sec-nearby}
+
+A fair objection to the previous section is that a model does not need an exact
+match. Faced with a combination of circumstances it has never seen, it borrows
+from combinations it has seen that are similar, and no classifier would be much
+use if it could not.
+
+That borrowing rests on an assumption. Records close together in feature space
+are supposed to have similar outcomes, and where that holds a model has
+something to generalise along. The assumption is testable here, because the
+variables are categorical and closeness has an exact meaning: two collisions are
+at **Hamming distance** $d$ when they differ on $d$ of the recorded variables
+and agree on the rest. Distance zero is the cell.
+
+@tbl-locality asks whether a collision's near neighbours are more likely to be
+serious than a collision picked at random.
+
+```{python}
+#| label: tbl-locality
+#| tbl-cap: "Given a serious collision, how often is a neighbour at each distance also serious?"
+
+from vision_zero.ceiling.locality import locality_profile
+
+LOCALITY = locality_profile(
+    DATA.X_train,
+    DATA.y_train,
+    target_class=DATA.classes[-1],
+    seed=EXPERIMENT.split.seed,
+)
+supported = LOCALITY[LOCALITY["expected"] >= 100]
+pd.DataFrame(
+    {
+                "Variables differing": [int(v) for v in supported["distance"]],
+        "Neighbour pairs": [f"{int(v):,}" for v in supported["pairs"]],
+        "Share of neighbours serious": supported["share"].round(5),
+                "Ratio to the base rate": supported["lift"].round(2),
+        "Counted": ["exactly" if v else "sampled" for v in supported["exact"]],
+    }
+)
+```
+
+The fourth column is the third divided by the share of *all* records that were
+serious, which is
+`{python} f"{float(LOCALITY.attrs['base_rate']):.5f}"`. Read it as a multiple
+rather than a percentage: two means a neighbour is twice as likely to be serious
+as a collision drawn at random.
+
+The last column matters too. Distances of two or less are counted exhaustively,
+by grouping on every choice of variables to ignore. Beyond that the pairs are
+sampled, which is adequate because two collisions drawn at random from
+`{python} f"{len(DATA.features)}"` variables are almost never close: the space
+is sparse enough that most randomly chosen pairs differ on most fields. Rows are
+shown only where the base rate alone would produce a hundred neighbours or more,
+since a ratio computed from a handful of pairs is noise.
+
+::: {.callout-note appearance="simple"}
+## What the ratio would look like if the features carried local structure
+
+Run the same measure on constructed data where a rare outcome depends on two of
+ten variables and it returns a ratio of about four at the closest distances,
+falling below one at the furthest. That figure is measured rather than derived,
+and it would change with the strength of the dependence; what matters is that it
+is far from one and that it decays.
+
+On constructed data where the outcome is independent of every variable, the
+ratio stays within a few percent of one at every distance.
+
+Both are in the repository as tests, since a measure that cannot tell those two
+cases apart has nothing to report.
+:::
+
+```{python}
+#| label: locality-figures
+#| include: false
+
+near = float(supported.loc[supported["distance"] <= 2, "lift"].mean())
+far = float(supported.loc[supported["distance"] >= 6, "lift"].mean())
+```
+
+The ratio does fall away, which runs against what the rest of the chapter might
+lead one to expect and so needs stating clearly. Collisions
+differing in a single recorded variable are about twice as likely to share a
+serious outcome as a collision picked at random. The elevation shrinks with each
+further variable that differs and reaches chance at around six or seven. There
+is local structure here, and a model does have something to generalise along.
+
+Two qualifications keep that from being good news.
+
+The first is the size of the effect. Doubling a rate of one percent gives a rate
+of two percent. A collision's closest neighbours are still, some
+ninety-eight times in a hundred, not serious. The structure is real and it is
+the same real-but-small quantity the rest of this chapter measures, arriving by
+another route.
+
+The second is the far end of the table. The ratio does not settle at chance; it
+turns and climbs again among pairs differing on thirteen or fourteen variables.
+Collisions that are almost entirely unalike are somewhat more likely to share a
+serious outcome than collisions that are moderately unalike.
+
+That shape is what one would see if serious collisions sat in several small
+pockets far apart from one another rather than in one region. Two severe
+collisions drawn from different pockets, a pedestrian struck at an intersection
+and a motorcyclist on a straight road at night, would differ on most of the
+form. The data cannot confirm that reading, and @sec-matters offers a partial
+check: the participant variables are the ones that separate outcomes, and those
+are exactly the variables on which such pairs would differ.
+
+## Matching on fewer variables
+
+If requiring every variable to match produces cells too small to be informative,
+what happens if fewer are required to match?
+
+The endpoints are arithmetic rather than discovery. Match on everything and the
+cells are tiny and highly specific. Match on nothing and there is one cell
+containing everything, whose outcome shares are the overall shares by
+definition. The interesting question is the shape in between.
+
+```{python}
+#| label: tbl-resolution
+#| tbl-cap: "Matching on fewer variables. Larger cells, and less to say."
+
+resolution = resolution_profile(
+    DATA.X_train, DATA.y_train, n_samples=8, seed=EXPERIMENT.split.seed
+)
+pd.DataFrame(
+    {
+        "Variables matched": [int(v) for v in resolution["n_features"]],
+        "Cells": [f"{v:,.0f}" for v in resolution["n_cells"]],
+        "Mean cell size": resolution["mean_cell_size"].round(1),
+        "Records alone in a cell": resolution["singleton_share"].round(3),
+        "Information (bits)": resolution["information_bits"].round(4),
+    }
+)
+```
+
+The cell count rises down the column for a structural reason rather than an
+empirical one. Adding a variable to the match can only split existing cells,
+never merge them, since two records that already differed somewhere still differ
+there. So each row is a refinement of the one above it, and the counts can only
+grow. At the full eighteen the cells are numerous and small, averaging under two
+records apiece.
+
+Two more terms.
+
+**Records alone in a cell** is the share of records whose combination of
+variables occurs exactly once. This measures directly how far the previous section's warning applies: where this is high, any within-cell statistic is
+mostly measuring uniqueness.
+
+**Information** is an estimate of how much knowing the cell reduces uncertainty
+about the outcome, measured in bits. @sec-information explains what a bit of
+uncertainty is and where the measure comes from. For reading this table, three
+facts about it suffice. Zero means the variables tell you nothing beyond the
+overall rates. The largest it could possibly be is the total uncertainty in the
+outcome, which for this data is `{python} f"{BRACKET.label_entropy:.3f}"` bits.
+And it is estimated on held-out records, so it can come out **negative**, which
+happens when the cells are so specific that what they appear to say does not
+survive contact with new data.
+
+That last property is what makes the table informative. A naive estimate would
+rise steadily as variables are added, because more variables make smaller cells
+and smaller cells look more certain. This one does not have to.
+
+```{python}
+#| label: tbl-single-feature
+#| tbl-cap: "Each variable on its own, most informative first."
+
+alone = single_feature_profile(
+    DATA.X_train, DATA.y_train, seed=EXPERIMENT.split.seed
+)
+pd.DataFrame(
+    {
+        "Variable": [BOOK[name].name_in("en") for name in alone["feature"]],
+        "Information (bits)": alone["information_bits"].round(5),
+        "Distinct values": [int(v) for v in alone["n_values"]],
+        "Mean cell size": [f"{v:,.0f}" for v in alone["mean_group_size"]],
+    }
+)
+```
+
+Taken one at a time, the variables are large enough in each cell for the
+estimate to be stable, and @tbl-single-feature is the more trustworthy view of
+which ones carry anything. @sec-matters takes up what the ordering means.
+
+## The same limit, from the other direction
+
+The counting argument bounds accuracy from above. There is a second argument,
+independent of it, that bounds the error rate from below.
+
+Fano's inequality relates the error probability of any estimator to how much
+uncertainty about the outcome survives once the features are known
+[@fano1961; @cover2006]. It requires no assumption about how the estimator
+works. @sec-information gives the statement, the intuition and a sketch of why
+it holds; the result is used here without derivation.
+
+```{python}
+#| label: tbl-fano
+#| tbl-cap: "Uncertainty in the outcome, and the floor it puts under the error rate."
+
+pd.DataFrame(
+    [
+        {
+            "Quantity": "Total uncertainty in the outcome, H(Y)",
+            "Value": f"{BRACKET.label_entropy:.4f} bits",
+        },
+        {
+            "Quantity": "Uncertainty remaining, optimistic estimate",
+            "Value": f"{BRACKET.plug_in:.4f} bits",
+        },
+        {
+            "Quantity": "Uncertainty remaining, pessimistic estimate",
+            "Value": f"{BRACKET.held_out:.4f} bits",
+        },
+        {
+            "Quantity": "Implied floor under the error rate, conservative",
+            "Value": f"{BRACKET.conservative_floor:.4f}",
+        },
+        {
+            "Quantity": "Implied floor under the error rate, optimistic",
+            "Value": f"{BRACKET.optimistic_floor:.4f}",
+        },
+    ]
+)
+```
+
+The remaining uncertainty is reported as a range rather than a number because
+neither available estimate is unbiased and the two err in opposite directions.
+The optimistic one is computed within cells and is dragged toward zero by small
+cells, exactly as in @tbl-multiplicity. The pessimistic one is computed on
+held-out records and overstates the difficulty by the amount the learned cell
+distributions miss.
+
+Quote the conservative floor, which is the weaker of the two. It
+follows from the estimate that makes the problem look easiest, and a bound that
+errs toward easiness cannot manufacture this book's conclusion.
+
+Two bounds, arrived at by unrelated routes, agreeing that the achievable range
+is narrow. On a constructed dataset where the answer is known exactly the two meet, which
+checks that both are computed correctly; the test asserting it is in the
+repository.
+
+## It is not the model
+
+A weak result invites the obvious objection: perhaps a better model would do
+better.
+
+Answering it calls for trying differently rather than trying harder. @fig-sweep
+fits several estimator families under identical preprocessing, identical folds
+and identical scoring. They have very different assumptions about what a
+decision boundary should look like: one is linear, one is a single tree, two are
+ensembles of trees, one is a small neural network.
+
+```{python}
+#| label: fig-sweep
+#| fig-cap: "Five estimator families, everything else held fixed."
+
+sweep = model_sweep(EXPERIMENT, DATA)
+viz.plot_sweep(sweep)
+```
+
+```{python}
+#| label: tbl-sweep
+#| tbl-cap: "The same comparison in figures, with the trivial baseline for scale."
+
+pd.DataFrame(
+    {
+        "Estimator": sweep["family"],
+        "Matthews correlation": sweep["mcc_mean"].round(4),
+        "Balanced accuracy": sweep["balanced_accuracy_mean"].round(4),
+        "Macro F1": sweep["macro_f1_mean"].round(4),
+        "Accuracy": sweep["accuracy_mean"].round(4),
+        "Recall, serious or fatal": sweep["focus_recall_mean"].round(4),
+    }
+)
+```
+
+```{python}
+#| label: sweep-spread
+#| include: false
+
+models = sweep[sweep["family"] != "majority baseline"]
+spread = float(models["mcc_mean"].max() - models["mcc_mean"].min())
+best_mcc = models.loc[models["mcc_mean"].idxmax(), "family"]
+best_recall = models.loc[models["focus_recall_mean"].idxmax(), "family"]
+best_severe = float(models["focus_recall_mean"].max())
+```
+
+If capacity were the binding constraint, adding capacity would help. It does
+not. The five families are separated by
+`{python} f"{spread:.4f}"` of Matthews correlation, which is less than the
+difference between any of them and a coin flip about which to use.
+
+Nor does any of them win outright. On these figures
+`{python} best_mcc` leads on Matthews correlation while
+`{python} best_recall` leads on recall for serious collisions and sits near the
+bottom on accuracy. The metrics disagree with each other more than the models
+do, which is the same point @sec-methods makes about scoring: a single number
+is a choice about what to care about, not a fact about the model.
+
+### A correlation of 0.4 that means less than it looks
+
+The Matthews correlation in that table is not small. Around 0.4 would ordinarily describe a model that was working, and the figure is
+no artifact: the baseline scores
+exactly zero by construction, so this is genuine agreement beyond what the base
+rates alone produce.
+
+Read along the same row to the last column. Recall on serious and fatal
+collisions is at most
+`{python} f"{best_severe:.2%}"`, and for two of the five families it is
+indistinguishable from zero.
+
+Both figures are correct, and together they say what the model has actually
+learned. It separates collisions that hurt somebody from collisions that did
+not, with some success. It does almost nothing to separate the serious injuries
+from the minor ones. The three-level problem is being solved as a two-level one, and the level being
+skipped is the level that matters.
+
+This is what one would expect from @sec-quality. After the pedestrian victim
+indicator was removed, the variables carrying most of the signal are the ones
+describing who was involved: the type of collision, and whether a cyclist or
+motorcyclist was among the parties. Those predict injury, because a person
+struck outside a vehicle usually is injured. They say very little about how
+badly, and nothing in the extract does.
+
+@sec-matters takes up which variables are doing this work, and whether any of
+them are variables anyone could change.
+
+## It is not the amount of data
+
+The other obvious objection is that more records would help. @fig-learning-curve
+refits on growing fractions of the training data.
+
+```{python}
+#| label: fig-learning-curve
+#| fig-cap: "Performance against the number of records used for fitting."
+
+curve = learning_curve(EXPERIMENT, DATA)
+viz.plot_learning_curve(curve)
+```
+
+```{python}
+#| label: tbl-learning-curve
+#| tbl-cap: "The same figures."
+
+pd.DataFrame(
+    {
+        "Fraction used": curve["fraction"],
+        "Records": [f"{int(v):,}" for v in curve["n_train"]],
+        "Matthews correlation": curve["mcc"].round(4),
+        "Balanced accuracy": curve["balanced_accuracy"].round(4),
+        "Recall, serious or fatal": curve["focus_recall"].round(4),
+    }
+)
+```
+
+```{python}
+#| label: curve-figures
+#| include: false
+
+first_step = float(curve["mcc"].iloc[1] - curve["mcc"].iloc[0])
+last_step = float(curve["mcc"].iloc[-1] - curve["mcc"].iloc[-2])
+```
+
+The curve is not flat, and calling it flat would overstate the case. The Matthews
+correlation does rise as records are added, by `{python} f"{first_step:+.4f}"`
+over the first step of the table and by `{python} f"{last_step:+.4f}"` over the
+last. At the right-hand edge it is still rising.
+
+What it is doing is flattening. Each addition buys less than the one before,
+which is the shape of a curve approaching an asymptote rather than one with room
+left to climb. Extrapolating it would be guesswork, so the reading here stays
+narrow: another decade of reports recorded the same way would move this number,
+and the four other arguments in this chapter are why it would not move far
+enough to matter.
+
+## Better than chance, and by how much {#sec-permutation}
+
+The phrase "better than chance" is a claim about a distribution, and it can be
+checked directly by destroying the relationship and measuring what survives.
+
+Shuffling the outcomes leaves every marginal untouched. The same class
+imbalance, the same variables, the same number of records, the same cells. What
+it removes is any connection between a collision's recorded circumstances and
+what happened to it. Whatever a procedure scores on shuffled outcomes is what it
+scores on nothing at all [@ojala2010].
+
+```{python}
+#| label: tbl-permutation
+#| tbl-cap: "Two quantities set against what they score when the outcomes are shuffled at random."
+
+TRUE_LABELS = DATA.y_train.to_numpy()
+
+
+def in_sample(labels: np.ndarray) -> float:
+    return in_sample_ceiling(DATA.X_train, pd.Series(labels), cells=CELLS).ceiling
+
+
+def held_out(labels: np.ndarray) -> float:
+    series = pd.Series(labels, index=DATA.y_train.index)
+    return held_out_ceiling(
+        X_FIT, series.iloc[TRAIN_IDX], X_VAL, series.iloc[VAL_IDX]
+    ).accuracy
+
+
+results = {
+    "Accuracy bound, every cell counted": permutation_null(
+        in_sample, TRUE_LABELS, n_permutations=40, seed=EXPERIMENT.split.seed
+    ),
+        "Cell-majority rule, scored on held-out records": permutation_null(
+        held_out, TRUE_LABELS, n_permutations=40, seed=EXPERIMENT.split.seed
+    ),
+}
+pd.DataFrame(
+    [
+        {
+            "Quantity": name,
+            "Observed": f"{result.observed:.4f}",
+            "Shuffled outcomes": f"{result.null_mean:.4f}",
+            "p": f"{result.p_value:.3f}",
+        }
+        for name, result in results.items()
+    ]
+)
+```
+
+The first row is the promised demonstration. The bound computed over every cell
+barely changes when the outcomes are randomised, because it was never measuring
+predictability. It was measuring how many distinct combinations of variables
+exist, and shuffling the outcomes does not change that.
+
+The second row is the real test, and licenses every statement about chance in
+this book.
+
+## What this amounts to
+
+Four arguments, none of which depends on any of the others.
+
+Cells of identically recorded collisions have mixed outcomes, so no method can
+separate them. Counting that across the data gives an upper bound on accuracy.
+Fano's inequality gives a floor under the error rate from the information the
+variables carry. Five estimator families and a learning curve say the limit
+belongs to the data rather than to the model or the sample size.
+
+They agree. What remains is to ask which variables are carrying what little
+there is, and whether any of them are variables anyone could act on.

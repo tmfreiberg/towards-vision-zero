@@ -56,6 +56,22 @@ __all__ = [
 #: Columns that identify a record rather than describe one. Never features.
 IDENTIFIERS: Final[frozenset[str]] = frozenset({"ID"})
 
+#: Variables withheld from every feature set, for reasons belonging to the
+#: variable itself rather than to any particular experiment.
+#:
+#: ``RDWX`` records whether a collision happened in or near a road work zone.
+#: The published documentation defines one value, meaning yes, and defines
+#: nothing for "not in a work zone"; nor does it carry a "Non précisé" row. The
+#: field is empty on roughly 98% of records, and nothing distinguishes a blank
+#: meaning "no work zone" from a blank meaning "not filled in".
+#:
+#: Either reading could be defended and they lead to different variables: on the
+#: first this is a complete binary indicator, on the second it is almost
+#: entirely absent. Choosing one silently would be an inference dressed as a
+#: fact. The variable is set aside instead, and the ambiguity is recorded in the
+#: codebook.
+WITHHELD: Final[frozenset[str]] = frozenset({"RDWX"})
+
 #: Values that occur in the extracts but that the published documentation does
 #: not admit. They are coerced to null on load, and the count is logged, so the
 #: coercion is a recorded decision rather than something that happens silently
@@ -219,6 +235,14 @@ LEAKAGE: Final[dict[str, frozenset[str]]] = {
 #: pedestrian was struck predicts injury well and suggests nothing to do about
 #: it; knowing the road configuration predicts poorly and would suggest a great
 #: deal if it predicted at all.
+#:
+#: The assignment is a convenience for asking that question and not a property
+#: of the variables, some of which do not divide cleanly. ``LIGHT`` is the clear
+#: case: two of its four values are daytime and two are night, so most of what
+#: it encodes is the time of day, and only the contrast between a lit and an
+#: unlit road at night describes anything a city installs. It is filed under
+#: ``environment`` because that contrast is the reason to record it at all, and
+#: the analysis says so where it matters rather than relying on the label.
 FEATURE_BLOCKS: Final[dict[str, frozenset[str]]] = {
     # Who and what took part. Predictive, and outside anyone's control at the
     # moment of the collision.
@@ -400,7 +424,8 @@ def feature_candidates(
         derived ones.
     exclude
         Further columns to drop, for instance ``{"YEAR"}`` when the year of a
-        collision is not plausibly explanatory.
+        collision is not plausibly explanatory. Columns in :data:`WITHHELD` are
+        dropped whether or not they are named here.
     path
         Codebook to derive from.
 
@@ -420,7 +445,7 @@ def feature_candidates(
     if available is None:
         available = columns(path) + tuple(d.name for d in DERIVED)
 
-    blocked = set(exclude) | set(IDENTIFIERS) | set(leaks(target)) | {target}
+    blocked = set(exclude) | set(IDENTIFIERS) | set(WITHHELD) | set(leaks(target)) | {target}
 
     # A derived column is a deterministic function of its source. Offering both
     # to a model contributes no information and introduces exact collinearity,

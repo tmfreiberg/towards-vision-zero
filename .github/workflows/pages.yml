@@ -1,0 +1,75 @@
+name: Publish
+
+# Renders the book from frozen results. No Python is executed here and no data
+# is read: `_freeze/` holds the output of every code cell, produced on a machine
+# that has the extracts. That is what makes publishing possible at all, since
+# the source data is far larger than a runner should be asked to handle.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.qmd"
+      - "book/**"
+      - "app/index.html"
+      - "_freeze/**"
+      - "_quarto.yml"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The book renders from frozen output; the extracts are not needed.
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/data
+
+      - name: Install Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          tinytex: true
+
+      - name: Fail if any chapter would need to execute
+        run: |
+          if [ ! -d _freeze ]; then
+            echo "No _freeze/ directory. Render locally and commit it." >&2
+            exit 1
+          fi
+
+      - name: Render
+        run: quarto render --no-execute-daemon
+
+      - name: Build the explorer payload placeholder
+        run: |
+          # The payload is generated from the data and is not committed, so a
+          # published explorer needs it supplied here or fetched from a release.
+          # Until that is wired up, the page loads and reports its absence.
+          test -f app/index.html
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _book
+
+  deploy:
+    needs: render
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v5

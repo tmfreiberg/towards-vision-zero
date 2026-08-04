@@ -93,6 +93,16 @@
   }
   .provenance b { font-weight: 600; color: var(--ink); }
 
+  /* Whose data this is. Kept distinct from the masthead, which says whose page
+     it is: putting the publisher's name at the top made this look like their
+     tool rather than an independent reading of their record. */
+  .source-note {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .source-note a { color: var(--focus); text-underline-offset: 2px; }
+
   .lang {
     float: right;
     display: flex;
@@ -454,13 +464,14 @@
       <button type="button" data-lang="en" aria-pressed="true">EN</button>
       <button type="button" data-lang="fr" aria-pressed="false">FR</button>
     </div>
-    <p class="eyebrow" id="eyebrow">Société de l'assurance automobile du Québec</p>
+    <p class="eyebrow" id="eyebrow">Towards Vision Zero &middot; an independent analysis</p>
     <h1 id="title">What happened to collisions like this one</h1>
     <p class="standfirst" id="standfirst">
       Tick the conditions recorded on a police report. The panel shows what became of
       every collision in the record that matches — not a prediction, a tally.
     </p>
     <p class="provenance" id="provenance"></p>
+    <p class="source-note" id="source-note"></p>
   </div>
 </header>
 
@@ -534,6 +545,8 @@
       chosen: n => `${n} chosen`,
       source: "Source",
       loaded: "reports loaded",
+      eyebrow: "Towards Vision Zero · an independent analysis",
+      sourceNote: 'Built from collision reports published by the <a href="https://www.donneesquebec.ca/recherche/dataset/rapports-d-accident">Société de l\'assurance automobile du Québec</a>. This page is not affiliated with the SAAQ.',
       whatTheseMean: "What these mean",
       scale: "Scale",
       levels: n => `${n} levels`,
@@ -568,6 +581,8 @@
       chosen: n => `${n} cochées`,
       source: "Source",
       loaded: "rapports chargés",
+      eyebrow: "Vers la Vision Zéro · une analyse indépendante",
+      sourceNote: 'Réalisé à partir des rapports d\'accident publiés par la <a href="https://www.donneesquebec.ca/recherche/dataset/rapports-d-accident">Société de l\'assurance automobile du Québec</a>. Cette page n\'est pas affiliée à la SAAQ.',
       whatTheseMean: "Ce que cela signifie",
       scale: "Échelle",
       levels: n => `${n} niveaux`,
@@ -613,10 +628,19 @@
   const pct = x => (100 * x).toFixed(1) + "%";
 
   async function load() {
+    // `no-cache` means revalidate, not refetch: the browser still sends a
+    // conditional request and an unchanged payload comes back as a 304 without
+    // the five megabytes. Plain caching is wrong here because the payload is
+    // regenerated whenever the data or the schema changes, and a stale
+    // `meta.json` shows a field list that no longer matches the records.
+    const options = { cache: "no-cache" };
     const [metaResponse, dataResponse] = await Promise.all([
-      fetch("meta.json"),
-      fetch("records.bin.gz")
+      fetch("meta.json", options),
+      fetch("records.bin.gz", options)
     ]);
+    if (!metaResponse.ok || !dataResponse.ok) {
+      throw new Error(`payload not found (${metaResponse.status}, ${dataResponse.status})`);
+    }
     meta = await metaResponse.json();
 
     let bytes;
@@ -1003,6 +1027,8 @@
     $("clear").textContent = copy.clear;
     $("foot-1").textContent = copy.foot1;
     $("foot-2").textContent = copy.foot2;
+    $("eyebrow").textContent = copy.eyebrow;
+    $("source-note").innerHTML = copy.sourceNote;
     $("source-heading").textContent = copy.source;
     renderProvenance();
     $("citation").innerHTML = copy.citation;

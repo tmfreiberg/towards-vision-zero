@@ -19,6 +19,9 @@ if /I "%~1"=="typecheck" goto typecheck
 if /I "%~1"=="test"      goto test
 if /I "%~1"=="test-fast" goto testfast
 if /I "%~1"=="test-data" goto testdata
+if /I "%~1"=="render"    goto render
+if /I "%~1"=="render-fresh" goto renderfresh
+if /I "%~1"=="preview"   goto preview
 if /I "%~1"=="check"     goto check
 if /I "%~1"=="clean"     goto clean
 
@@ -35,6 +38,9 @@ echo   typecheck   Run mypy in strict mode
 echo   test        Run the full suite, enforcing the coverage floor
 echo   test-fast   Run the suite, skipping tests marked slow
 echo   test-data   Run the checks that need the full dataset
+echo   render        Render the book, reusing cached results
+echo   render-fresh  Re-execute every chapter, ignoring the cache
+echo   preview     Render and watch, for writing
 echo   check       Everything CI runs
 echo   clean       Remove caches and build output
 goto end
@@ -74,6 +80,19 @@ goto end
 uv run pytest -m requires_data --no-cov || goto fail
 goto end
 
+:render
+uv run quarto render || goto fail
+goto end
+
+:renderfresh
+if exist _freeze rmdir /s /q _freeze
+uv run quarto render || goto fail
+goto end
+
+:preview
+uv run quarto preview || goto fail
+goto end
+
 :check
 call "%~f0" lint || goto fail
 call "%~f0" typecheck || goto fail
@@ -87,6 +106,8 @@ if exist .ruff_cache   rmdir /s /q .ruff_cache
 if exist htmlcov       rmdir /s /q htmlcov
 if exist dist          rmdir /s /q dist
 if exist build         rmdir /s /q build
+if exist _book         rmdir /s /q _book
+if exist .quarto       rmdir /s /q .quarto
 if exist .coverage     del /q .coverage
 if exist coverage.xml  del /q coverage.xml
 for /d /r %%d in (__pycache__) do @if exist "%%d" rmdir /s /q "%%d"

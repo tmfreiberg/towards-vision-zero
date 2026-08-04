@@ -1,0 +1,73 @@
+# Quarto book configuration.
+#
+# `freeze: auto` is what makes this publishable. Chapters execute on a machine
+# that has the 257 MB of source extracts; their results are cached under
+# `_freeze/` and committed; CI renders from that cache without installing the
+# modelling stack or reading a byte of data. A chapter re-executes only when its
+# own source changes, and only where the data actually is.
+
+project:
+  type: book
+  output-dir: _book
+  resources:
+    # The explorer is a static page with its own payload, published alongside
+    # the book rather than rendered by it.
+    - app/
+
+execute:
+  freeze: auto
+  echo: false
+  warning: false
+
+book:
+  title: "Towards Vision Zero"
+  subtitle: "An analysis of the collision reports published by the SAAQ"
+  author: "Tristan Freiberg"
+  date: today
+  date-format: "D MMMM YYYY"
+  search: true
+  repo-url: https://github.com/tmfreiberg/towards-vision-zero
+  repo-actions: [source, issue]
+  downloads: [pdf]
+  sidebar:
+    style: docked
+    collapse-level: 1
+  chapters:
+    - index.qmd
+    - book/01-data.qmd
+    - book/02-quality.qmd
+    - book/03-limits.qmd
+    - book/04-what-matters.qmd
+    - book/05-conclusion.qmd
+  appendices:
+    - book/a1-information.qmd
+    - book/a2-methods.qmd
+    # Quarto places the bibliography wherever `#refs` appears. Without a page
+    # holding it, citations render as links pointing at nothing.
+    - book/references.qmd
+
+bibliography: book/references.bib
+csl: https://www.zotero.org/styles/apa
+
+format:
+  html:
+    theme:
+      - cosmo
+      - book/theme.scss
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-summary: "Show the code"
+    fig-align: center
+    fig-responsive: true
+    link-external-newwindow: true
+    citations-hover: true
+    footnotes-hover: true
+  pdf:
+    documentclass: scrbook
+    papersize: a4
+    geometry:
+      - margin=3cm
+    colorlinks: true
+    code-fold: false

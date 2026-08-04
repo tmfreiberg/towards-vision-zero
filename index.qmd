@@ -1,0 +1,140 @@
+# One is too many {.unnumbered}
+
+One road death is one too many. As long as severe traffic accidents occur, we
+should ask what more we can do to reduce the number.
+
+## Vision Zero
+
+Vision Zero began in Sweden in the 1990s and has since been adopted by cities
+across Europe and North America, Montréal among them. Two of its commitments
+matter for what follows [@visionzero; @belin2012].
+
+The first is a refusal of the word "accident". Traffic deaths have long been
+treated as an unfortunate cost of moving around, regrettable but essentially
+inevitable. Vision Zero treats them instead as failures of a system that could
+have been designed differently, and sets the target at zero rather than at some
+percentage improvement.
+
+The second is more specific, and the whole of this book rests on it. Vision Zero
+accepts that people will make mistakes, and holds that the road system should be
+built so that an ordinary mistake does not kill anyone. Somewhere in a city of
+two million, a driver misjudges a gap every day. Whether that misjudgement ends in a dented bumper or a tragedy depends, on this
+view, on the road, the speed and the vehicle rather than on luck. Severity, in other words, is something a city
+can design for, and that is an empirical claim about the world.
+
+Among the strategies Vision Zero asks of a committed city is "collecting,
+analyzing, and using data to understand trends" [@visionzero]. This book takes
+that instruction seriously enough to ask what one particular public dataset can
+support.
+
+<!-- PERSONAL NARRATIVE. Draft above is deliberately impersonal; replace or
+     precede it with the reason you spent evenings on this. Material available
+     if wanted: Montréal's own programme; Park Avenue, where the mayor has said
+     thirteen cyclists and pedestrians have been killed in thirteen years, and
+     where more ghost bikes stand than anywhere else in the city [@kozicka2026];
+     the fact that this began as a bootcamp exercise and what changed on
+     returning to it. -->
+
+## The reports themselves
+
+Below is every collision report Quebec published between 2011 and 2022, a little
+over 1.7 million of them. Tick the conditions recorded on a police report and the
+panel tallies what became of every collision that matches. Nothing is predicted;
+the figures are counts of what happened.
+
+Before reading on, it may help to try two things. First, pick a few conditions
+you would expect to matter, such as a wet road, darkness or a high speed limit,
+and watch how far the outcomes move from the overall rate. Second, keep adding
+conditions, and watch the number of matching records collapse.
+
+The rest of this book is an attempt to state exactly what those two observations
+amount to.
+
+```{=html}
+<div class="explorer-actions">
+  <span>1,717,407 reports &middot; Qu&eacute;bec-wide &middot; 2011&ndash;2022</span>
+  <a href="app/index.html" target="_blank" rel="noopener">Open full screen &rarr;</a>
+</div>
+<iframe class="explorer-frame" src="app/index.html"
+        title="Interactive explorer for Quebec collision records"></iframe>
+```
+
+## What this book found
+
+The Société de l'assurance automobile du Québec publishes the reports police
+complete after a collision: when, where in broad terms, who was involved, what
+the road and the weather were like, and how badly it turned out. If a city can design for severity, these
+reports are an obvious place to look for evidence of it.
+
+The evidence is not there.
+
+The record does predict severity, but almost entirely through who was involved.
+Knowing that a pedestrian or a cyclist was struck tells you a great deal.
+Everything else the form records about the road, its configuration, its surface,
+its lighting, its posted speed limit, adds close to nothing once that is known.
+The variables a city could change are the ones that carry least.
+
+There is also a ceiling. Collisions recorded identically on every one of the
+eighteen variables frequently turned out differently from one another, and any
+method reading those variables has to answer them all the same way, so it has to
+be wrong about some. Counting that across the whole dataset bounds what any
+method could achieve, and the bound is low. Five different kinds of model land in the same place, and a learning curve that
+flattens as records are added suggests another decade of the same reports would
+not move it far.
+
+None of this shows that road design has no effect on severity. Every figure here
+is computed over collisions that happened, so design that prevents an encounter
+altogether leaves no trace in the record. What the reports cannot do is
+distinguish, among the collisions that did occur, the ones the road made
+worse.
+
+## Why a negative result is still a result
+
+Saying that a model is not good enough describes how hard somebody tried. Saying
+that no model could be describes the data, and can be checked. Establishing the
+second has three benefits.
+
+It guards against a plausible mistake. The model built here reaches a Matthews
+correlation of about 0.44 on records it had never seen, which in most settings
+would indicate something that worked. On the same records it predicted a serious
+collision seven times out of forty-one thousand, and was right once. Reporting
+the first figure without the second would produce something that looked useful
+and was not.
+
+It indicates where not to look. If the limit lies in the data, then better
+algorithms, more computing power and more records of the same kind will not help,
+and effort spent on them is wasted.
+
+It also redirects attention. The same reports, asked a different question, are
+producing findings that Montréal boroughs have acted on. @sec-conclusion
+describes that work, which required a location and a count rather than a model of
+outcomes.
+
+## What this project is
+
+A learning exercise, worked through carefully.
+
+What is being learned is not a modelling technique but how to distinguish a hard
+problem from an impossible one, and how to establish which of the two you are
+facing without relying on a hunch. Most of the care that requires goes in before
+any model is fitted. One variable here turned out to be the outcome recorded
+under another name; blank fields turned out not to be blank at random; and
+several of the obvious estimators are biased in the direction that would have
+flattered the conclusion.
+
+@sec-methods records those decisions, including the ones that were wrong the
+first time.
+
+## How to read it
+
+| | |
+|---|---|
+| @sec-data | Where the data comes from, what a collision report records, and what it does not. |
+| @sec-quality | What was found before any modelling: a variable that was the answer in disguise, and blank fields that were not blank at random. |
+| @sec-limits | Whether any model could do better, argued four independent ways. |
+| @sec-matters | What each group of variables contributes, and which of them anyone could change. |
+| @sec-conclusion | What the data supports, what it does not, and what would be needed instead. |
+
+@sec-information is a self-contained introduction to the information theory the
+third chapter leans on. It assumes nothing and can be read on its own.
+@sec-methods records how every number here was produced.

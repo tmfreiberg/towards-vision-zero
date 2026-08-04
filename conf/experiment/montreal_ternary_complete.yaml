@@ -41,5 +41,6 @@ model:
     tree_method: hist
 
 evaluation:
-  beta: [0.5, 1.0, 2.0]
-  weights: [1.0, 4.0, 16.0]
+  # The outcome the analysis is about. Scores are reported for every class;
+  # this one is the one repeated in summaries.
+  focus_class: 2

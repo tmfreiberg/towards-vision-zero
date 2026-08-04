@@ -18,6 +18,7 @@ from vision_zero.viz.plots import (
     plot_reliability,
     plot_sweep,
     plot_trend,
+    plot_volume_and_rate,
 )
 from vision_zero.viz.theme import SEVERITY_COLOURS, SEVERITY_LABELS, apply_theme, figure
 
@@ -35,4 +36,5 @@ __all__ = [
     "plot_reliability",
     "plot_sweep",
     "plot_trend",
+    "plot_volume_and_rate",
 ]

@@ -15,6 +15,8 @@ Commands are grouped by concern::
 
 from __future__ import annotations
 
+import json
+from datetime import UTC, datetime
 from typing import Any
 
 import pandas as pd
@@ -259,30 +261,30 @@ def sweep(
 
     result = model_sweep(specification, dataset, folds=folds, subsample=subsample or None)
     table = Table(title="Estimator families under identical conditions")
-    for column in ("family", "F*", "MCC", "accuracy", "severe recall"):
+    for column in ("family", "MCC", "balanced acc.", "accuracy", "focus recall"):
         table.add_column(column, justify="right" if column != "family" else "left")
     for _, row in result.iterrows():
         table.add_row(
             str(row["family"]),
-            f"{row['f_star_mean']:.4f}",
             f"{row['mcc_mean']:+.4f}",
+            f"{row['balanced_accuracy_mean']:.4f}",
             f"{row['accuracy_mean']:.4f}",
-            f"{row['severe_recall_mean']:.4f}",
+            f"{row['focus_recall_mean']:.4f}",
         )
     console.print(table)
 
     if curve:
         points = learning_curve(specification, dataset, folds=folds, subsample=subsample or None)
         curve_table = Table(title="Learning curve")
-        for column in ("fraction", "n train", "F*", "MCC", "severe recall"):
+        for column in ("fraction", "n train", "MCC", "balanced acc.", "focus recall"):
             curve_table.add_column(column, justify="right")
         for _, row in points.iterrows():
             curve_table.add_row(
                 f"{row['fraction']:.2f}",
                 f"{int(row['n_train']):,}",
-                f"{row['f_star']:.4f}",
                 f"{row['mcc']:+.4f}",
-                f"{row['severe_recall']:.4f}",
+                f"{row['balanced_accuracy']:.4f}",
+                f"{row['focus_recall']:.4f}",
             )
         console.print(curve_table)
 
@@ -525,13 +527,7 @@ def evaluate(
     classes = list(dataset.classes)
     predictions = np.asarray(classes)[probabilities.argmax(axis=1)]
 
-    scores = classification_scores(
-        dataset.y_test.to_numpy(),
-        predictions,
-        beta=specification.evaluation.beta,
-        weights=specification.evaluation.weights,
-        classes=classes,
-    )
+    scores = classification_scores(dataset.y_test.to_numpy(), predictions, classes=classes)
     baseline = baseline_predictions(
         Baseline.MAJORITY,
         dataset.y_train.to_numpy(),
@@ -539,27 +535,23 @@ def evaluate(
         classes=np.asarray(classes),
     )
     baseline_scores = classification_scores(
-        dataset.y_test.to_numpy(),
-        baseline.labels,
-        beta=specification.evaluation.beta,
-        weights=specification.evaluation.weights,
-        classes=classes,
+        dataset.y_test.to_numpy(), baseline.labels, classes=classes
     )
 
     table = Table(title=f"{specification.name}: held-out set, {dataset.n_test:,} records")
     for column in ("metric", "model", "majority baseline"):
         table.add_column(column, justify="right" if column != "metric" else "left")
     for label, value, floor in (
-        ("F*", scores.f_star, baseline_scores.f_star),
         ("MCC", scores.mcc, baseline_scores.mcc),
-        ("accuracy", scores.accuracy, baseline_scores.accuracy),
         ("balanced accuracy", scores.balanced_accuracy, baseline_scores.balanced_accuracy),
+        ("macro F1", scores.macro_f1, baseline_scores.macro_f1),
+        ("accuracy", scores.accuracy, baseline_scores.accuracy),
     ):
         table.add_row(label, f"{value:.4f}", f"{floor:.4f}")
     console.print(table)
 
     per_class = Table(title="Per class")
-    for column in ("class", "support", "predicted", "precision", "recall", "F-beta"):
+    for column in ("class", "support", "predicted", "precision", "recall", "F1"):
         per_class.add_column(column, justify="right")
     for index, label in enumerate(scores.classes):
         per_class.add_row(
@@ -568,7 +560,7 @@ def evaluate(
             f"{int(scores.predicted[index]):,}",
             f"{scores.precision[index]:.4f}",
             f"{scores.recall[index]:.4f}",
-            f"{scores.fbeta[index]:.4f}",
+            f"{scores.f1[index]:.4f}",
         )
     console.print(per_class)
 
@@ -593,6 +585,235 @@ def evaluate(
         "contradiction: the stated odds are right even though the labels are useless."
     )
 
+    # Written so that the analysis documents can report the figure without
+    # opening the held-out set themselves. A chapter that recomputed this on
+    # every render would be consulting the vault continually, which is the one
+    # thing the vault exists to prevent.
+    settings = get_settings()
+    settings.ensure_writable_dirs()
+    record = {
+        "experiment": specification.name,
+        "evaluated": datetime.now(UTC).isoformat(timespec="seconds"),
+        "n_test": dataset.n_test,
+        "classes": [int(label) for label in classes],
+        "model": {
+            "mcc": scores.mcc,
+            "balanced_accuracy": scores.balanced_accuracy,
+            "macro_f1": scores.macro_f1,
+            "accuracy": scores.accuracy,
+            "precision": [float(v) for v in scores.precision],
+            "recall": [float(v) for v in scores.recall],
+            "f1": [float(v) for v in scores.f1],
+            "support": [int(v) for v in scores.support],
+            "predicted": [int(v) for v in scores.predicted],
+            "abandoned_classes": list(scores.abandoned_classes),
+        },
+        "baseline": {
+            "mcc": baseline_scores.mcc,
+            "balanced_accuracy": baseline_scores.balanced_accuracy,
+            "macro_f1": baseline_scores.macro_f1,
+            "accuracy": baseline_scores.accuracy,
+        },
+        "calibration": {
+            "brier": report.brier,
+            "error_by_class": {str(k): v for k, v in report.calibration_error.items()},
+            # The bins themselves, so a document can show what the model said
+            # against what occurred without opening the held-out set again.
+            "reliability": {
+                str(label): table.to_dict(orient="list")
+                for label, table in report.reliability.items()
+            },
+        },
+    }
+    destination = settings.report_dir / f"{specification.name}-heldout.json"
+    destination.write_text(json.dumps(record, indent=2), encoding="utf-8")
+    console.print(f"Recorded to {destination}")
+
+
+@app.command()
+def locality(
+    experiment: str = typer.Argument(..., help="Experiment name or path to a YAML file."),
+    pairs: bool = typer.Option(
+        False, "--pairs", help="Also examine differences of two variables at a time."
+    ),
+    top: int = typer.Option(8, "--top", help="Rows to show at each end of a ranking."),
+) -> None:
+    """Ask whether collisions that resemble each other turn out alike.
+
+    Three views of the same tally. How outcome similarity varies with the number
+    of variables that differ; what each variable does when it alone differs; and
+    what a whole block does when everything outside it is held fixed.
+    """
+    from vision_zero.ceiling.locality import (
+        confined_difference_agreement,
+        difference_set_profile,
+        locality_profile,
+    )
+    from vision_zero.data import load_codebook
+    from vision_zero.data.schema import blocks_for
+    from vision_zero.modeling.config import load_experiment
+    from vision_zero.modeling.dataset import build_dataset
+
+    specification = load_experiment(experiment)
+    dataset = build_dataset(specification)
+    book = load_codebook()
+    focus = specification.evaluation.focus_class
+
+    profile = locality_profile(
+        dataset.X_train, dataset.y_train, target_class=focus, seed=specification.split.seed
+    )
+    supported = profile[profile["expected"] >= 100]
+    distance_table = Table(title=f"Class {focus} among neighbours, by how many variables differ")
+    for column in ("differing", "pairs", "share", "vs base rate", "counted"):
+        distance_table.add_column(column, justify="right")
+    for _, row in supported.iterrows():
+        distance_table.add_row(
+            f"{int(row['distance'])}",
+            f"{int(row['pairs']):,}",
+            f"{row['share']:.5f}",
+            f"{row['lift']:.2f}",
+            "exact" if row["exact"] else "sampled",
+        )
+    console.print(distance_table)
+    console.print(
+        f"Base rate {profile.attrs['base_rate']:.5f}. Rows shown only where the base rate "
+        "alone would give a hundred neighbours or more."
+    )
+
+    sets = difference_set_profile(
+        dataset.X_train, dataset.y_train, target_class=focus, max_size=2 if pairs else 1
+    )
+    if sets.empty:
+        console.print("No difference set has enough pairs to report.")
+        return
+
+    reference = float(sets.attrs["identical_lift"])
+    singles = sets[sets["size"] == 1]
+    single_table = Table(title="Each variable alone: the lift when only it differs")
+    for column in ("variable", "pairs", "lift", "share of reference"):
+        single_table.add_column(column, justify="right" if column != "variable" else "left")
+    for _, row in singles.iterrows():
+        name = str(row["variables"])
+        single_table.add_row(
+            book[name].name_in("en") if name in book else name,
+            f"{int(row['pairs']):,}",
+            f"{row['lift']:.3f}",
+            f"{row['lift'] / reference:.2f}",
+        )
+    console.print(single_table)
+    console.print(
+        f"Compare against {reference:.3f}, the lift among records identical throughout. "
+        "A variable that carries nothing leaves the enrichment intact, so its lift sits "
+        "at the reference; one that carries something pulls it down."
+    )
+
+    if pairs:
+        both = sets[sets["size"] == 2]
+        for title, subset in (
+            ("Pairs of variables that move the outcome most", both.head(top)),
+            ("Pairs that move it least", both.tail(top)),
+        ):
+            table = Table(title=title)
+            for column in ("variables", "pairs", "lift", "share of reference"):
+                table.add_column(column, justify="right" if column != "variables" else "left")
+            for _, row in subset.iterrows():
+                names = [
+                    book[part].name_in("en") if part in book else part
+                    for part in str(row["variables"]).split(", ")
+                ]
+                table.add_row(
+                    " + ".join(names),
+                    f"{int(row['pairs']):,}",
+                    f"{row['lift']:.3f}",
+                    f"{row['lift'] / reference:.2f}",
+                )
+            console.print(table)
+
+    # Each block, and each block's complement. The two answer different
+    # questions: what happens when only this block differs, and what happens
+    # when this block is the only thing held fixed. Neither implies the other.
+    blocks = dict(blocks_for(dataset.features))
+    for name, members in list(blocks.items()):
+        outside = tuple(f for f in dataset.features if f not in members)
+        if outside and len(outside) < len(dataset.features):
+            blocks[f"all but {name}"] = outside
+    confined = confined_difference_agreement(dataset.X_train, dataset.y_train, blocks)
+    block_table = Table(title="Outcome agreement when only this block differs")
+    for column in (
+        "block",
+        "variables",
+        "pairs",
+        "agreement",
+        "same size, at random",
+        "difference",
+    ):
+        block_table.add_column(column, justify="right" if column != "block" else "left")
+    for _, row in confined.iterrows():
+        block_table.add_row(
+            str(row["block"]),
+            f"{int(row['variables'])}",
+            f"{int(row['pairs']):,}",
+            f"{row['agreement']:.4f}",
+            f"{row['same_size_control']:.4f}",
+            f"{row['difference']:+.4f}",
+        )
+    console.print(block_table)
+    console.print(
+        "Pairs agreeing on everything outside the block, so whatever separates them lies "
+        "inside it. Compared against blocks of the same size drawn at random, since a "
+        f"smaller block imposes a finer partition. Chance agreement is "
+        f"{confined.attrs['chance_agreement']:.4f}."
+    )
+
+
+@app.command()
+def resolution(
+    experiment: str = typer.Argument(..., help="Experiment name or path to a YAML file."),
+    samples: int = typer.Option(12, "--samples", help="Random subsets per size."),
+) -> None:
+    """Trace what the features resolve against how many records they cover."""
+    from vision_zero.ceiling.resolution import resolution_profile, single_feature_profile
+    from vision_zero.modeling.config import load_experiment
+    from vision_zero.modeling.dataset import build_dataset
+
+    specification = load_experiment(experiment)
+    dataset = build_dataset(specification)
+
+    profile = resolution_profile(
+        dataset.X_train, dataset.y_train, n_samples=samples, seed=specification.split.seed
+    )
+    table = Table(title="Matching on fewer variables: larger groups, less resolution")
+    for column in ("variables", "groups", "mean size", "singletons", "ceiling", "information"):
+        table.add_column(column, justify="right")
+    for _, row in profile.iterrows():
+        table.add_row(
+            f"{int(row['n_features'])}",
+            f"{int(row['n_cells']):,}",
+            f"{row['mean_cell_size']:.1f}",
+            f"{row['singleton_share']:.3f}",
+            f"{row['local_ceiling']:.4f}",
+            f"{row['information_bits']:+.4f}",
+        )
+    console.print(table)
+    console.print(
+        "Information is the half-split estimate, in bits. It can go negative: "
+        "estimated group distributions worse than the base rate is what "
+        "overfitting looks like from outside."
+    )
+
+    ranked = single_feature_profile(dataset.X_train, dataset.y_train, seed=specification.split.seed)
+    alone = Table(title="Each variable alone, most informative first")
+    for column in ("variable", "information", "values", "mean group"):
+        alone.add_column(column, justify="right" if column != "variable" else "left")
+    for _, row in ranked.head(12).iterrows():
+        alone.add_row(
+            str(row["feature"]),
+            f"{row['information_bits']:.5f}",
+            f"{int(row['n_values'])}",
+            f"{row['mean_group_size']:,.0f}",
+        )
+    console.print(alone)
+
 
 @app.command()
 def ablate(
@@ -611,33 +832,31 @@ def ablate(
 
     blocks = block_ablation(specification, dataset, folds=folds, subsample=cap)
     table = Table(title="Each block alone, and what it adds to the others")
-    for column in ("block", "features", "F* alone", "F* added", "MCC alone", "severe recall alone"):
+    for column in ("block", "features", "MCC alone", "MCC added", "focus recall alone"):
         table.add_column(column, justify="right" if column != "block" else "left")
     for _, row in blocks.iterrows():
-        added = row.get("f_star_added")
+        added = row.get("mcc_added")
         table.add_row(
             str(row["block"]),
             f"{int(row['n_features'])}",
-            f"{row['f_star_alone']:.4f}",
-            "-" if pd.isna(added) else f"{added:+.4f}",
             f"{row['mcc_alone']:+.4f}",
-            f"{row['severe_recall_alone']:.4f}",
+            "-" if pd.isna(added) else f"{added:+.4f}",
+            f"{row['focus_recall_alone']:.4f}",
         )
     console.print(table)
 
     steps = cumulative_ablation(specification, dataset, folds=folds, subsample=cap)
     running = Table(title="Blocks added in order, from the unavoidable to the actionable")
-    for column in ("step", "features", "F*", "change", "MCC", "severe recall"):
+    for column in ("step", "features", "MCC", "change", "focus recall"):
         running.add_column(column, justify="right" if column != "step" else "left")
     for _, row in steps.iterrows():
-        delta = row["f_star_delta"]
+        delta = row["mcc_delta"]
         running.add_row(
             str(row["step"]),
             f"{int(row['n_features'])}",
-            f"{row['f_star']:.4f}",
-            "-" if pd.isna(delta) else f"{delta:+.4f}",
             f"{row['mcc']:+.4f}",
-            f"{row['severe_recall']:.4f}",
+            "-" if pd.isna(delta) else f"{delta:+.4f}",
+            f"{row['focus_recall']:.4f}",
         )
     console.print(running)
     console.print(

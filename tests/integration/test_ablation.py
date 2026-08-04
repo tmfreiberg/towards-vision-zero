@@ -67,8 +67,8 @@ def test_ablation_covers_every_block_plus_the_reference_rows(dataset: Dataset) -
 def test_ablation_reports_both_alone_and_added(dataset: Dataset) -> None:
     result = block_ablation(_spec(), dataset, folds=2, subsample=None)
     blocks = result[~result["block"].isin(["majority baseline", "all features"])]
-    assert blocks["f_star_alone"].notna().all()
-    assert blocks["f_star_added"].notna().all()
+    assert blocks["mcc_alone"].notna().all()
+    assert blocks["mcc_added"].notna().all()
 
 
 def test_the_full_feature_set_is_scored_for_reference(dataset: Dataset) -> None:
@@ -87,8 +87,8 @@ def test_cumulative_ablation_grows_monotonically(dataset: Dataset) -> None:
 
 def test_cumulative_ablation_reports_each_step_change(dataset: Dataset) -> None:
     steps = cumulative_ablation(_spec(), dataset, folds=2, subsample=None)
-    assert pd.isna(steps["f_star_delta"].iloc[0])
-    assert steps["f_star_delta"].iloc[1:].notna().all()
+    assert pd.isna(steps["mcc_delta"].iloc[0])
+    assert steps["mcc_delta"].iloc[1:].notna().all()
 
 
 def test_an_unknown_block_in_the_order_is_skipped(dataset: Dataset) -> None:
@@ -125,3 +125,30 @@ def test_the_cap_is_validated() -> None:
 
     with pytest.raises(ValidationError):
         _spec(max_missing_features=-1)
+
+
+def test_a_stricter_filter_holds_out_the_same_records(frame: pd.DataFrame) -> None:
+    """Two experiments differing only in how strictly they filter must share a vault.
+
+    The split is taken before any quality filter, so the looser experiment's
+    training set contains the stricter one's, and neither one's training data
+    can overlap the other's held-out set. Filtering first would give them
+    unrelated splits and quietly break that.
+    """
+    loose = build_dataset(_spec(), frame)
+    strict = build_dataset(_spec(max_missing_features=0), frame)
+
+    loose_train = set(map(tuple, loose.X_train[list(strict.features)].to_numpy()))
+    assert strict.n_train <= loose.n_train
+    assert strict.n_test <= loose.n_test
+    assert loose_train, "sanity: the loose training set is not empty"
+
+
+def test_the_held_out_set_shrinks_with_the_filter_too(frame: pd.DataFrame) -> None:
+    """The held-out records must come from the same population as the training
+    ones, so a filter applied to one is applied to both."""
+    unfiltered = build_dataset(_spec(), frame)
+    filtered = build_dataset(_spec(max_missing_features=0), frame)
+
+    assert filtered.n_test < unfiltered.n_test
+    assert not filtered.X_test.isna().any().any()

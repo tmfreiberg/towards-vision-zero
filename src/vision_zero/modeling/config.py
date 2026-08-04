@@ -184,37 +184,23 @@ class ResamplingConfig(_Frozen):
 
 
 class EvaluationConfig(_Frozen):
-    """The scoring rule, class by class.
+    """Which class the reporting singles out.
+
+    There is no aggregate weighting here to configure. Scores are reported per
+    class, and where a single number is wanted it is the Matthews correlation
+    coefficient, which has no parameters. This block exists only to name the
+    class the analysis is about, so that summaries need not assume it is the
+    last one.
 
     Attributes
     ----------
-    beta
-        Per-class beta for the F-beta score, in class order. Above one weights
-        recall, below one weights precision.
-    weights
-        Per-class weight in the aggregate score.
-
-    Notes
-    -----
-    The defaults encode an asymmetry in what errors cost. Missing a serious
-    collision matters more than raising a false alarm about one, so the severe
-    class gets ``beta = 2``. Calling a material-damage collision severe wastes
-    attention rather than risking a life, so that class gets ``beta = 0.5``.
-    The weights counteract the class imbalance, so that a model cannot score
-    well merely by handling the majority class competently.
+    focus_class
+        The outcome whose recall and precision are quoted in summary tables.
+        Every class is reported in full regardless; this one is repeated where
+        a table has room for only one.
     """
 
-    beta: list[float] = Field(default_factory=lambda: [0.5, 1.0, 2.0])
-    weights: list[float] = Field(default_factory=lambda: [1.0, 4.0, 16.0])
-
-    @model_validator(mode="after")
-    def _same_length(self) -> EvaluationConfig:
-        """Both lists index the classes, so both must have the same length."""
-        if len(self.beta) != len(self.weights):
-            raise ValueError(
-                f"beta has {len(self.beta)} entries but weights has {len(self.weights)}"
-            )
-        return self
+    focus_class: int = 2
 
 
 class Experiment(_Frozen):

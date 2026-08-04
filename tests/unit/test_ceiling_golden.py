@@ -18,6 +18,7 @@ import pandas as pd
 import pytest
 
 from vision_zero.ceiling.bayes_error import (
+    achievable_frontier,
     held_out_ceiling,
     in_sample_ceiling,
     multiplicity_profile,
@@ -30,6 +31,9 @@ from vision_zero.ceiling.information import (
 )
 
 TOLERANCE = 1e-9
+
+#: Training features and labels, then validation features and labels.
+type Enriched = tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series]
 
 
 def _cells(pattern: dict[str, list[int]], repeats: int = 1) -> tuple[pd.DataFrame, pd.Series]:
@@ -427,3 +431,118 @@ def test_smoothing_keeps_an_unseen_outcome_finite() -> None:
     value, coverage = held_out_conditional_entropy(X_train, y_train, X_val, y_val)
     assert np.isfinite(value)
     assert coverage == 1.0
+
+
+# --------------------------------------------------------------------------
+# What "best possible" depends on
+# --------------------------------------------------------------------------
+
+
+@pytest.fixture(scope="module")
+def enriched() -> Enriched:
+    """Three cells with known rates of a rare class: 30%, 5% and 0.2%."""
+    rng = np.random.default_rng(0)
+    cells: list[str] = []
+    labels: list[int] = []
+    for name, rate, count in [("rich", 0.30, 4000), ("mid", 0.05, 8000), ("poor", 0.002, 40000)]:
+        cells += [name] * count
+        labels += list((rng.random(count) < rate).astype(int) * 2)
+
+    frame = (
+        pd.DataFrame({"f": cells, "y": labels})
+        .sample(frac=1.0, random_state=0)
+        .reset_index(drop=True)
+    )
+    half = len(frame) // 2
+    return (
+        frame[["f"]].iloc[:half],
+        frame["y"].iloc[:half],
+        frame[["f"]].iloc[half:],
+        frame["y"].iloc[half:],
+    )
+
+
+def test_the_optimal_rule_depends_on_what_is_being_scored(enriched: Enriched) -> None:
+    """There is no metric-free "best possible rule", and the gap is not small."""
+    X_fit, y_fit, X_val, y_val = enriched
+
+    for_accuracy = held_out_ceiling(X_fit, y_fit, X_val, y_val, rule="accuracy")
+    for_balance = held_out_ceiling(X_fit, y_fit, X_val, y_val, rule="balanced")
+
+    assert for_accuracy.accuracy > for_balance.accuracy
+    assert for_balance.balanced_accuracy > for_accuracy.balanced_accuracy
+
+    # The accuracy rule never names the rare class; the balanced rule finds most.
+    assert for_accuracy.per_class_recall[2] == pytest.approx(0.0, abs=1e-9)
+    assert for_balance.per_class_recall[2] > 0.9
+
+
+def test_precision_cannot_exceed_the_richest_cell(enriched: Enriched) -> None:
+    """A hard bound that holds for every method however it is tuned or scored."""
+    X_fit, y_fit, X_val, y_val = enriched
+    frontier = achievable_frontier(X_fit, y_fit, X_val, y_val, target_class=2)
+
+    assert float(frontier["precision"].max()) == pytest.approx(0.30, abs=0.03)
+
+
+def test_full_recall_costs_everything(enriched: Enriched) -> None:
+    """Naming every cell finds every case, at the class's overall rate."""
+    X_fit, y_fit, X_val, y_val = enriched
+    frontier = achievable_frontier(X_fit, y_fit, X_val, y_val, target_class=2)
+
+    last = frontier.iloc[-1]
+    assert float(last["recall"]) == pytest.approx(1.0, abs=1e-9)
+    assert float(last["precision"]) == pytest.approx(float((y_val == 2).mean()), abs=0.01)
+
+
+def test_the_frontier_trades_precision_for_recall(enriched: Enriched) -> None:
+    X_fit, y_fit, X_val, y_val = enriched
+    frontier = achievable_frontier(X_fit, y_fit, X_val, y_val, target_class=2)
+
+    assert frontier["recall"].is_monotonic_increasing
+    assert frontier["precision"].is_monotonic_decreasing
+
+
+def test_one_operating_point_per_cell_not_per_record(enriched: Enriched) -> None:
+    """Records in a cell are indistinguishable, so naming half of one is not a rule."""
+    X_fit, y_fit, X_val, y_val = enriched
+    frontier = achievable_frontier(X_fit, y_fit, X_val, y_val, target_class=2)
+    assert len(frontier) == 3
+
+
+def test_a_class_absent_from_validation_yields_nothing() -> None:
+    X = pd.DataFrame({"f": ["a", "b"] * 20})
+    y = pd.Series([0, 1] * 20)
+    frontier = achievable_frontier(
+        X.iloc[:20], y.iloc[:20], X.iloc[20:], y.iloc[20:], target_class=9
+    )
+    assert frontier.empty
+
+
+def test_recall_is_capped_by_what_the_rule_has_seen() -> None:
+    """A rule built from cells abstains on combinations it has never seen.
+
+    Abstaining means not flagging, so those records are missed at every
+    threshold. The recall of any such rule is therefore capped at the share of
+    the target class whose combination appeared in training, and flagging
+    everything the rule recognises does not reach one.
+    """
+    rng = np.random.default_rng(0)
+    train_cells = [f"seen{index % 50}" for index in range(4000)]
+    val_cells = [f"seen{index % 50}" for index in range(1000)] + [
+        f"new{index}" for index in range(1000)
+    ]
+
+    X_train = pd.DataFrame({"f": train_cells})
+    X_val = pd.DataFrame({"f": val_cells})
+    y_train = pd.Series((rng.random(4000) < 0.2).astype(int) * 2)
+    y_val = pd.Series((rng.random(2000) < 0.2).astype(int) * 2)
+
+    frontier = achievable_frontier(X_train, y_train, X_val, y_val, target_class=2)
+
+    serious = y_val == 2
+    seen = pd.Series(val_cells).str.startswith("seen")
+    reachable = float((serious & seen).sum()) / float(serious.sum())
+
+    assert float(frontier["recall"].max()) == pytest.approx(reachable, abs=1e-9)
+    assert float(frontier["recall"].max()) < 1.0

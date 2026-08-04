@@ -34,6 +34,7 @@ __all__ = [
     "plot_reliability",
     "plot_sweep",
     "plot_trend",
+    "plot_volume_and_rate",
 ]
 
 
@@ -167,6 +168,68 @@ def plot_trend(table: pd.DataFrame, period: str, title: str = "") -> Figure:
     return fig
 
 
+def plot_volume_and_rate(
+    table: pd.DataFrame,
+    rate_column: str,
+    *,
+    rate_label: str = "",
+    title: str = "",
+) -> Figure:
+    """Plot how often something happens against how badly it turns out.
+
+    The two need to share a figure because the interesting cases are the ones
+    where they disagree. Collisions are most frequent in winter and most severe
+    in summer; showing either alone invites the reader to assume the other
+    follows it.
+
+    Parameters
+    ----------
+    table
+        Rows in the order they should appear, with ``label``, ``n``, and the
+        rate column.
+    rate_column
+        Column holding the rate to draw as a line, typically the share of one
+        outcome class.
+    rate_label
+        Axis label for the rate.
+    title
+        Figure title.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Counts as bars against the left axis, the rate as a line against the
+        right.
+    """
+    fig, ax = figure()
+    positions = np.arange(len(table))
+
+    ax.bar(positions, table["n"], color="#d5d8d1", label="collisions")
+    ax.set_xticks(positions)
+    ax.set_xticklabels(table["label"], rotation=45, ha="right")
+    ax.set_ylabel("collisions")
+    ax.grid(visible=False, axis="x")
+
+    rate = ax.twinx()
+    rate.plot(
+        positions,
+        table[rate_column],
+        marker="o",
+        color=severity_colour(2),
+        linewidth=1.8,
+        label=rate_label or rate_column,
+    )
+    rate.set_ylabel(rate_label or rate_column)
+    rate.set_ylim(bottom=0)
+    rate.grid(visible=False)
+
+    handles = [*ax.containers, *rate.get_lines()]
+    ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 1.14), ncol=2)
+    if title:
+        ax.set_title(title, pad=30)
+    return fig
+
+
 def plot_missingness_profile(profile: pd.DataFrame) -> Figure:
     """Plot outcome shares against the number of blank fields.
 
@@ -200,7 +263,7 @@ def plot_missingness_profile(profile: pd.DataFrame) -> Figure:
     return fig
 
 
-def plot_ablation(ablation: pd.DataFrame, metric: str = "f_star") -> Figure:
+def plot_ablation(ablation: pd.DataFrame, metric: str = "mcc") -> Figure:
     """Plot each block's score alone against what it adds to the others.
 
     The two are different questions and the figure keeps them side by side. A
@@ -247,7 +310,7 @@ def plot_ablation(ablation: pd.DataFrame, metric: str = "f_star") -> Figure:
     return fig
 
 
-def plot_learning_curve(curve: pd.DataFrame, metric: str = "f_star") -> Figure:
+def plot_learning_curve(curve: pd.DataFrame, metric: str = "mcc") -> Figure:
     """Plot performance against training-set size.
 
     A flat curve says the shortage is of information rather than of records, and
@@ -263,7 +326,7 @@ def plot_learning_curve(curve: pd.DataFrame, metric: str = "f_star") -> Figure:
     return fig
 
 
-def plot_sweep(sweep: pd.DataFrame, metric: str = "f_star_mean") -> Figure:
+def plot_sweep(sweep: pd.DataFrame, metric: str = "mcc_mean") -> Figure:
     """Plot estimator families against one another and against the baseline.
 
     Families with very different inductive biases arriving at the same score is

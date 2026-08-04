@@ -27,7 +27,11 @@ data:
   # those two differ only by whether the damage estimate cleared $2,000, which
   # is an insurer's distinction and worth seeing rather than assuming away.
   target: SEV4
-  exclude_features: [YEAR]
+  # YEAR is withheld from the modelling experiments, where the calendar year of
+  # a collision is not plausibly a cause of its severity and inviting a model to
+  # fit drift in reporting practice would be a mistake. The explorer has no such
+  # worry and a reader may well want to compare one year with another.
+  exclude_features: []
   drop_rows_missing_target: true
   # No cap: whether a field was filled in is part of what the record says, and
   # the explorer is for looking at the record rather than modelling from it.
@@ -48,5 +52,6 @@ model:
     max_depth: 1
 
 evaluation:
-  beta: [0.5, 1.0, 2.0]
-  weights: [1.0, 4.0, 16.0]
+  # The outcome the analysis is about. Scores are reported for every class;
+  # this one is the one repeated in summaries.
+  focus_class: 2

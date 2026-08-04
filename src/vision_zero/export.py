@@ -108,7 +108,7 @@ class ExportResult:
 LANGUAGES: tuple[Language, ...] = ("en", "fr")
 
 
-def _feature_vocabulary(name: str) -> dict[str, Any]:
+def _feature_vocabulary(name: str, observed: list[str] | None = None) -> dict[str, Any]:
     """Describe one variable and its documented values, in both languages.
 
     Carries the SAAQ's own definition of every value, not just its name. A
@@ -116,12 +116,19 @@ def _feature_vocabulary(name: str) -> dict[str, Any]:
     business and a residential area falls, should not have to leave the page to
     find out — and the answer is not obvious, since these are administrative
     definitions rather than everyday ones.
+
+    A few variables have no enumerated values in the codebook because they are
+    not categorical in the SAAQ's sense: ``YEAR`` is an integer, not a code with
+    a documented meaning. For those the vocabulary comes from the values
+    actually present, and each labels itself. There is no official definition to
+    carry because there is nothing to define.
     """
     book = load_codebook()
     variable = book[name]
 
     values = []
-    for key in variable.values:
+    documented = list(variable.values)
+    for key in documented:
         entry = variable.values[key]
         values.append(
             {
@@ -132,6 +139,16 @@ def _feature_vocabulary(name: str) -> dict[str, Any]:
                 },
             }
         )
+
+    if not documented:
+        values = [
+            {
+                "key": key,
+                "label": dict.fromkeys(LANGUAGES, key),
+                "definition": dict.fromkeys(LANGUAGES, None),
+            }
+            for key in observed or []
+        ]
 
     missing = variable.missing
     return {
@@ -296,6 +313,21 @@ def _groupings(target: DerivedColumn, classes: list[int]) -> list[dict[str, Any]
     return sorted(out, key=lambda entry: -len(entry["partition"]))
 
 
+def _observed_values(column: pd.Series) -> list[str]:
+    """Return a column's distinct values as strings, in their natural order.
+
+    Only consulted where the codebook enumerates none. Sorting numerically when
+    the values are numbers keeps years and counts in the order a reader expects
+    rather than the order a string comparison produces.
+    """
+    present = column.dropna().unique()
+    try:
+        ordered = sorted(present, key=float)
+    except (TypeError, ValueError):
+        ordered = sorted(present, key=str)
+    return [str(value) for value in ordered]
+
+
 def _encode(column: pd.Series, keys: list[str]) -> np.ndarray:
     """Map a column's values onto their index in the documented vocabulary."""
     lookup = {key: index for index, key in enumerate(keys)}
@@ -343,7 +375,9 @@ def export_for_browser(
         X, y = dataset.X_train, dataset.y_train
 
     features = [name for name in dataset.features if name in book]
-    vocabulary = [_feature_vocabulary(name) for name in features]
+    vocabulary = [
+        _feature_vocabulary(name, observed=_observed_values(X[name])) for name in features
+    ]
 
     columns = [
         _encode(X[entry["name"]], [value["key"] for value in entry["values"]])
