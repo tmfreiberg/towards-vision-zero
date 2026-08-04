@@ -73,3 +73,5 @@ coverage.xml
 .idea/
 .vscode/
 .DS_Store
+
+**/*.quarto_ipynb
