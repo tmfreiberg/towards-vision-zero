@@ -7,12 +7,16 @@
 *.csv
 !data/raw/saaq_201[1-9].csv
 !data/raw/saaq_202[0-2].csv
-!tests/fixtures/*.csv
+# The test fixtures sit in `tests/fixtures/raw/`, so a single-level negation
+# misses them and they never reach the repository. Every local run passes
+# because they are on disk; a clean checkout has no fixtures and every
+# integration test errors at setup.
+!tests/fixtures/**/*.csv
 
 data/processed/
 data/interim/
 *.parquet
-!tests/fixtures/*.parquet
+!tests/fixtures/**/*.parquet
 
 # Model artifacts and generated reports are reproducible from a config + seed.
 artifacts/

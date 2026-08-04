@@ -1,0 +1,401 @@
+YEAR,ASPECT,PUB_PRIV_RD,WEATHER,RD_CONFG,LIGHT,ZONE,RD_COND,ACCDN_TYPE,LONG_LOC,RDWX,SEVERITY,HOUR,LT_TRK,MTRCYC,PED,HVY_VEH,BICYC,WKDY_WKND,MONTH,NUM_VEH,NUM_VICTIMS,ID,REGION,SPD_LIM
+2012,Curve,,15,23,2,1,18,cyclist,33,Y,Material damage only,12:00:00-15:59:00,Y,Y,N,Y,N,WKND,3,9,0,2012 _ 1,Laurentides (15),50
+2012,Straight,2,17,9,4,4,,other,,Y,Material damage only,20:00:00-23:59:00,N,Y,N,Y,Y,WKDY,9,2,0,2012 _ 2,Bas-Saint-Laurent (01),80
+2012,Straight,1,99,9,4,1,99,vehicle,99,Y,Material damage below the reporting threshold,04:00:00-07:59:00,Y,Y,N,N,Y,WKND,6,1,0,2012 _ 3,Nord-du-Québec (10),<50
+2012,,2,15,23,1,4,14,vehicle,34,Y,Material damage only,08:00:00-11:59:00,N,Y,Y,N,N,WKND,3,9,0,2012 _ 4,Montérégie (16),80
+2012,Curve,,15,23,1,3,14,other,34,Y,Material damage below the reporting threshold,20:00:00-23:59:00,Y,N,N,Y,Y,WKDY,8,9,0,2012 _ 5,Mauricie (04),<50
+2012,Curve,1,19,23,1,5,,cyclist,69,Y,Minor,08:00:00-11:59:00,N,Y,N,N,N,WKND,1,9,1,2012 _ 6,Laval (13),100
+2012,Straight,2,13,1,3,3,13,animal,33,Y,Material damage only,16:00:00-19:59:00,N,Y,N,Y,Y,WKDY,2,,0,2012 _ 7,Montréal (06),50
+2012,Straight,2,11,1,1,5,14,pedestrian,34,Y,Material damage only,08:00:00-11:59:00,Y,N,N,Y,Y,WKDY,7,9,0,2012 _ 8,Laval (13),60
+2012,Straight,2,12,45,2,4,19,vehicle,12,Y,Minor,12:00:00-15:59:00,N,N,Y,Y,N,WKDY,9,2,1,2012 _ 9,Laurentides (15),80
+2012,Curve,1,16,23,3,6,13,other,69,Y,Material damage only,16:00:00-19:59:00,N,N,Y,Y,N,WKND,10,2,0,2012 _ 10,Capitale-Nationale (03),100
+2012,Curve,1,11,1,1,4,11,cyclist,69,Y,Material damage below the reporting threshold,08:00:00-11:59:00,N,Y,N,N,Y,WKND,7,1,0,2012 _ 11,Bas-Saint-Laurent (01),50
+2012,Curve,2,16,45,3,2,15,other,33,Y,Material damage only,04:00:00-07:59:00,Y,Y,Y,N,Y,WKND,11,,0,2012 _ 12,Laurentides (15),100
+2012,Curve,2,12,23,1,3,11,other,69,Y,Material damage below the reporting threshold,08:00:00-11:59:00,Y,N,Y,N,Y,WKDY,10,2,0,2012 _ 13,Capitale-Nationale (03),90
+2012,Straight,1,14,9,2,2,12,pedestrian,12,Y,Material damage only,16:00:00-19:59:00,Y,Y,N,Y,N,WKND,8,1,0,2012 _ 14,Mauricie (04),80
+2012,Straight,1,13,45,3,2,18,fixed object,40,Y,Material damage only,16:00:00-19:59:00,N,N,N,N,Y,WKDY,4,1,0,2012 _ 15,Capitale-Nationale (03),<50
+2012,Curve,,17,23,1,9,11,animal,40,Y,Material damage only,16:00:00-19:59:00,N,Y,N,Y,Y,WKND,7,1,0,2012 _ 16,Estrie (05),80
+2012,Straight,1,16,9,1,3,15,vehicle,33,Y,Material damage below the reporting threshold,08:00:00-11:59:00,Y,Y,Y,Y,N,WKND,12,9,0,2012 _ 17,Laval (13),50
+2012,Curve,2,14,1,4,5,17,pedestrian,69,Y,Material damage only,08:00:00-11:59:00,Y,N,Y,N,N,WKDY,3,1,0,2012 _ 18,Abitibi-Témiscamingue (08),70
+2012,Straight,1,14,23,3,2,13,vehicle,12,Y,Material damage only,04:00:00-07:59:00,Y,N,N,N,N,WKND,2,9,0,2012 _ 19,Montréal (06),80
+2012,Straight,2,12,23,4,4,13,other,33,Y,Fatal or serious,20:00:00-23:59:00,N,N,N,N,Y,WKDY,8,1,1,2012 _ 20,Côte-Nord (09),70
+2012,Straight,1,13,45,,9,15,animal,99,Y,Material damage only,16:00:00-19:59:00,Y,Y,N,N,Y,WKND,12,1,0,2012 _ 21,Centre-du-Québec (17),
+2012,Curve,1,99,1,3,4,11,animal,69,Y,Material damage only,20:00:00-23:59:00,N,N,Y,N,Y,WKND,2,1,0,2012 _ 22,,100
+2012,Straight,1,18,23,1,,20,animal,34,Y,Material damage below the reporting threshold,16:00:00-19:59:00,N,N,N,N,Y,WKND,8,2,0,2012 _ 23,Nord-du-Québec (10),50
+2012,Curve,2,18,1,1,6,14,other,34,Y,Material damage only,16:00:00-19:59:00,Y,N,Y,N,N,WKDY,9,2,0,2012 _ 24,Laval (13),100
+2012,Curve,2,99,9,4,4,20,other,69,Y,Material damage only,08:00:00-11:59:00,Y,Y,Y,N,Y,WKDY,1,2,0,2012 _ 25,Montérégie (16),70
+2012,Curve,1,18,45,2,5,16,fixed object,69,Y,Material damage only,04:00:00-07:59:00,Y,N,Y,N,Y,WKDY,5,2,0,2012 _ 26,Chaudière-Appalaches (12),90
+2012,Straight,2,15,,2,6,20,pedestrian,33,Y,Fatal or serious,04:00:00-07:59:00,Y,Y,N,N,N,WKND,11,9,1,2012 _ 27,Outaouais (07),50
+2012,Curve,2,12,23,2,3,16,vehicle,33,Y,Material damage only,12:00:00-15:59:00,N,Y,Y,Y,N,WKND,12,2,0,2012 _ 28,Estrie (05),90
+2012,Curve,2,12,1,1,,16,no collision,99,Y,Minor,00:00:00-03:59:00,Y,N,N,N,N,WKDY,7,9,1,2012 _ 29,Outaouais (07),60
+2012,Curve,1,17,23,2,9,11,animal,34,Y,Material damage only,20:00:00-23:59:00,Y,Y,Y,N,N,WKDY,12,1,0,2012 _ 30,Côte-Nord (09),<50
+2012,Curve,2,16,45,2,1,99,vehicle,12,Y,Material damage only,12:00:00-15:59:00,N,Y,N,N,N,WKND,3,1,0,2012 _ 31,Montérégie (16),
+2012,Straight,1,16,9,4,4,11,pedestrian,99,Y,Material damage only,04:00:00-07:59:00,N,Y,Y,Y,N,WKND,9,1,0,2012 _ 32,Outaouais (07),
+2012,Straight,2,16,9,1,3,18,animal,40,Y,Minor,08:00:00-11:59:00,N,Y,Y,Y,Y,WKDY,3,9,1,2012 _ 33,Nord-du-Québec (10),70
+2012,Straight,2,16,45,2,9,14,animal,69,Y,Minor,12:00:00-15:59:00,Y,Y,Y,Y,N,WKDY,4,2,1,2012 _ 34,Laval (13),<50
+2012,Straight,1,99,1,2,9,15,animal,40,Y,Material damage below the reporting threshold,16:00:00-19:59:00,N,Y,N,N,N,WKND,1,1,0,2012 _ 35,Lanaudière (14),70
+2012,Curve,2,13,23,4,4,11,other,40,Y,Material damage only,00:00:00-03:59:00,N,Y,N,N,N,WKND,7,2,0,2012 _ 36,Saguenay/-Lac-Saint-Jean (02),70
+2012,Curve,2,17,9,1,2,18,fixed object,12,Y,Material damage only,04:00:00-07:59:00,N,N,N,N,Y,WKND,11,9,0,2012 _ 37,,80
+2012,Straight,1,13,45,2,3,11,cyclist,40,Y,Material damage only,00:00:00-03:59:00,N,Y,N,N,N,WKND,11,9,0,2012 _ 38,Saguenay/-Lac-Saint-Jean (02),<50
+2012,Straight,2,99,45,3,5,99,no collision,69,Y,Material damage only,00:00:00-03:59:00,N,Y,Y,Y,Y,WKDY,6,9,0,2012 _ 39,Lanaudière (14),100
+2012,Curve,1,,23,,6,16,pedestrian,,Y,Material damage only,20:00:00-23:59:00,Y,N,N,N,Y,WKDY,4,2,0,2012 _ 40,Centre-du-Québec (17),80
+2012,Curve,2,19,45,4,9,,pedestrian,,Y,Material damage below the reporting threshold,08:00:00-11:59:00,N,Y,N,Y,N,WKDY,10,2,0,2012 _ 41,Capitale-Nationale (03),70
+2012,Straight,1,16,9,3,2,20,animal,69,Y,Material damage only,08:00:00-11:59:00,Y,Y,Y,N,Y,WKDY,8,1,0,2012 _ 42,Bas-Saint-Laurent (01),70
+2012,Curve,1,11,45,1,3,11,pedestrian,33,Y,Material damage only,20:00:00-23:59:00,Y,N,N,N,Y,WKND,4,2,0,2012 _ 43,Centre-du-Québec (17),80
+2012,Straight,1,14,45,4,2,14,animal,40,Y,Material damage only,16:00:00-19:59:00,N,N,Y,Y,Y,WKND,7,2,0,2012 _ 44,Montréal (06),60
+2012,Curve,2,15,1,2,5,99,animal,99,Y,Minor,16:00:00-19:59:00,Y,Y,N,N,N,WKDY,3,1,1,2012 _ 45,Montréal (06),100
+2012,Curve,1,13,45,2,3,12,animal,69,Y,Material damage only,04:00:00-07:59:00,Y,Y,N,Y,N,WKND,10,9,0,2012 _ 46,Capitale-Nationale (03),70
+2012,Curve,2,19,9,3,4,13,pedestrian,34,Y,Material damage only,20:00:00-23:59:00,Y,N,N,N,N,WKND,9,9,0,2012 _ 47,Abitibi-Témiscamingue (08),80
+2012,Curve,1,11,9,2,9,20,fixed object,12,Y,Minor,04:00:00-07:59:00,N,N,N,N,Y,WKDY,12,2,1,2012 _ 48,Montréal (06),60
+2012,Straight,1,18,,4,9,13,vehicle,69,Y,Material damage only,04:00:00-07:59:00,Y,Y,N,N,Y,WKND,8,1,0,2012 _ 49,Centre-du-Québec (17),50
+2012,Curve,1,13,23,4,5,18,vehicle,12,Y,Material damage only,04:00:00-07:59:00,N,N,N,Y,Y,WKND,11,2,0,2012 _ 50,Gaspésie/-Îles-de-la-Madeleine (11),<50
+2012,Straight,1,15,9,2,,99,fixed object,34,Y,Material damage only,20:00:00-23:59:00,Y,N,Y,N,Y,WKND,5,2,0,2012 _ 51,Nord-du-Québec (10),100
+2012,Straight,2,14,45,3,1,16,cyclist,69,Y,Material damage only,04:00:00-07:59:00,N,Y,Y,N,Y,WKDY,11,1,0,2012 _ 52,Lanaudière (14),80
+2012,Straight,2,19,23,3,4,16,other,33,Y,Material damage only,04:00:00-07:59:00,N,Y,N,N,Y,WKND,9,9,0,2012 _ 53,Montréal (06),60
+2012,Curve,2,17,1,1,4,17,animal,40,Y,Material damage only,04:00:00-07:59:00,Y,Y,Y,Y,N,WKND,4,1,0,2012 _ 54,Bas-Saint-Laurent (01),80
+2012,Straight,2,18,1,3,9,20,other,40,Y,Material damage only,16:00:00-19:59:00,Y,N,N,N,N,WKND,7,9,0,2012 _ 55,Montréal (06),50
+2012,Straight,1,18,23,2,5,16,no collision,69,Y,Material damage only,16:00:00-19:59:00,Y,N,N,Y,N,WKND,9,2,0,2012 _ 56,Lanaudière (14),50
+2012,Curve,2,12,9,1,3,16,no collision,99,Y,Material damage only,,Y,N,Y,N,N,WKND,1,1,0,2012 _ 57,Lanaudière (14),90
+2012,Straight,1,17,1,4,4,20,cyclist,12,Y,Material damage only,16:00:00-19:59:00,Y,Y,N,N,N,WKND,10,2,0,2012 _ 58,Lanaudière (14),100
+2012,Straight,2,15,1,4,,18,cyclist,33,Y,Material damage only,04:00:00-07:59:00,N,Y,N,Y,N,WKDY,1,1,0,2012 _ 59,Centre-du-Québec (17),70
+2012,Straight,2,11,9,2,3,19,other,99,Y,Material damage only,04:00:00-07:59:00,Y,Y,Y,Y,Y,WKDY,8,9,0,2012 _ 60,Laval (13),<50
+2012,Curve,1,99,9,1,2,14,vehicle,99,Y,Material damage only,04:00:00-07:59:00,N,N,N,Y,Y,WKND,12,1,0,2012 _ 61,Centre-du-Québec (17),80
+2012,Straight,2,16,45,2,9,,pedestrian,34,Y,Material damage only,04:00:00-07:59:00,Y,N,N,Y,Y,WKDY,3,9,0,2012 _ 62,Chaudière-Appalaches (12),70
+2012,Straight,2,16,23,4,1,18,cyclist,34,Y,Material damage only,08:00:00-11:59:00,Y,Y,N,N,Y,WKDY,10,2,0,2012 _ 63,Abitibi-Témiscamingue (08),50
+2012,Curve,2,19,23,2,6,17,cyclist,33,Y,Material damage only,20:00:00-23:59:00,N,Y,Y,N,N,WKDY,10,1,0,2012 _ 64,Montréal (06),60
+2012,Curve,2,11,9,4,6,18,cyclist,99,Y,Material damage only,12:00:00-15:59:00,N,N,N,N,N,WKDY,3,2,0,2012 _ 65,Montréal (06),60
+2012,Straight,2,11,9,4,1,13,fixed object,34,Y,Minor,20:00:00-23:59:00,Y,N,N,N,Y,WKND,5,1,9,2012 _ 66,Saguenay/-Lac-Saint-Jean (02),70
+2012,Curve,2,13,45,2,3,16,no collision,33,Y,Material damage only,16:00:00-19:59:00,N,Y,N,N,N,WKDY,9,9,0,2012 _ 67,Saguenay/-Lac-Saint-Jean (02),90
+2012,Curve,2,13,9,1,1,15,cyclist,99,Y,Material damage only,04:00:00-07:59:00,Y,Y,Y,N,Y,WKDY,12,1,0,2012 _ 68,Chaudière-Appalaches (12),100
+2012,Curve,1,12,23,2,5,14,vehicle,12,Y,Material damage only,20:00:00-23:59:00,Y,N,Y,Y,Y,WKDY,7,1,0,2012 _ 69,Saguenay/-Lac-Saint-Jean (02),<50
+2012,Straight,2,19,23,,1,19,cyclist,33,Y,Material damage only,12:00:00-15:59:00,Y,Y,N,Y,N,WKDY,7,2,0,2012 _ 70,Bas-Saint-Laurent (01),90
+2012,Straight,1,13,23,4,2,12,fixed object,34,Y,Material damage only,20:00:00-23:59:00,N,Y,Y,N,N,WKDY,1,9,0,2012 _ 71,Outaouais (07),100
+2012,Curve,1,11,1,3,9,16,other,40,Y,Material damage only,16:00:00-19:59:00,N,Y,Y,N,Y,WKND,6,2,0,2012 _ 72,Saguenay/-Lac-Saint-Jean (02),50
+2012,Straight,2,15,23,4,2,99,cyclist,99,Y,Material damage only,00:00:00-03:59:00,Y,Y,N,N,N,WKND,4,1,0,2012 _ 73,Laurentides (15),
+2012,Straight,1,16,9,3,3,99,other,12,Y,Material damage only,00:00:00-03:59:00,Y,Y,N,N,N,WKDY,12,2,0,2012 _ 74,Abitibi-Témiscamingue (08),
+2012,Straight,1,99,23,2,2,20,fixed object,34,Y,Minor,16:00:00-19:59:00,Y,N,Y,N,N,WKDY,10,2,2,2012 _ 75,Montérégie (16),<50
+2012,Straight,2,18,9,4,1,13,vehicle,40,Y,Material damage only,08:00:00-11:59:00,N,Y,Y,Y,Y,WKDY,5,1,0,2012 _ 76,Laval (13),<50
+2012,Straight,2,17,9,2,9,16,vehicle,33,Y,Material damage only,00:00:00-03:59:00,N,N,N,Y,N,WKND,11,9,0,2012 _ 77,Saguenay/-Lac-Saint-Jean (02),50
+2012,Curve,2,19,45,3,5,99,,40,Y,Material damage only,08:00:00-11:59:00,N,Y,Y,Y,N,WKDY,12,9,0,2012 _ 78,Mauricie (04),90
+2012,Straight,1,99,1,2,1,19,,33,Y,Material damage only,04:00:00-07:59:00,N,Y,Y,N,N,WKND,5,1,0,2012 _ 79,Saguenay/-Lac-Saint-Jean (02),60
+2012,Curve,,12,9,3,2,12,vehicle,99,Y,Material damage only,04:00:00-07:59:00,Y,Y,N,N,Y,WKDY,3,2,0,2012 _ 80,Montérégie (16),
+2012,Curve,1,13,1,1,1,14,animal,40,Y,Material damage only,04:00:00-07:59:00,N,Y,N,N,N,WKDY,9,1,0,2012 _ 81,Gaspésie/-Îles-de-la-Madeleine (11),70
+2012,Curve,1,11,45,1,9,16,cyclist,99,Y,Material damage only,08:00:00-11:59:00,N,N,Y,N,Y,WKDY,9,1,0,2012 _ 82,Bas-Saint-Laurent (01),90
+2012,Straight,2,17,45,4,5,16,pedestrian,69,Y,Material damage only,12:00:00-15:59:00,Y,N,Y,N,N,WKND,6,9,0,2012 _ 83,Montréal (06),60
+2012,Curve,1,17,45,4,2,12,cyclist,,Y,Material damage only,08:00:00-11:59:00,N,N,Y,Y,N,WKND,4,,0,2012 _ 84,Mauricie (04),90
+2012,Curve,1,16,9,2,3,18,no collision,12,Y,Material damage only,00:00:00-03:59:00,N,Y,N,N,N,WKDY,9,1,0,2012 _ 85,Laval (13),50
+2012,Straight,1,11,23,4,9,99,pedestrian,34,Y,Material damage only,08:00:00-11:59:00,Y,N,N,Y,N,WKDY,12,2,0,2012 _ 86,Saguenay/-Lac-Saint-Jean (02),80
+2012,Straight,,18,45,1,5,13,other,99,Y,Material damage only,20:00:00-23:59:00,N,Y,N,N,Y,WKDY,7,1,0,2012 _ 87,Nord-du-Québec (10),100
+2012,Curve,2,17,45,2,,99,pedestrian,12,Y,Minor,00:00:00-03:59:00,Y,Y,N,Y,N,WKND,1,1,1,2012 _ 88,Laurentides (15),100
+2012,Straight,,12,45,2,3,,cyclist,33,Y,Material damage below the reporting threshold,00:00:00-03:59:00,Y,N,N,N,Y,WKDY,10,1,0,2012 _ 89,,50
+2012,Straight,2,12,45,4,6,20,animal,40,Y,Material damage only,00:00:00-03:59:00,N,Y,N,N,N,WKDY,3,2,0,2012 _ 90,Centre-du-Québec (17),70
+2012,Straight,1,12,23,1,4,16,fixed object,69,Y,Material damage below the reporting threshold,16:00:00-19:59:00,Y,Y,N,N,Y,WKDY,4,9,0,2012 _ 91,Laval (13),50
+2012,Straight,2,19,9,3,4,14,cyclist,34,Y,Minor,12:00:00-15:59:00,N,Y,Y,Y,N,WKND,11,2,1,2012 _ 92,Laurentides (15),
+2012,Straight,2,18,1,3,6,20,vehicle,99,Y,Minor,12:00:00-15:59:00,Y,N,N,Y,Y,WKDY,4,2,1,2012 _ 93,Estrie (05),100
+2012,Straight,1,13,1,2,4,17,no collision,69,Y,Material damage only,,Y,Y,Y,Y,N,WKDY,7,9,0,2012 _ 94,Montérégie (16),80
+2012,Curve,2,16,45,3,9,17,pedestrian,34,Y,Material damage below the reporting threshold,00:00:00-03:59:00,Y,N,N,N,N,WKND,1,,0,2012 _ 95,Laval (13),60
+2012,Curve,2,18,9,3,3,11,cyclist,40,Y,Material damage only,04:00:00-07:59:00,N,N,N,N,Y,WKDY,1,9,0,2012 _ 96,Saguenay/-Lac-Saint-Jean (02),100
+2012,,2,11,23,3,1,20,other,99,Y,Material damage only,12:00:00-15:59:00,N,N,N,Y,Y,WKND,8,2,0,2012 _ 97,Lanaudière (14),90
+2012,Curve,1,12,23,1,9,,other,,Y,Material damage only,00:00:00-03:59:00,N,Y,N,Y,N,WKDY,4,9,0,2012 _ 98,Saguenay/-Lac-Saint-Jean (02),<50
+2012,Curve,1,17,,3,1,19,cyclist,34,Y,Material damage only,12:00:00-15:59:00,N,N,N,Y,Y,WKND,11,2,0,2012 _ 99,Centre-du-Québec (17),90
+2012,Straight,1,14,45,4,1,13,vehicle,40,Y,Material damage only,08:00:00-11:59:00,Y,N,Y,Y,Y,WKND,8,1,0,2012 _ 100,Côte-Nord (09),70
+2012,Straight,2,16,1,,2,15,cyclist,69,Y,Material damage only,16:00:00-19:59:00,Y,N,N,N,N,WKDY,7,9,0,2012 _ 101,Estrie (05),100
+2012,Straight,2,17,45,3,5,16,no collision,40,Y,Material damage only,08:00:00-11:59:00,N,N,N,N,Y,WKND,3,1,0,2012 _ 102,Montérégie (16),100
+2012,Straight,1,14,23,1,2,14,pedestrian,33,Y,Material damage only,08:00:00-11:59:00,N,N,N,N,N,WKND,3,2,0,2012 _ 103,Centre-du-Québec (17),100
+2012,Curve,2,19,1,1,5,18,vehicle,69,Y,Material damage below the reporting threshold,16:00:00-19:59:00,Y,N,N,Y,N,WKND,3,1,0,2012 _ 104,Montérégie (16),70
+2012,Straight,2,12,9,1,6,11,cyclist,69,Y,Material damage only,20:00:00-23:59:00,Y,Y,N,Y,Y,WKND,11,2,0,2012 _ 105,Mauricie (04),90
+2012,Curve,1,19,1,3,4,12,cyclist,40,Y,Material damage only,12:00:00-15:59:00,N,N,N,Y,Y,WKDY,12,9,0,2012 _ 106,Capitale-Nationale (03),80
+2012,Straight,2,12,45,1,5,,fixed object,33,Y,Material damage below the reporting threshold,04:00:00-07:59:00,N,Y,Y,N,Y,WKND,7,1,0,2012 _ 107,Gaspésie/-Îles-de-la-Madeleine (11),<50
+2012,Curve,2,15,9,1,1,20,pedestrian,99,Y,Material damage only,08:00:00-11:59:00,N,Y,N,Y,N,WKND,6,9,0,2012 _ 108,Lanaudière (14),50
+2012,Straight,1,18,,2,3,12,fixed object,99,Y,Material damage only,04:00:00-07:59:00,Y,Y,Y,Y,N,WKDY,9,9,0,2012 _ 109,Mauricie (04),80
+2012,Curve,,17,1,4,9,13,vehicle,40,Y,Material damage below the reporting threshold,00:00:00-03:59:00,N,Y,Y,Y,Y,WKND,12,9,0,2012 _ 110,Côte-Nord (09),<50
+2012,Straight,1,19,1,2,6,11,cyclist,40,Y,Material damage only,20:00:00-23:59:00,Y,N,N,N,N,WKND,9,1,0,2012 _ 111,Abitibi-Témiscamingue (08),90
+2012,Straight,1,18,45,4,6,11,other,12,Y,Material damage only,12:00:00-15:59:00,N,Y,N,Y,Y,WKND,12,9,0,2012 _ 112,Lanaudière (14),80
+2012,,1,17,45,3,6,12,cyclist,34,Y,Material damage only,16:00:00-19:59:00,N,N,N,Y,Y,WKDY,6,1,0,2012 _ 113,Mauricie (04),<50
+2012,Straight,2,12,45,4,9,20,vehicle,,Y,Material damage only,20:00:00-23:59:00,N,Y,N,Y,N,WKDY,12,1,0,2012 _ 114,Côte-Nord (09),90
+2012,Curve,1,16,23,1,3,16,fixed object,69,Y,Minor,20:00:00-23:59:00,N,Y,N,Y,Y,WKND,11,1,1,2012 _ 115,Capitale-Nationale (03),<50
+2012,Curve,2,19,23,3,4,13,cyclist,12,Y,Material damage only,00:00:00-03:59:00,N,Y,Y,N,N,WKDY,12,2,0,2012 _ 116,Bas-Saint-Laurent (01),80
+2012,Straight,2,14,,3,2,14,animal,33,Y,Minor,12:00:00-15:59:00,Y,Y,Y,N,Y,WKDY,1,2,1,2012 _ 117,Nord-du-Québec (10),<50
+2012,Curve,2,13,1,1,4,16,cyclist,99,Y,Material damage only,00:00:00-03:59:00,Y,N,N,Y,N,WKDY,1,9,0,2012 _ 118,Montréal (06),50
+2012,Straight,2,12,45,2,5,15,,33,Y,Material damage only,16:00:00-19:59:00,N,Y,N,N,N,WKND,2,9,0,2012 _ 119,Capitale-Nationale (03),
+2012,Straight,2,18,1,2,4,17,fixed object,40,Y,Material damage only,20:00:00-23:59:00,Y,N,N,N,Y,WKDY,8,2,0,2012 _ 120,Abitibi-Témiscamingue (08),<50
+2012,Curve,2,18,23,3,6,12,fixed object,99,Y,Material damage below the reporting threshold,08:00:00-11:59:00,N,N,Y,Y,Y,WKDY,3,1,0,2012 _ 121,Laval (13),<50
+2012,Curve,2,13,9,3,6,17,no collision,34,Y,Material damage only,04:00:00-07:59:00,N,Y,N,N,Y,WKDY,10,2,0,2012 _ 122,,90
+2012,Straight,1,12,,3,9,13,fixed object,34,Y,Material damage only,16:00:00-19:59:00,N,N,Y,Y,Y,WKND,7,9,0,2012 _ 123,Mauricie (04),50
+2012,Curve,2,11,23,2,2,99,animal,69,Y,Material damage only,08:00:00-11:59:00,N,N,N,N,N,WKND,6,1,0,2012 _ 124,Laval (13),<50
+2012,Curve,1,18,23,3,4,13,cyclist,69,Y,Material damage only,04:00:00-07:59:00,N,Y,Y,N,Y,WKND,12,1,0,2012 _ 125,Montérégie (16),90
+2012,Curve,1,16,9,3,4,,pedestrian,34,Y,Minor,16:00:00-19:59:00,Y,Y,Y,Y,N,WKDY,7,1,1,2012 _ 126,Laval (13),90
+2012,Straight,1,14,45,3,5,16,cyclist,12,Y,Material damage below the reporting threshold,16:00:00-19:59:00,Y,Y,N,N,Y,WKND,4,9,0,2012 _ 127,Lanaudière (14),70
+2012,Curve,2,17,9,2,5,14,no collision,99,Y,Material damage only,08:00:00-11:59:00,N,N,N,Y,N,WKDY,7,9,0,2012 _ 128,Chaudière-Appalaches (12),70
+2012,Straight,1,19,23,,2,18,other,12,Y,Material damage only,12:00:00-15:59:00,Y,N,N,N,N,WKDY,1,2,0,2012 _ 129,Montréal (06),<50
+2012,,1,18,9,4,2,17,cyclist,33,Y,Material damage only,12:00:00-15:59:00,N,N,N,N,N,WKDY,7,2,0,2012 _ 130,Chaudière-Appalaches (12),
+2012,Curve,1,19,23,4,9,16,fixed object,40,Y,Material damage only,00:00:00-03:59:00,N,Y,N,Y,Y,WKDY,6,1,0,2012 _ 131,Nord-du-Québec (10),50
+2012,Straight,,18,9,3,2,20,other,,Y,Minor,04:00:00-07:59:00,N,Y,N,Y,Y,WKDY,12,1,1,2012 _ 132,Laurentides (15),80
+2012,Straight,1,16,1,3,5,12,animal,33,Y,Material damage only,08:00:00-11:59:00,N,Y,N,Y,Y,WKND,12,1,0,2012 _ 133,Capitale-Nationale (03),60
+2012,Curve,1,16,23,1,1,14,cyclist,12,Y,Material damage only,04:00:00-07:59:00,Y,N,Y,N,N,WKDY,7,1,0,2012 _ 134,Outaouais (07),60
+2012,Curve,1,16,1,4,5,15,cyclist,34,Y,Material damage only,00:00:00-03:59:00,Y,Y,Y,Y,Y,WKDY,2,1,0,2012 _ 135,Saguenay/-Lac-Saint-Jean (02),100
+2012,Curve,2,14,9,4,1,13,no collision,33,Y,Material damage below the reporting threshold,00:00:00-03:59:00,Y,Y,N,N,N,WKDY,5,2,0,2012 _ 136,Outaouais (07),100
+2012,Curve,1,11,1,4,4,19,vehicle,33,Y,Fatal or serious,08:00:00-11:59:00,N,Y,Y,Y,Y,WKDY,2,1,1,2012 _ 137,Mauricie (04),50
+2012,Curve,2,99,1,4,4,13,no collision,99,Y,Material damage only,20:00:00-23:59:00,Y,Y,N,N,N,WKDY,2,2,0,2012 _ 138,Côte-Nord (09),90
+2012,Curve,,16,1,3,5,19,no collision,99,Y,Material damage only,08:00:00-11:59:00,N,Y,Y,Y,N,WKDY,8,2,0,2012 _ 139,Abitibi-Témiscamingue (08),80
+2012,Straight,2,16,9,1,5,16,no collision,40,Y,Material damage only,08:00:00-11:59:00,Y,Y,Y,Y,Y,WKND,8,,0,2012 _ 140,Laurentides (15),90
+2012,Straight,2,13,9,3,3,13,vehicle,34,Y,Material damage only,16:00:00-19:59:00,N,N,N,Y,N,WKND,11,9,0,2012 _ 141,Nord-du-Québec (10),<50
+2012,Curve,1,12,45,4,9,20,other,99,Y,Material damage only,08:00:00-11:59:00,N,Y,N,Y,N,WKND,6,1,0,2012 _ 142,Montréal (06),70
+2012,Straight,,99,9,2,2,11,other,,Y,Material damage only,16:00:00-19:59:00,Y,Y,N,N,N,WKDY,8,1,0,2012 _ 143,Nord-du-Québec (10),100
+2012,Straight,2,12,23,3,6,,no collision,99,Y,Material damage below the reporting threshold,12:00:00-15:59:00,Y,N,N,Y,N,WKDY,2,9,0,2012 _ 144,Montérégie (16),70
+2012,Curve,2,13,23,2,3,11,fixed object,12,Y,Fatal or serious,12:00:00-15:59:00,Y,N,Y,Y,N,WKDY,11,1,1,2012 _ 145,Capitale-Nationale (03),90
+2012,Straight,1,15,23,2,6,99,fixed object,33,Y,Material damage only,00:00:00-03:59:00,N,N,N,Y,Y,WKDY,6,9,0,2012 _ 146,Estrie (05),50
+2012,Curve,1,17,1,2,1,,vehicle,69,Y,Material damage only,12:00:00-15:59:00,N,Y,N,Y,N,WKND,9,9,0,2012 _ 147,Abitibi-Témiscamingue (08),<50
+2012,Straight,1,15,23,,6,12,other,34,Y,Material damage only,00:00:00-03:59:00,Y,Y,Y,Y,N,WKND,10,9,0,2012 _ 148,Capitale-Nationale (03),<50
+2012,Curve,1,99,23,1,4,16,fixed object,99,Y,Material damage only,12:00:00-15:59:00,Y,Y,N,N,N,WKDY,4,9,0,2012 _ 149,Laval (13),60
+2012,Straight,1,15,23,3,3,19,cyclist,69,Y,Material damage only,08:00:00-11:59:00,Y,N,N,N,N,WKND,12,9,0,2012 _ 150,,60
+2012,Straight,1,18,9,2,9,16,other,40,Y,Material damage only,12:00:00-15:59:00,N,N,N,N,N,WKDY,1,2,0,2012 _ 151,Abitibi-Témiscamingue (08),80
+2012,Curve,1,17,9,3,3,12,fixed object,69,Y,Material damage only,00:00:00-03:59:00,Y,Y,N,N,Y,WKDY,7,,0,2012 _ 152,Nord-du-Québec (10),100
+2012,Curve,2,11,45,3,2,17,vehicle,34,Y,Material damage only,16:00:00-19:59:00,N,Y,N,Y,Y,WKND,8,9,0,2012 _ 153,Bas-Saint-Laurent (01),80
+2012,Curve,2,13,1,4,2,17,vehicle,34,Y,Material damage only,08:00:00-11:59:00,Y,Y,N,Y,N,WKDY,10,1,0,2012 _ 154,Estrie (05),50
+2012,Straight,1,,45,1,1,15,animal,33,Y,Minor,16:00:00-19:59:00,Y,Y,N,Y,N,WKND,5,9,1,2012 _ 155,Laurentides (15),90
+2012,Straight,2,18,23,3,4,17,animal,99,Y,Material damage only,00:00:00-03:59:00,Y,Y,N,N,Y,WKND,12,2,0,2012 _ 156,Estrie (05),70
+2012,Curve,2,17,,1,4,20,no collision,34,Y,Minor,08:00:00-11:59:00,N,N,Y,N,N,WKDY,2,1,1,2012 _ 157,Mauricie (04),50
+2012,Straight,1,17,,1,4,20,fixed object,34,Y,Material damage only,08:00:00-11:59:00,N,N,N,Y,Y,WKND,2,9,0,2012 _ 158,Abitibi-Témiscamingue (08),80
+2012,Curve,2,16,9,2,3,15,cyclist,69,Y,Material damage only,12:00:00-15:59:00,Y,N,Y,N,Y,WKDY,11,9,0,2012 _ 159,Outaouais (07),50
+2012,Curve,1,14,1,2,9,14,other,34,Y,Material damage below the reporting threshold,00:00:00-03:59:00,N,Y,Y,N,N,WKND,9,1,0,2012 _ 160,Estrie (05),
+2012,Straight,1,15,45,3,5,17,fixed object,99,Y,Material damage below the reporting threshold,12:00:00-15:59:00,N,Y,N,Y,N,WKND,10,1,0,2012 _ 161,Centre-du-Québec (17),
+2012,Curve,2,12,45,3,3,16,pedestrian,99,Y,Material damage only,12:00:00-15:59:00,N,N,Y,N,Y,WKDY,8,,0,2012 _ 162,Centre-du-Québec (17),100
+2012,Straight,1,13,9,2,6,19,other,34,Y,Material damage only,04:00:00-07:59:00,Y,Y,Y,Y,Y,WKDY,6,9,0,2012 _ 163,Gaspésie/-Îles-de-la-Madeleine (11),90
+2012,Curve,1,11,9,4,1,12,fixed object,34,Y,Material damage only,12:00:00-15:59:00,Y,Y,Y,Y,Y,WKND,9,2,0,2012 _ 164,,60
+2012,Curve,2,17,23,4,3,99,vehicle,40,Y,Material damage only,12:00:00-15:59:00,N,Y,Y,N,N,WKDY,3,2,0,2012 _ 165,Montréal (06),90
+2012,Curve,1,99,23,1,5,13,pedestrian,40,Y,Material damage only,16:00:00-19:59:00,Y,N,N,Y,N,WKND,2,2,0,2012 _ 166,Montérégie (16),
+2012,,1,18,23,4,4,99,vehicle,34,Y,Material damage only,12:00:00-15:59:00,Y,Y,Y,Y,N,WKND,3,2,0,2012 _ 167,Gaspésie/-Îles-de-la-Madeleine (11),50
+2012,Straight,1,18,45,2,5,16,,69,Y,Material damage only,08:00:00-11:59:00,Y,Y,Y,N,N,WKND,3,1,0,2012 _ 168,Gaspésie/-Îles-de-la-Madeleine (11),70
+2012,,2,18,9,2,4,12,animal,99,Y,Material damage only,00:00:00-03:59:00,N,Y,N,Y,N,WKND,4,9,0,2012 _ 169,Estrie (05),70
+2012,Straight,1,12,23,2,9,16,pedestrian,33,Y,Minor,20:00:00-23:59:00,Y,N,N,N,N,WKDY,4,9,2,2012 _ 170,Estrie (05),100
+2012,Curve,1,13,9,4,9,16,no collision,12,Y,Minor,04:00:00-07:59:00,Y,Y,N,N,Y,WKND,12,2,1,2012 _ 171,Montérégie (16),100
+2012,Straight,2,11,9,3,3,16,cyclist,34,Y,Material damage only,16:00:00-19:59:00,Y,N,N,N,Y,WKND,8,9,0,2012 _ 172,Bas-Saint-Laurent (01),80
+2012,Curve,1,15,9,4,4,15,pedestrian,69,Y,Material damage only,00:00:00-03:59:00,N,N,N,Y,N,WKND,11,1,0,2012 _ 173,Gaspésie/-Îles-de-la-Madeleine (11),90
+2012,Curve,2,,23,3,5,15,pedestrian,12,Y,Material damage only,00:00:00-03:59:00,N,Y,N,Y,N,WKND,5,2,0,2012 _ 174,Laurentides (15),90
+2012,Curve,2,11,9,2,2,14,vehicle,33,Y,Material damage only,00:00:00-03:59:00,Y,N,N,N,N,WKDY,9,9,0,2012 _ 175,Montréal (06),70
+2012,Straight,1,18,9,,2,14,other,69,Y,Minor,08:00:00-11:59:00,N,Y,N,Y,N,WKDY,11,1,1,2012 _ 176,Gaspésie/-Îles-de-la-Madeleine (11),50
+2012,Curve,2,14,9,2,4,16,cyclist,34,Y,Material damage below the reporting threshold,00:00:00-03:59:00,N,Y,Y,Y,Y,WKDY,5,1,0,2012 _ 177,Côte-Nord (09),60
+2012,Straight,1,99,23,4,4,12,cyclist,33,Y,Minor,00:00:00-03:59:00,N,Y,Y,Y,Y,WKDY,5,2,1,2012 _ 178,Laurentides (15),60
+2012,Straight,1,99,23,4,5,12,other,99,Y,Material damage below the reporting threshold,20:00:00-23:59:00,Y,N,Y,N,Y,WKDY,4,2,0,2012 _ 179,Estrie (05),50
+2012,Curve,1,99,23,1,3,15,no collision,99,Y,Material damage only,20:00:00-23:59:00,N,Y,Y,N,Y,WKDY,5,9,0,2012 _ 180,Chaudière-Appalaches (12),<50
+2012,Curve,1,99,,3,1,17,pedestrian,34,Y,Material damage only,04:00:00-07:59:00,N,N,N,N,Y,WKND,3,9,0,2012 _ 181,Nord-du-Québec (10),60
+2012,Straight,2,19,1,2,1,13,fixed object,99,Y,Material damage below the reporting threshold,20:00:00-23:59:00,Y,Y,Y,Y,N,WKND,11,9,0,2012 _ 182,Nord-du-Québec (10),90
+2012,Curve,1,18,23,1,4,18,no collision,33,Y,Material damage only,08:00:00-11:59:00,N,N,Y,Y,Y,WKDY,6,9,0,2012 _ 183,Côte-Nord (09),50
+2012,Straight,1,16,45,3,2,18,fixed object,69,Y,Material damage only,16:00:00-19:59:00,Y,Y,N,Y,Y,WKND,11,9,0,2012 _ 184,Laurentides (15),100
+2012,Straight,2,18,45,4,2,13,cyclist,33,Y,Material damage below the reporting threshold,20:00:00-23:59:00,Y,N,N,N,N,WKDY,6,1,0,2012 _ 185,Mauricie (04),<50
+2012,Straight,2,12,23,3,2,12,vehicle,34,Y,Material damage only,,Y,N,N,N,Y,WKND,9,1,0,2012 _ 186,Montérégie (16),<50
+2012,Straight,1,16,45,,6,15,fixed object,40,Y,Material damage only,,N,Y,Y,N,N,WKDY,6,2,0,2012 _ 187,Gaspésie/-Îles-de-la-Madeleine (11),80
+2012,Curve,1,18,1,4,4,17,,33,Y,Material damage only,00:00:00-03:59:00,Y,N,N,N,N,WKND,9,9,0,2012 _ 188,Laval (13),<50
+2012,,1,,23,4,,99,other,33,Y,Material damage below the reporting threshold,16:00:00-19:59:00,N,N,N,N,N,WKDY,11,9,0,2012 _ 189,Abitibi-Témiscamingue (08),70
+2012,Curve,1,16,1,1,1,18,cyclist,,Y,Material damage only,08:00:00-11:59:00,N,Y,Y,Y,Y,WKND,6,,0,2012 _ 190,Bas-Saint-Laurent (01),<50
+2012,Straight,2,11,23,2,9,14,fixed object,69,Y,Material damage only,08:00:00-11:59:00,N,Y,N,Y,N,WKDY,12,2,0,2012 _ 191,Centre-du-Québec (17),60
+2012,Straight,1,15,,,2,15,other,99,Y,Material damage only,04:00:00-07:59:00,N,N,N,N,N,WKDY,4,1,0,2012 _ 192,Chaudière-Appalaches (12),80
+2012,Curve,1,17,9,2,5,,no collision,,Y,Minor,00:00:00-03:59:00,N,N,Y,Y,N,WKDY,4,9,1,2012 _ 193,Abitibi-Témiscamingue (08),50
+2012,Straight,2,99,1,4,2,14,vehicle,,Y,Material damage only,12:00:00-15:59:00,Y,Y,N,Y,N,WKND,11,1,0,2012 _ 194,Nord-du-Québec (10),100
+2012,Curve,1,15,45,3,5,17,vehicle,33,Y,Material damage only,08:00:00-11:59:00,Y,N,Y,Y,N,WKND,9,9,0,2012 _ 195,Montréal (06),60
+2012,Curve,2,12,23,2,3,20,animal,69,Y,Minor,04:00:00-07:59:00,Y,Y,N,N,N,WKDY,9,1,1,2012 _ 196,Côte-Nord (09),60
+2012,Straight,1,14,45,4,3,15,animal,34,Y,Material damage only,00:00:00-03:59:00,Y,Y,N,Y,N,WKDY,3,,0,2012 _ 197,Laurentides (15),70
+2012,Straight,1,11,1,4,9,13,other,99,Y,Material damage only,12:00:00-15:59:00,Y,N,N,N,N,WKDY,4,1,0,2012 _ 198,Outaouais (07),
+2012,Curve,1,14,45,3,6,18,animal,34,Y,Material damage only,12:00:00-15:59:00,Y,N,N,N,N,WKND,8,2,0,2012 _ 199,Chaudière-Appalaches (12),<50
+2012,Curve,2,17,45,2,,18,fixed object,34,Y,Material damage only,00:00:00-03:59:00,N,N,Y,Y,Y,WKND,3,9,0,2012 _ 200,Gaspésie/-Îles-de-la-Madeleine (11),100
+2012,Straight,1,15,9,1,1,13,other,99,Y,Material damage below the reporting threshold,00:00:00-03:59:00,N,N,N,Y,Y,WKND,4,2,0,2012 _ 201,Centre-du-Québec (17),100
+2012,Straight,1,13,45,1,3,17,vehicle,33,Y,Material damage only,00:00:00-03:59:00,N,Y,Y,Y,Y,WKDY,3,2,0,2012 _ 202,Saguenay/-Lac-Saint-Jean (02),100
+2012,Straight,2,13,9,4,9,13,fixed object,12,Y,Material damage only,16:00:00-19:59:00,N,N,Y,Y,N,WKND,7,9,0,2012 _ 203,Estrie (05),70
+2012,Straight,1,14,1,4,9,17,cyclist,33,Y,Material damage only,12:00:00-15:59:00,Y,Y,N,N,Y,WKND,12,2,0,2012 _ 204,Montérégie (16),70
+2012,Straight,2,15,1,4,9,99,other,34,Y,Material damage below the reporting threshold,00:00:00-03:59:00,Y,N,Y,N,Y,WKDY,3,1,0,2012 _ 205,Nord-du-Québec (10),<50
+2012,Curve,2,16,45,4,,13,pedestrian,99,Y,Minor,04:00:00-07:59:00,N,N,N,N,Y,WKDY,2,1,1,2012 _ 206,Laval (13),<50
+2012,Curve,2,14,9,2,3,17,no collision,34,Y,Material damage only,08:00:00-11:59:00,Y,Y,N,Y,Y,WKND,5,9,0,2012 _ 207,Laval (13),100
+2012,Curve,1,14,9,2,4,99,vehicle,12,Y,Material damage below the reporting threshold,12:00:00-15:59:00,N,Y,N,Y,Y,WKND,11,9,0,2012 _ 208,Côte-Nord (09),80
+2012,Curve,2,19,1,4,,,no collision,33,Y,Material damage only,20:00:00-23:59:00,Y,N,Y,Y,N,WKND,8,1,0,2012 _ 209,Capitale-Nationale (03),90
+2012,Straight,2,12,9,4,3,99,,33,Y,Material damage below the reporting threshold,12:00:00-15:59:00,N,Y,Y,Y,Y,WKDY,11,2,0,2012 _ 210,Centre-du-Québec (17),90
+2012,Straight,1,12,45,1,3,20,other,,Y,Material damage only,12:00:00-15:59:00,N,N,Y,Y,Y,WKDY,7,1,0,2012 _ 211,Estrie (05),<50
+2012,Curve,1,18,45,4,,11,cyclist,40,Y,Minor,00:00:00-03:59:00,Y,Y,N,N,N,WKDY,10,2,1,2012 _ 212,Montréal (06),60
+2012,Curve,1,19,45,3,2,,pedestrian,99,Y,Material damage only,00:00:00-03:59:00,N,N,N,Y,Y,WKDY,1,2,0,2012 _ 213,Montérégie (16),
+2012,Curve,2,17,9,2,1,17,animal,69,Y,Material damage only,08:00:00-11:59:00,N,N,N,Y,Y,WKND,11,2,0,2012 _ 214,Mauricie (04),80
+2012,Curve,1,11,9,2,9,18,no collision,99,Y,Fatal or serious,,N,Y,Y,Y,Y,WKND,2,2,1,2012 _ 215,Montréal (06),<50
+2012,,2,12,23,2,5,12,no collision,40,Y,Material damage only,20:00:00-23:59:00,N,N,Y,Y,Y,WKDY,3,1,0,2012 _ 216,Bas-Saint-Laurent (01),50
+2012,Curve,2,12,23,3,6,15,cyclist,40,Y,Material damage only,20:00:00-23:59:00,N,Y,N,Y,Y,WKND,10,1,0,2012 _ 217,Montréal (06),90
+2012,Straight,2,12,45,2,5,13,animal,34,Y,Material damage only,12:00:00-15:59:00,Y,Y,Y,N,Y,WKND,11,9,0,2012 _ 218,Montérégie (16),
+2012,Straight,2,18,45,2,4,19,animal,69,Y,Minor,20:00:00-23:59:00,N,Y,Y,Y,N,WKDY,1,2,2,2012 _ 219,Lanaudière (14),60
+2012,Straight,1,17,9,1,2,20,other,40,Y,Material damage only,20:00:00-23:59:00,N,Y,N,Y,N,WKDY,8,,0,2012 _ 220,Outaouais (07),80
+2012,Straight,1,18,9,3,5,,no collision,69,Y,Minor,20:00:00-23:59:00,Y,Y,N,Y,N,WKND,12,1,1,2012 _ 221,Lanaudière (14),<50
+2012,Straight,1,11,45,2,2,11,pedestrian,33,Y,Material damage below the reporting threshold,04:00:00-07:59:00,Y,Y,N,N,N,WKDY,2,1,0,2012 _ 222,Laval (13),60
+2012,Curve,1,19,1,1,5,20,other,99,Y,Material damage only,20:00:00-23:59:00,Y,Y,N,N,N,WKND,10,2,0,2012 _ 223,Estrie (05),50
+2012,Curve,1,11,45,4,6,16,pedestrian,33,Y,Material damage only,,N,N,Y,Y,N,WKDY,7,2,0,2012 _ 224,Mauricie (04),80
+2012,Curve,2,15,23,1,5,19,fixed object,40,Y,Material damage only,04:00:00-07:59:00,Y,N,Y,N,N,WKDY,10,2,0,2012 _ 225,Gaspésie/-Îles-de-la-Madeleine (11),<50
+2012,Curve,2,11,45,1,4,13,no collision,99,Y,Material damage only,00:00:00-03:59:00,N,Y,Y,Y,N,WKND,2,2,0,2012 _ 226,Capitale-Nationale (03),80
+2012,Straight,1,14,23,2,9,20,no collision,12,Y,Minor,04:00:00-07:59:00,N,Y,N,Y,Y,WKND,3,1,2,2012 _ 227,Centre-du-Québec (17),50
+2012,Straight,1,12,9,,5,13,fixed object,34,Y,Material damage below the reporting threshold,12:00:00-15:59:00,Y,Y,Y,Y,Y,WKDY,8,2,0,2012 _ 228,,60
+2012,Curve,,14,23,1,9,16,,33,Y,Minor,08:00:00-11:59:00,Y,Y,Y,Y,Y,WKND,8,2,1,2012 _ 229,Laval (13),90
+2012,Straight,1,15,1,3,1,16,vehicle,99,Y,Material damage below the reporting threshold,12:00:00-15:59:00,Y,N,Y,N,N,WKDY,6,2,0,2012 _ 230,Centre-du-Québec (17),<50
+2012,Straight,2,18,9,3,4,20,vehicle,69,Y,Material damage only,16:00:00-19:59:00,N,Y,Y,N,Y,WKND,12,1,0,2012 _ 231,Nord-du-Québec (10),<50
+2012,Straight,1,13,23,2,3,14,pedestrian,12,Y,Material damage below the reporting threshold,16:00:00-19:59:00,Y,N,N,N,N,WKND,12,1,0,2012 _ 232,Montérégie (16),<50
+2012,Straight,1,,9,4,5,19,fixed object,34,Y,Material damage below the reporting threshold,04:00:00-07:59:00,N,N,N,N,Y,WKND,3,9,0,2012 _ 233,Centre-du-Québec (17),80
+2012,Straight,1,11,1,1,1,12,fixed object,12,Y,Material damage below the reporting threshold,00:00:00-03:59:00,Y,N,Y,Y,N,WKND,7,1,0,2012 _ 234,Mauricie (04),100
+2012,Curve,2,99,23,4,3,16,animal,40,Y,Material damage only,00:00:00-03:59:00,N,Y,N,N,N,WKND,10,1,0,2012 _ 235,Mauricie (04),<50
+2012,,1,18,9,1,5,20,animal,99,Y,Minor,20:00:00-23:59:00,N,N,Y,N,N,WKDY,9,2,1,2012 _ 236,Mauricie (04),
+2012,Straight,1,11,23,2,1,14,cyclist,99,Y,Material damage only,04:00:00-07:59:00,Y,N,Y,N,Y,WKND,3,,0,2012 _ 237,Capitale-Nationale (03),80
+2012,Curve,1,13,23,2,5,18,vehicle,69,Y,Material damage only,04:00:00-07:59:00,N,N,N,N,N,WKND,10,1,0,2012 _ 238,Chaudière-Appalaches (12),70
+2012,Curve,2,15,45,4,3,14,fixed object,99,Y,Material damage only,20:00:00-23:59:00,N,N,N,N,Y,WKDY,5,2,0,2012 _ 239,Mauricie (04),60
+2012,Curve,2,17,23,3,5,15,vehicle,99,Y,Material damage only,08:00:00-11:59:00,Y,Y,Y,Y,Y,WKND,8,1,0,2012 _ 240,Bas-Saint-Laurent (01),80
+2012,Curve,1,16,9,3,1,19,pedestrian,34,Y,Material damage only,12:00:00-15:59:00,Y,N,Y,N,N,WKND,9,2,0,2012 _ 241,Gaspésie/-Îles-de-la-Madeleine (11),100
+2012,Straight,2,14,45,4,1,18,cyclist,33,Y,Minor,08:00:00-11:59:00,Y,N,Y,N,Y,WKDY,12,1,9,2012 _ 242,Saguenay/-Lac-Saint-Jean (02),100
+2012,Straight,1,14,45,2,1,12,no collision,33,Y,Material damage only,20:00:00-23:59:00,N,N,N,Y,N,WKND,9,9,0,2012 _ 243,Centre-du-Québec (17),50
+2012,Curve,1,99,9,4,2,15,vehicle,69,Y,Material damage below the reporting threshold,,N,N,N,Y,Y,WKDY,9,1,0,2012 _ 244,Laurentides (15),60
+2012,Straight,2,99,1,1,9,19,cyclist,69,Y,Material damage only,,N,Y,N,N,N,WKND,8,2,0,2012 _ 245,Bas-Saint-Laurent (01),<50
+2012,Straight,2,16,,4,6,16,vehicle,69,Y,Material damage only,16:00:00-19:59:00,N,N,Y,N,Y,WKND,6,9,0,2012 _ 246,Laval (13),90
+2012,Straight,2,13,1,4,2,99,other,33,Y,Minor,20:00:00-23:59:00,N,N,N,Y,Y,WKND,4,1,1,2012 _ 247,Laurentides (15),60
+2012,Curve,2,15,9,1,1,18,vehicle,69,Y,Material damage only,16:00:00-19:59:00,Y,N,Y,Y,N,WKDY,9,1,0,2012 _ 248,Montérégie (16),70
+2012,Curve,1,14,45,1,2,,no collision,69,Y,Material damage only,04:00:00-07:59:00,N,Y,Y,N,Y,WKDY,1,1,0,2012 _ 249,Montérégie (16),80
+2012,Curve,2,11,45,4,1,11,cyclist,12,Y,Material damage only,08:00:00-11:59:00,Y,N,Y,N,N,WKDY,11,9,0,2012 _ 250,Gaspésie/-Îles-de-la-Madeleine (11),80
+2012,Curve,2,12,45,2,9,17,other,69,Y,Material damage below the reporting threshold,00:00:00-03:59:00,N,Y,N,Y,Y,WKND,7,2,0,2012 _ 251,Côte-Nord (09),50
+2012,Straight,1,12,9,4,5,16,pedestrian,99,Y,Minor,12:00:00-15:59:00,N,Y,Y,Y,Y,WKND,12,9,1,2012 _ 252,Laurentides (15),60
+2012,Straight,1,12,9,1,6,19,pedestrian,33,Y,Minor,04:00:00-07:59:00,N,N,N,N,Y,WKDY,8,2,1,2012 _ 253,Laurentides (15),100
+2012,Straight,2,19,,4,9,18,other,12,Y,Material damage only,04:00:00-07:59:00,N,N,Y,N,Y,WKND,6,2,0,2012 _ 254,Capitale-Nationale (03),70
+2012,Curve,2,13,45,1,6,99,fixed object,34,Y,Material damage only,20:00:00-23:59:00,Y,Y,Y,N,N,WKDY,11,2,0,2012 _ 255,Laurentides (15),<50
+2012,Straight,2,19,45,4,4,18,cyclist,34,Y,Material damage below the reporting threshold,08:00:00-11:59:00,Y,N,N,N,N,WKND,2,2,0,2012 _ 256,Abitibi-Témiscamingue (08),60
+2012,Straight,2,17,23,3,6,13,cyclist,99,Y,Material damage only,00:00:00-03:59:00,N,Y,N,Y,Y,WKND,9,1,0,2012 _ 257,Côte-Nord (09),<50
+2012,,1,12,45,4,3,12,pedestrian,40,Y,Material damage only,20:00:00-23:59:00,Y,N,N,N,Y,WKND,3,9,0,2012 _ 258,Laurentides (15),50
+2012,Curve,2,16,23,1,2,20,vehicle,99,Y,Material damage only,16:00:00-19:59:00,N,Y,N,N,N,WKND,2,2,0,2012 _ 259,Lanaudière (14),100
+2012,Straight,1,19,45,4,1,99,no collision,33,Y,Material damage only,12:00:00-15:59:00,Y,N,Y,N,Y,WKND,7,2,0,2012 _ 260,,70
+2012,,1,15,45,2,6,14,no collision,99,Y,Material damage below the reporting threshold,08:00:00-11:59:00,Y,Y,N,N,N,WKDY,11,9,0,2012 _ 261,,50
+2012,Straight,1,12,45,3,4,99,pedestrian,33,Y,Material damage only,20:00:00-23:59:00,N,N,Y,Y,Y,WKDY,9,1,0,2012 _ 262,Laurentides (15),80
+2012,Straight,2,12,9,2,1,20,animal,33,Y,Material damage only,00:00:00-03:59:00,Y,N,Y,Y,N,WKDY,5,1,0,2012 _ 263,Montérégie (16),80
+2012,Curve,2,13,23,2,9,17,cyclist,40,Y,Material damage only,08:00:00-11:59:00,Y,Y,N,N,Y,WKND,7,9,0,2012 _ 264,Montréal (06),60
+2012,Curve,2,19,45,3,9,18,fixed object,40,Y,Material damage only,04:00:00-07:59:00,N,N,Y,Y,Y,WKDY,6,9,0,2012 _ 265,Côte-Nord (09),50
+2012,Curve,2,12,45,4,2,13,vehicle,99,Y,Minor,12:00:00-15:59:00,N,N,Y,N,Y,WKND,4,9,1,2012 _ 266,Chaudière-Appalaches (12),80
+2012,Curve,1,12,1,1,9,99,cyclist,40,Y,Material damage only,04:00:00-07:59:00,Y,Y,Y,Y,N,WKND,4,1,0,2012 _ 267,Abitibi-Témiscamingue (08),80
+2012,Straight,1,12,23,3,9,20,pedestrian,40,Y,Material damage below the reporting threshold,20:00:00-23:59:00,N,Y,N,Y,Y,WKND,12,9,0,2012 _ 268,Saguenay/-Lac-Saint-Jean (02),50
+2012,Curve,1,11,23,2,6,19,fixed object,33,Y,Minor,00:00:00-03:59:00,N,Y,N,Y,Y,WKND,4,1,1,2012 _ 269,Estrie (05),60
+2012,Curve,1,18,23,2,1,11,vehicle,12,Y,Material damage below the reporting threshold,04:00:00-07:59:00,N,N,Y,N,N,WKND,10,2,0,2012 _ 270,Abitibi-Témiscamingue (08),90
+2012,Straight,1,16,45,2,1,99,fixed object,12,Y,Material damage only,16:00:00-19:59:00,Y,N,Y,Y,Y,WKND,10,9,0,2012 _ 271,Bas-Saint-Laurent (01),50
+2012,Straight,2,,1,3,1,99,fixed object,33,Y,Minor,16:00:00-19:59:00,N,Y,Y,Y,Y,WKND,5,,1,2012 _ 272,Centre-du-Québec (17),50
+2012,Curve,2,13,45,2,3,20,other,69,Y,Material damage below the reporting threshold,16:00:00-19:59:00,Y,Y,N,Y,N,WKND,12,9,0,2012 _ 273,Saguenay/-Lac-Saint-Jean (02),100
+2012,Curve,1,19,1,4,2,12,no collision,12,Y,Material damage only,08:00:00-11:59:00,Y,Y,N,N,Y,WKDY,7,2,0,2012 _ 274,Chaudière-Appalaches (12),80
+2012,Curve,1,11,23,3,9,15,other,34,Y,Material damage below the reporting threshold,04:00:00-07:59:00,Y,Y,Y,N,N,WKND,1,2,0,2012 _ 275,Lanaudière (14),60
+2012,Curve,1,18,1,1,2,16,cyclist,40,Y,Material damage only,08:00:00-11:59:00,Y,Y,N,Y,Y,WKND,5,2,0,2012 _ 276,Bas-Saint-Laurent (01),80
+2012,Straight,1,19,23,1,9,19,animal,12,Y,Fatal or serious,00:00:00-03:59:00,N,N,Y,N,N,WKND,8,9,1,2012 _ 277,Estrie (05),100
+2012,Straight,1,14,45,4,1,18,animal,40,Y,Material damage below the reporting threshold,12:00:00-15:59:00,N,Y,Y,N,Y,WKDY,1,2,0,2012 _ 278,Nord-du-Québec (10),70
+2012,Curve,2,16,45,3,6,14,no collision,,Y,Material damage only,08:00:00-11:59:00,N,N,Y,Y,Y,WKDY,9,2,0,2012 _ 279,Saguenay/-Lac-Saint-Jean (02),70
+2012,Straight,2,,9,4,4,,fixed object,40,Y,Material damage only,04:00:00-07:59:00,Y,Y,N,N,Y,WKND,5,2,0,2012 _ 280,Côte-Nord (09),50
+2012,Curve,2,99,23,2,9,17,fixed object,34,Y,Material damage only,12:00:00-15:59:00,N,N,Y,Y,Y,WKDY,6,9,0,2012 _ 281,Estrie (05),90
+2012,Straight,2,19,,1,4,14,other,99,Y,Material damage below the reporting threshold,00:00:00-03:59:00,N,N,Y,N,N,WKND,7,2,0,2012 _ 282,Gaspésie/-Îles-de-la-Madeleine (11),60
+2012,Curve,1,12,9,3,4,20,cyclist,99,Y,Material damage below the reporting threshold,00:00:00-03:59:00,N,N,N,N,Y,WKND,6,1,0,2012 _ 283,Lanaudière (14),100
+2012,Curve,1,15,45,1,2,13,no collision,34,Y,Material damage only,08:00:00-11:59:00,N,Y,N,N,N,WKND,3,2,0,2012 _ 284,Montréal (06),80
+2012,Curve,1,15,1,3,2,18,animal,40,Y,Material damage only,12:00:00-15:59:00,N,N,N,N,N,WKND,2,9,0,2012 _ 285,Estrie (05),70
+2012,Straight,1,12,1,1,6,19,pedestrian,12,Y,Minor,00:00:00-03:59:00,N,Y,N,Y,Y,WKDY,5,9,1,2012 _ 286,Laurentides (15),50
+2012,Straight,1,14,9,4,6,17,other,33,Y,Material damage only,04:00:00-07:59:00,Y,Y,Y,Y,N,WKND,11,1,0,2012 _ 287,Montérégie (16),80
+2012,Curve,2,14,9,3,5,20,animal,12,Y,Material damage only,08:00:00-11:59:00,Y,N,Y,Y,Y,WKDY,4,2,0,2012 _ 288,Lanaudière (14),80
+2012,Straight,2,17,1,1,2,12,vehicle,33,Y,Minor,12:00:00-15:59:00,N,Y,Y,Y,Y,WKND,4,2,2,2012 _ 289,Capitale-Nationale (03),70
+2012,Straight,2,14,23,2,9,17,no collision,69,Y,Minor,20:00:00-23:59:00,Y,Y,Y,N,Y,WKND,11,2,1,2012 _ 290,,50
+2012,Curve,2,11,9,2,3,12,cyclist,12,Y,Material damage only,00:00:00-03:59:00,N,N,N,N,N,WKDY,7,,0,2012 _ 291,Bas-Saint-Laurent (01),
+2012,Curve,1,12,45,4,2,15,cyclist,69,Y,Material damage only,16:00:00-19:59:00,Y,N,N,Y,Y,WKDY,3,2,0,2012 _ 292,Chaudière-Appalaches (12),70
+2012,Straight,2,19,9,1,5,16,no collision,34,Y,Material damage only,04:00:00-07:59:00,Y,Y,N,Y,Y,WKDY,5,9,0,2012 _ 293,Bas-Saint-Laurent (01),60
+2012,Curve,,18,9,4,,13,cyclist,99,Y,Material damage only,12:00:00-15:59:00,Y,N,N,Y,N,WKND,4,2,0,2012 _ 294,Lanaudière (14),100
+2012,Curve,1,11,45,2,3,99,vehicle,12,Y,Material damage below the reporting threshold,08:00:00-11:59:00,Y,N,N,N,Y,WKND,1,1,0,2012 _ 295,Bas-Saint-Laurent (01),50
+2012,Curve,2,19,1,4,5,99,fixed object,33,Y,Material damage only,00:00:00-03:59:00,N,Y,N,N,N,WKND,9,9,0,2012 _ 296,Mauricie (04),50
+2012,Straight,2,16,23,4,3,20,pedestrian,69,Y,Material damage below the reporting threshold,04:00:00-07:59:00,N,Y,N,N,Y,WKND,8,2,0,2012 _ 297,Nord-du-Québec (10),90
+2012,Curve,2,19,45,1,1,20,no collision,69,Y,Material damage only,00:00:00-03:59:00,Y,Y,Y,Y,N,WKND,4,2,0,2012 _ 298,Bas-Saint-Laurent (01),80
+2012,,1,19,,3,4,18,,69,Y,Material damage only,08:00:00-11:59:00,N,Y,N,Y,N,WKDY,1,9,0,2012 _ 299,Lanaudière (14),60
+2012,Curve,2,19,45,2,,13,animal,40,Y,Material damage below the reporting threshold,16:00:00-19:59:00,N,Y,Y,Y,Y,WKDY,12,9,0,2012 _ 300,Saguenay/-Lac-Saint-Jean (02),100
+2012,Curve,2,17,1,4,6,11,no collision,,Y,Material damage only,00:00:00-03:59:00,N,N,Y,Y,Y,WKDY,12,1,0,2012 _ 301,Estrie (05),<50
+2012,Curve,,15,9,4,5,15,cyclist,99,Y,Material damage only,08:00:00-11:59:00,N,N,N,Y,N,WKDY,3,1,0,2012 _ 302,Capitale-Nationale (03),100
+2012,Curve,2,99,1,1,3,15,no collision,,Y,Material damage below the reporting threshold,04:00:00-07:59:00,N,Y,N,N,N,WKND,2,9,0,2012 _ 303,Lanaudière (14),90
+2012,Curve,1,19,45,1,2,13,pedestrian,12,Y,Material damage only,12:00:00-15:59:00,Y,Y,Y,N,Y,WKDY,6,2,0,2012 _ 304,Gaspésie/-Îles-de-la-Madeleine (11),100
+2012,Straight,2,15,23,2,9,15,other,99,Y,Material damage only,00:00:00-03:59:00,Y,N,N,N,Y,WKDY,7,1,0,2012 _ 305,Outaouais (07),<50
+2012,Straight,2,16,1,3,4,11,no collision,40,Y,Material damage below the reporting threshold,20:00:00-23:59:00,Y,N,N,N,Y,WKDY,2,1,0,2012 _ 306,Capitale-Nationale (03),80
+2012,Straight,1,15,9,2,2,12,vehicle,34,Y,Material damage only,08:00:00-11:59:00,N,N,N,N,N,WKDY,1,2,0,2012 _ 307,Montréal (06),70
+2012,Curve,1,16,1,3,5,18,,12,Y,Material damage only,20:00:00-23:59:00,Y,Y,Y,N,N,WKND,2,2,0,2012 _ 308,Gaspésie/-Îles-de-la-Madeleine (11),60
+2012,Straight,2,18,9,1,,15,no collision,34,Y,Material damage below the reporting threshold,08:00:00-11:59:00,N,N,Y,Y,Y,WKND,9,1,0,2012 _ 309,Côte-Nord (09),80
+2012,Curve,1,19,23,2,3,15,no collision,12,Y,Material damage only,16:00:00-19:59:00,Y,Y,N,Y,Y,WKDY,4,1,0,2012 _ 310,Bas-Saint-Laurent (01),60
+2012,Straight,1,11,,4,3,99,other,33,Y,Material damage only,20:00:00-23:59:00,Y,N,N,Y,Y,WKDY,1,1,0,2012 _ 311,Bas-Saint-Laurent (01),80
+2012,Straight,1,19,9,4,6,16,fixed object,40,Y,Material damage below the reporting threshold,16:00:00-19:59:00,N,Y,Y,N,N,WKDY,1,2,0,2012 _ 312,Abitibi-Témiscamingue (08),80
+2012,Curve,1,12,1,1,5,19,animal,33,Y,Minor,00:00:00-03:59:00,N,N,Y,N,N,WKND,1,1,1,2012 _ 313,Montréal (06),<50
+2012,Curve,2,18,23,2,2,15,pedestrian,69,Y,Material damage only,08:00:00-11:59:00,N,Y,N,Y,Y,WKND,12,1,0,2012 _ 314,Lanaudière (14),50
+2012,Curve,1,15,9,3,9,99,cyclist,12,Y,Minor,12:00:00-15:59:00,N,Y,Y,Y,Y,WKND,2,1,1,2012 _ 315,,<50
+2012,Straight,1,11,45,3,3,20,pedestrian,34,Y,Material damage only,12:00:00-15:59:00,N,N,Y,Y,Y,WKDY,10,9,0,2012 _ 316,Lanaudière (14),80
+2012,Curve,1,16,1,3,5,99,no collision,12,Y,Material damage only,16:00:00-19:59:00,N,N,Y,Y,Y,WKND,6,2,0,2012 _ 317,Nord-du-Québec (10),60
+2012,Curve,2,18,1,3,3,13,animal,99,Y,Fatal or serious,12:00:00-15:59:00,Y,Y,Y,N,Y,WKND,2,2,2,2012 _ 318,Saguenay/-Lac-Saint-Jean (02),<50
+2012,Curve,1,12,45,,2,18,animal,40,Y,Material damage below the reporting threshold,12:00:00-15:59:00,Y,Y,N,N,N,WKDY,9,1,0,2012 _ 319,Capitale-Nationale (03),50
+2012,Curve,2,13,23,3,4,19,other,34,Y,Material damage only,16:00:00-19:59:00,N,N,Y,Y,Y,WKND,5,1,0,2012 _ 320,Lanaudière (14),90
+2012,Curve,1,99,1,1,2,15,animal,12,Y,Material damage only,12:00:00-15:59:00,Y,Y,Y,N,Y,WKDY,3,2,0,2012 _ 321,Côte-Nord (09),100
+2012,Curve,2,17,23,4,3,20,no collision,34,Y,Material damage only,00:00:00-03:59:00,Y,N,Y,Y,Y,WKND,7,2,0,2012 _ 322,Estrie (05),100
+2012,Curve,2,12,9,4,5,20,pedestrian,34,Y,Fatal or serious,20:00:00-23:59:00,N,Y,N,N,N,WKDY,5,9,1,2012 _ 323,Montréal (06),70
+2012,Curve,1,18,23,2,4,11,other,33,Y,Material damage only,00:00:00-03:59:00,N,N,N,Y,Y,WKDY,5,9,0,2012 _ 324,Chaudière-Appalaches (12),100
+2012,Straight,1,14,45,2,5,19,pedestrian,33,Y,Material damage below the reporting threshold,04:00:00-07:59:00,Y,N,N,N,Y,WKND,3,1,0,2012 _ 325,Montréal (06),100
+2012,Straight,1,13,45,2,1,15,vehicle,69,Y,Material damage only,00:00:00-03:59:00,Y,N,Y,Y,Y,WKDY,3,2,0,2012 _ 326,Laval (13),60
+2012,Straight,1,13,1,1,6,17,other,34,Y,Material damage only,16:00:00-19:59:00,Y,N,N,Y,N,WKDY,4,2,0,2012 _ 327,Abitibi-Témiscamingue (08),100
+2012,Straight,,12,9,2,1,16,other,99,Y,Material damage only,12:00:00-15:59:00,Y,N,Y,Y,N,WKND,1,2,0,2012 _ 328,Nord-du-Québec (10),90
+2012,Curve,1,14,1,4,5,20,vehicle,34,Y,Material damage only,08:00:00-11:59:00,N,Y,Y,N,Y,WKDY,12,9,0,2012 _ 329,Outaouais (07),100
+2012,Straight,1,15,9,3,5,15,no collision,33,Y,Material damage only,00:00:00-03:59:00,Y,N,N,Y,N,WKND,4,1,0,2012 _ 330,Abitibi-Témiscamingue (08),<50
+2012,Straight,2,12,1,4,1,99,animal,33,Y,Material damage only,04:00:00-07:59:00,Y,Y,N,N,Y,WKND,12,9,0,2012 _ 331,Mauricie (04),<50
+2012,Curve,1,16,23,4,1,17,animal,33,Y,Material damage below the reporting threshold,00:00:00-03:59:00,N,N,Y,N,N,WKND,7,2,0,2012 _ 332,Capitale-Nationale (03),<50
+2012,Curve,1,14,23,4,4,13,vehicle,12,Y,Minor,08:00:00-11:59:00,Y,Y,N,N,Y,WKDY,11,1,1,2012 _ 333,Gaspésie/-Îles-de-la-Madeleine (11),<50
+2012,Curve,2,12,1,1,9,19,cyclist,12,Y,Material damage only,16:00:00-19:59:00,Y,N,N,Y,Y,WKDY,2,9,0,2012 _ 334,Laurentides (15),70
+2012,Curve,,16,23,1,3,13,vehicle,40,Y,Material damage only,16:00:00-19:59:00,Y,Y,Y,N,N,WKDY,9,9,0,2012 _ 335,Centre-du-Québec (17),50
+2012,Curve,2,17,45,4,4,14,pedestrian,33,Y,Minor,20:00:00-23:59:00,Y,Y,N,N,Y,WKDY,6,1,1,2012 _ 336,Laval (13),70
+2012,Curve,1,99,23,2,1,18,animal,40,Y,Minor,20:00:00-23:59:00,Y,N,Y,Y,Y,WKND,1,9,1,2012 _ 337,Saguenay/-Lac-Saint-Jean (02),50
+2012,Curve,2,18,9,1,4,13,other,34,Y,Material damage only,20:00:00-23:59:00,N,Y,Y,Y,N,WKDY,12,1,0,2012 _ 338,Abitibi-Témiscamingue (08),<50
+2012,Curve,1,12,9,2,6,12,vehicle,40,Y,Material damage only,12:00:00-15:59:00,Y,Y,Y,Y,N,WKDY,5,2,0,2012 _ 339,Saguenay/-Lac-Saint-Jean (02),<50
+2012,Curve,2,16,1,2,4,12,cyclist,33,Y,Material damage only,16:00:00-19:59:00,N,N,Y,N,N,WKND,4,2,0,2012 _ 340,Saguenay/-Lac-Saint-Jean (02),<50
+2012,,2,12,1,1,3,13,,69,Y,Material damage only,04:00:00-07:59:00,Y,N,Y,N,Y,WKND,9,2,0,2012 _ 341,Montérégie (16),70
+2012,Straight,1,11,45,2,6,11,fixed object,34,Y,Material damage only,12:00:00-15:59:00,N,Y,N,N,Y,WKDY,6,9,0,2012 _ 342,Outaouais (07),50
+2012,Curve,1,19,45,1,5,16,vehicle,34,Y,Material damage only,08:00:00-11:59:00,N,N,N,Y,Y,WKDY,1,1,0,2012 _ 343,Laurentides (15),70
+2012,Straight,1,13,23,3,1,16,no collision,12,Y,Material damage only,20:00:00-23:59:00,Y,Y,Y,Y,N,WKND,8,2,0,2012 _ 344,Outaouais (07),80
+2012,Straight,1,12,9,1,3,,,69,Y,Material damage only,12:00:00-15:59:00,Y,N,N,Y,Y,WKDY,11,1,0,2012 _ 345,Bas-Saint-Laurent (01),50
+2012,Curve,2,15,9,2,6,20,fixed object,69,Y,Material damage only,20:00:00-23:59:00,Y,N,Y,Y,Y,WKND,7,1,0,2012 _ 346,Estrie (05),90
+2012,Curve,1,11,45,4,6,99,fixed object,12,Y,Material damage only,,Y,N,Y,N,Y,WKND,4,9,0,2012 _ 347,Chaudière-Appalaches (12),<50
+2012,Curve,1,18,45,2,9,16,no collision,69,Y,Material damage only,20:00:00-23:59:00,N,N,Y,Y,N,WKND,4,9,0,2012 _ 348,Lanaudière (14),90
+2012,Curve,2,11,1,,2,17,no collision,33,Y,Material damage only,08:00:00-11:59:00,Y,N,N,Y,Y,WKDY,9,2,0,2012 _ 349,Abitibi-Témiscamingue (08),80
+2012,Curve,1,17,9,3,9,14,pedestrian,33,Y,Minor,08:00:00-11:59:00,N,N,N,N,N,WKND,7,9,1,2012 _ 350,Côte-Nord (09),50
+2012,Straight,1,14,45,2,1,13,cyclist,40,Y,Minor,20:00:00-23:59:00,Y,Y,Y,Y,N,WKDY,12,1,1,2012 _ 351,Outaouais (07),70
+2012,Curve,1,12,9,4,9,15,fixed object,69,Y,Minor,16:00:00-19:59:00,N,N,Y,Y,N,WKDY,12,1,1,2012 _ 352,Montérégie (16),70
+2012,Curve,1,17,23,3,9,11,fixed object,40,Y,Material damage only,12:00:00-15:59:00,N,N,Y,N,N,WKDY,6,1,0,2012 _ 353,Laval (13),70
+2012,Straight,1,19,45,1,5,11,animal,33,Y,Material damage only,08:00:00-11:59:00,Y,Y,N,N,N,WKDY,3,2,0,2012 _ 354,Centre-du-Québec (17),<50
+2012,Straight,1,18,45,2,9,13,pedestrian,99,Y,Material damage below the reporting threshold,08:00:00-11:59:00,Y,Y,N,Y,N,WKDY,6,1,0,2012 _ 355,Outaouais (07),70
+2012,Curve,2,13,9,3,3,20,other,40,Y,Material damage below the reporting threshold,08:00:00-11:59:00,N,N,N,N,N,WKDY,5,2,0,2012 _ 356,Centre-du-Québec (17),90
+2012,Curve,1,11,45,3,6,19,cyclist,12,Y,Material damage only,16:00:00-19:59:00,Y,N,N,Y,Y,WKND,9,9,0,2012 _ 357,Chaudière-Appalaches (12),60
+2012,Curve,2,15,23,1,2,12,vehicle,12,Y,Material damage only,04:00:00-07:59:00,N,Y,N,Y,N,WKND,12,2,0,2012 _ 358,Saguenay/-Lac-Saint-Jean (02),50
+2012,Straight,1,13,23,1,5,18,cyclist,40,Y,Material damage only,12:00:00-15:59:00,Y,Y,Y,N,Y,WKND,7,2,0,2012 _ 359,Lanaudière (14),60
+2012,Curve,1,12,1,1,4,16,vehicle,99,Y,Material damage only,12:00:00-15:59:00,Y,Y,Y,Y,N,WKDY,9,1,0,2012 _ 360,Estrie (05),50
+2012,Straight,2,17,45,3,4,13,pedestrian,34,Y,Material damage below the reporting threshold,08:00:00-11:59:00,Y,Y,N,Y,N,WKND,4,1,0,2012 _ 361,Chaudière-Appalaches (12),50
+2012,Straight,1,11,45,3,5,18,other,12,Y,Minor,12:00:00-15:59:00,N,N,Y,N,N,WKDY,2,9,1,2012 _ 362,Capitale-Nationale (03),60
+2012,Curve,1,12,9,3,5,14,fixed object,40,Y,Material damage only,00:00:00-03:59:00,N,N,Y,Y,Y,WKND,1,2,0,2012 _ 363,Côte-Nord (09),50
+2012,Straight,2,18,1,2,1,17,other,99,Y,Material damage below the reporting threshold,20:00:00-23:59:00,Y,N,N,N,N,WKDY,11,9,0,2012 _ 364,Estrie (05),100
+2012,Straight,1,16,9,2,6,99,fixed object,40,Y,Material damage only,08:00:00-11:59:00,N,N,Y,N,N,WKDY,12,2,0,2012 _ 365,Saguenay/-Lac-Saint-Jean (02),60
+2012,Straight,2,16,45,1,2,11,pedestrian,34,Y,Material damage only,04:00:00-07:59:00,Y,N,Y,N,N,WKND,4,9,0,2012 _ 366,Côte-Nord (09),100
+2012,Curve,2,11,45,4,2,14,fixed object,34,Y,Material damage only,16:00:00-19:59:00,Y,Y,Y,N,N,WKND,12,2,0,2012 _ 367,Laval (13),90
+2012,Curve,2,19,9,3,9,11,fixed object,33,Y,Material damage only,12:00:00-15:59:00,Y,N,N,N,Y,WKND,6,9,0,2012 _ 368,Gaspésie/-Îles-de-la-Madeleine (11),50
+2012,Straight,,19,45,,5,16,no collision,99,Y,Material damage below the reporting threshold,20:00:00-23:59:00,N,N,N,N,Y,WKDY,11,1,0,2012 _ 369,Nord-du-Québec (10),70
+2012,Curve,2,18,1,,6,15,fixed object,12,Y,Material damage only,00:00:00-03:59:00,Y,N,Y,Y,Y,WKDY,8,2,0,2012 _ 370,Montréal (06),
+2012,Straight,1,12,9,1,4,16,other,34,Y,Minor,,N,Y,N,Y,N,WKND,11,2,1,2012 _ 371,,<50
+2012,Straight,2,,23,4,4,11,pedestrian,34,Y,Minor,08:00:00-11:59:00,Y,N,Y,N,Y,WKND,4,1,1,2012 _ 372,Lanaudière (14),60
+2012,Curve,1,99,,2,3,16,animal,34,Y,Minor,12:00:00-15:59:00,Y,N,Y,Y,Y,WKDY,5,1,1,2012 _ 373,Estrie (05),<50
+2012,Straight,1,14,23,3,6,12,vehicle,34,Y,Material damage only,16:00:00-19:59:00,Y,Y,Y,Y,Y,WKND,8,9,0,2012 _ 374,Nord-du-Québec (10),60
+2012,Curve,2,18,9,3,4,18,other,,Y,Material damage below the reporting threshold,20:00:00-23:59:00,N,Y,N,N,N,WKDY,6,9,0,2012 _ 375,Centre-du-Québec (17),<50
+2012,Curve,1,99,45,1,6,11,fixed object,40,Y,Material damage only,20:00:00-23:59:00,N,Y,Y,N,Y,WKND,1,,0,2012 _ 376,Laurentides (15),60
+2012,Straight,1,15,9,3,5,11,fixed object,34,Y,Material damage only,00:00:00-03:59:00,N,N,Y,Y,N,WKDY,10,1,0,2012 _ 377,Montréal (06),80
+2012,Curve,1,18,45,1,9,12,pedestrian,69,Y,Minor,16:00:00-19:59:00,Y,Y,N,Y,Y,WKND,3,2,1,2012 _ 378,Mauricie (04),70
+2012,Curve,1,15,,1,5,20,no collision,33,Y,Material damage only,08:00:00-11:59:00,N,Y,N,N,Y,WKND,9,9,0,2012 _ 379,Nord-du-Québec (10),60
+2012,Curve,2,11,9,3,1,18,other,34,Y,Material damage only,20:00:00-23:59:00,Y,N,Y,N,Y,WKDY,12,9,0,2012 _ 380,Capitale-Nationale (03),100
+2012,Curve,2,14,9,4,1,14,animal,12,Y,Minor,04:00:00-07:59:00,N,Y,Y,N,N,WKDY,8,9,1,2012 _ 381,Abitibi-Témiscamingue (08),100
+2012,Curve,2,15,45,1,3,12,pedestrian,33,Y,Minor,20:00:00-23:59:00,Y,N,Y,N,N,WKND,10,,2,2012 _ 382,Laurentides (15),<50
+2012,Curve,2,15,45,1,,17,other,69,Y,Material damage only,08:00:00-11:59:00,N,N,Y,N,Y,WKDY,4,2,0,2012 _ 383,Estrie (05),100
+2012,Straight,1,19,23,4,6,14,animal,99,Y,Material damage only,20:00:00-23:59:00,Y,N,Y,Y,N,WKND,7,2,0,2012 _ 384,Laval (13),90
+2012,Curve,1,15,23,2,6,11,vehicle,34,Y,Material damage only,,Y,Y,Y,Y,Y,WKND,6,2,0,2012 _ 385,Abitibi-Témiscamingue (08),70
+2012,Curve,1,17,1,2,3,17,animal,34,Y,Minor,12:00:00-15:59:00,Y,N,N,N,Y,WKND,6,2,1,2012 _ 386,Côte-Nord (09),90
+2012,Straight,2,13,9,3,5,16,pedestrian,69,Y,Material damage only,00:00:00-03:59:00,N,Y,Y,N,Y,WKDY,5,1,0,2012 _ 387,Montérégie (16),100
+2012,Curve,1,12,1,4,5,18,no collision,69,Y,Material damage below the reporting threshold,16:00:00-19:59:00,N,N,N,Y,Y,WKDY,11,9,0,2012 _ 388,Montréal (06),90
+2012,Straight,2,16,1,2,3,15,other,69,Y,Material damage below the reporting threshold,12:00:00-15:59:00,Y,Y,Y,N,Y,WKND,12,1,0,2012 _ 389,Côte-Nord (09),100
+2012,Curve,,18,9,3,1,,fixed object,12,Y,Minor,12:00:00-15:59:00,N,N,Y,Y,N,WKND,9,9,1,2012 _ 390,Saguenay/-Lac-Saint-Jean (02),50
+2012,Straight,1,14,1,1,2,16,animal,12,Y,Material damage only,16:00:00-19:59:00,Y,Y,N,Y,Y,WKDY,11,1,0,2012 _ 391,Centre-du-Québec (17),80
+2012,Curve,1,12,23,1,3,13,animal,34,Y,Minor,08:00:00-11:59:00,N,Y,Y,Y,Y,WKND,4,1,1,2012 _ 392,Estrie (05),70
+2012,Straight,2,13,9,3,6,18,fixed object,34,Y,Material damage only,04:00:00-07:59:00,N,N,Y,N,N,WKND,1,2,0,2012 _ 393,,60
+2012,Curve,1,19,9,2,2,99,animal,99,Y,Minor,08:00:00-11:59:00,N,N,Y,N,N,WKND,4,2,1,2012 _ 394,Saguenay/-Lac-Saint-Jean (02),<50
+2012,Curve,1,15,9,4,9,18,pedestrian,33,Y,Material damage only,,N,N,Y,N,N,WKND,6,1,0,2012 _ 395,Saguenay/-Lac-Saint-Jean (02),60
+2012,Straight,1,12,9,3,3,15,vehicle,34,Y,Material damage only,08:00:00-11:59:00,N,N,N,N,Y,WKDY,4,1,0,2012 _ 396,Laval (13),90
+2012,Curve,1,18,45,2,9,19,other,69,Y,Material damage only,16:00:00-19:59:00,Y,N,Y,N,Y,WKDY,10,1,0,2012 _ 397,Estrie (05),100
+2012,Straight,2,16,1,3,9,18,fixed object,33,Y,Material damage only,20:00:00-23:59:00,Y,N,Y,N,N,WKDY,1,2,0,2012 _ 398,Saguenay/-Lac-Saint-Jean (02),60
+2012,,2,17,9,2,9,,fixed object,69,Y,Material damage only,12:00:00-15:59:00,Y,N,N,Y,N,WKDY,6,9,0,2012 _ 399,Montérégie (16),70
+2012,Curve,1,13,1,,4,14,no collision,33,Y,Material damage only,20:00:00-23:59:00,N,N,N,Y,Y,WKND,6,2,0,2012 _ 400,Abitibi-Témiscamingue (08),80
