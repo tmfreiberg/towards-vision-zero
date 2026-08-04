@@ -49,6 +49,12 @@ book:
 bibliography: book/references.bib
 csl: https://www.zotero.org/styles/apa
 
+# HTML only. A PDF format was declared here and never built: no runner has a
+# LaTeX installation, so it was never rendered or checked, while its figures
+# embedded a creation timestamp and so changed on every render. That left the
+# frozen results churning in every commit to produce an artifact nobody read.
+# Adding it back is a two-line change, and should come with a build that
+# exercises it.
 format:
   html:
     theme:
@@ -64,10 +70,3 @@ format:
     link-external-newwindow: true
     citations-hover: true
     footnotes-hover: true
-  pdf:
-    documentclass: scrbook
-    papersize: a4
-    geometry:
-      - margin=3cm
-    colorlinks: true
-    code-fold: false
