@@ -11,7 +11,12 @@ on:
     paths:
       - "index.qmd"
       - "book/**"
-      - "app/index.html"
+      # The whole directory, not just the page. The explorer's payload lives
+      # beside it and is committed, because this workflow checks out without
+      # `data/` and so cannot regenerate it. Watching only `app/index.html`
+      # meant that committing the payload published nothing, and the live page
+      # went on reporting that it could not find its records.
+      - "app/**"
       - "_freeze/**"
       - "_quarto.yml"
       - ".github/workflows/pages.yml"
@@ -53,12 +58,18 @@ jobs:
       - name: Render
         run: quarto render --no-execute-daemon
 
-      - name: Build the explorer payload placeholder
+      - name: Check the explorer has its payload
         run: |
-          # The payload is generated from the data and is not committed, so a
-          # published explorer needs it supplied here or fetched from a release.
-          # Until that is wired up, the page loads and reports its absence.
+          # The payload is generated from the compiled dataset by `tvz export`
+          # and committed, because this job checks out without `data/`. Verify
+          # it survived into the rendered site: without this the deploy succeeds
+          # and the live page reports that it cannot find its records, which is
+          # a failure nobody sees until they open the site.
           test -f app/index.html
+          test -f app/records.bin.gz
+          test -f app/meta.json
+          test -f _book/app/records.bin.gz
+          test -f _book/app/meta.json
 
       - uses: actions/upload-pages-artifact@v5
         with:
