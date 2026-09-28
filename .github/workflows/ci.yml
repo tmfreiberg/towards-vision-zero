@@ -133,5 +133,8 @@ jobs:
       # dependencies, which would otherwise appear in the lockfile it audits.
       - name: pip-audit
         run: |
-          uv export --format requirements-txt --no-hashes --all-extras > requirements-audit.txt
+          # The project itself is not on PyPI, so auditing it can only be skipped
+          # (on a 404) or fail outright (on a PyPI outage, as happened in September
+          # 2026). Audit the dependencies, not the package.
+          uv export --format requirements-txt --no-hashes --all-extras --no-emit-project > requirements-audit.txt
           uvx pip-audit --requirement requirements-audit.txt
