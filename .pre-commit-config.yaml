@@ -32,6 +32,9 @@ repos:
       - id: trailing-whitespace
       - id: mixed-line-ending
         args: [--fix=lf]
+        # make.bat is CRLF on disk on purpose (.gitattributes); --fix=lf would
+        # convert it back on every run.
+        exclude: \.bat$
       - id: detect-private-key
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

@@ -1,6 +1,13 @@
 * text=auto eol=lf
+
+# Windows entry points keep CRLF on disk, or cmd.exe can mis-parse them.
+# Stored LF like everything else.
+*.bat text eol=crlf
+
+# Binary: never diffed, line endings never touched.
 *.png binary
 *.pdf binary
 *.gif binary
+*.gz binary
 *.parquet binary
 *.csv binary
