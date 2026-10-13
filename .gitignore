@@ -85,4 +85,17 @@ coverage.xml
 # reproducible from history -- they're covered by file-level backup instead.
 excluded/
 
+# ---- Local notes ----
+# A separate local repository, not part of this project.
+/towards-vision-zero-private/
+# Backstop: if a note lands here by mistake, git will not take it.
+/handoff.txt
+/backlog.txt
+/backup.txt
+/devnotes.txt
+
+# ---- Update zips ----
+# Temporary archives, extracted in place and then deleted.
+/*-update-*.zip
+
 **/*.quarto_ipynb
